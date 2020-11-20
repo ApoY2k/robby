@@ -3,17 +3,20 @@ package apoy2k.robby
 import apoy2k.robby.engine.Game
 import apoy2k.robby.model.Board
 import apoy2k.robby.model.Field
+import apoy2k.robby.templates.BoardComponent
+import apoy2k.robby.templates.ViewComponent
 import apoy2k.robby.templates.gameRender
+import apoy2k.robby.templates.renderView
 import io.ktor.application.*
 import io.ktor.features.*
 import io.ktor.gson.*
+import io.ktor.html.*
+import io.ktor.http.*
 import io.ktor.http.content.*
 import io.ktor.request.*
 import io.ktor.response.*
 import io.ktor.routing.*
 import io.ktor.server.netty.*
-import io.ktor.html.*
-import io.ktor.http.*
 import kotlinx.html.*
 import org.slf4j.event.Level
 
@@ -33,25 +36,38 @@ fun Application.module(testing: Boolean = false) {
     }
 
     fun newGame(): Game {
-        return Game(Board(
-            arrayOf(
-                arrayOf(Field(), Field(), Field(), Field()),
-                arrayOf(Field(), Field(), Field(), Field()),
-                arrayOf(Field(), Field(), Field(), Field()),
-                arrayOf(Field(), Field(), Field(), Field()),
+        return Game(
+            Board(
+                arrayOf(
+                    arrayOf(Field(), Field(), Field(), Field()),
+                    arrayOf(Field(), Field(), Field(), Field()),
+                    arrayOf(Field(), Field(), Field(), Field()),
+                    arrayOf(Field(), Field(), Field(), Field()),
+                )
             )
-        ))
+        )
     }
 
     var game = newGame()
+
+    val component = BoardComponent(game)
+
+    val views = mapOf<String, ViewComponent>(
+        component.id to component
+    )
+
+    val socket = Socket()
 
     routing {
         get("/") {
             call.respondHtml {
                 head {
                     title("robby")
-                    link(rel = "stylesheet", href = "https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/css/bootstrap.min.css")
-                    link(rel = "stylesheet", href="/static/main.css")
+                    link(
+                        rel = "stylesheet",
+                        href = "https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/css/bootstrap.min.css"
+                    )
+                    link(rel = "stylesheet", href = "/static/main.css")
                 }
                 body {
                     div(classes = "container") {
@@ -72,7 +88,7 @@ fun Application.module(testing: Boolean = false) {
                             }
                         }
                     }
-                    gameRender(game)
+                    renderView(component, call)
                     script(src = "/static/main.js") { }
                 }
             }
@@ -86,7 +102,26 @@ fun Application.module(testing: Boolean = false) {
             }
 
             game.board.flip(id)
-            call.respondRedirect("/")
+
+            socket.sendUpdate(component.id)
+
+            call.respond(HttpStatusCode.OK)
+        }
+
+        get("/view/{id}") {
+            val id = call.parameters["id"]
+            if (id.isNullOrEmpty()) {
+                call.respond(HttpStatusCode.BadRequest)
+                return@get
+            }
+
+            val view = views[id]
+            if (view == null) {
+                call.respond(HttpStatusCode.NotFound)
+                return@get
+            }
+
+            call.renderView(view)
         }
 
         get("/reset") {

@@ -27,3 +27,7 @@ fun HtmlBlockTag.gameRender(game: Game) {
         }
     }
 }
+
+fun FlowContent.render(component: ViewComponent) {
+
+}

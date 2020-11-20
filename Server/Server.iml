@@ -13,7 +13,6 @@
           <option name="pluginClasspaths">
             <array />
           </option>
-          <option name="coroutinesState" value="enable" />
           <option name="errors">
             <ArgumentParseErrors />
           </option>
