@@ -38,7 +38,7 @@ fun Application.module(testing: Boolean = false) {
 
     routing {
         base(storage)
-        game(storage)
+        game(storage, sockets)
         socket(sockets)
     }
 }

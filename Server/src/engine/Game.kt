@@ -5,4 +5,7 @@ import apoy2k.robby.model.FieldType
 
 class Game(internal val board: Board) {
 
+    fun perform() {
+
+    }
 }

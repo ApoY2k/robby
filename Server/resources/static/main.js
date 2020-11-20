@@ -6,11 +6,17 @@ socket.addEventListener("open", () => {
 });
 
 socket.addEventListener("message", (event) => {
-    console.log("Message received", event.data);
+    const message = event.data;
+
+    if (message.startsWith("refresh:")) {
+
+    }
 });
 
-document.querySelectorAll(".field").forEach(field => {
-    field.addEventListener("click", (event) => {
-        console.log(event.target.attributes["data-id"].value);
+document.querySelectorAll("[data-socket-action]").forEach(actionTag => {
+    actionTag.addEventListener("click", (event) => {
+        event.stopPropagation();
+        event.preventDefault();
+        socket.send("action:" + actionTag.attributes["data-socket-action"].value);
     });
 });
