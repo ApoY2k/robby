@@ -1,7 +1,7 @@
 package apoy2k.robby
 
 import apoy2k.robby.data.MemoryStorage
-import apoy2k.robby.data.Sockets
+import apoy2k.robby.engine.Engine
 import apoy2k.robby.routes.base
 import apoy2k.robby.routes.game
 import apoy2k.robby.routes.socket
@@ -30,15 +30,14 @@ fun Application.module(testing: Boolean = false) {
     }
 
     install(WebSockets) {
-
     }
 
     val storage = MemoryStorage()
-    val sockets = Sockets()
+    val engine = Engine(storage)
 
     routing {
         base(storage)
-        game(storage, sockets)
-        socket(sockets)
+        game(engine)
+        socket(engine)
     }
 }

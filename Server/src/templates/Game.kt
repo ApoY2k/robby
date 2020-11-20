@@ -1,8 +1,10 @@
 package apoy2k.robby.templates
 
-import apoy2k.robby.engine.Command
-import apoy2k.robby.engine.CommandLabel
+import apoy2k.robby.ATTR_ACTION
+import apoy2k.robby.ATTR_BIND
+import apoy2k.robby.VIEW_BOARD
 import apoy2k.robby.engine.Game
+import apoy2k.robby.engine.SwitchFieldCommand
 import apoy2k.robby.model.Field
 import apoy2k.robby.model.FieldType
 import kotlinx.html.DIV
@@ -16,14 +18,14 @@ fun DIV.fieldRender(field: Field) {
     }
 
     div(classes = "col btn $fieldClass field") {
-        val command = Command(CommandLabel.SWITCHFIELD, field.id)
-        attributes["data-socket-action"] = command.toString()
+        val command = SwitchFieldCommand(field.id)
+        attributes[ATTR_ACTION] = command.toString()
     }
 }
 
 fun HtmlBlockTag.gameRender(game: Game) {
     div(classes = "row") {
-        attributes["data-socket-bind"] = "game"
+        attributes[ATTR_BIND] = VIEW_BOARD
 
         div(classes = "col") {
             game.board.cells.forEach {
