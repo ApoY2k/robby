@@ -18,6 +18,8 @@ fun DIV.fieldRender(field: Field) {
 
 fun HtmlBlockTag.gameRender(game: Game) {
     div(classes = "row") {
+        attributes["data-bind"] = "game"
+
         div(classes = "col") {
             game.board.cells.forEach {
                 div(classes = "row") {
@@ -26,8 +28,4 @@ fun HtmlBlockTag.gameRender(game: Game) {
             }
         }
     }
-}
-
-fun FlowContent.render(component: ViewComponent) {
-
 }

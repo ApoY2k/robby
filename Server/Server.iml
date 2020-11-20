@@ -13,6 +13,7 @@
           <option name="pluginClasspaths">
             <array />
           </option>
+          <option name="coroutinesState" value="enable" />
           <option name="errors">
             <ArgumentParseErrors />
           </option>
@@ -74,7 +75,6 @@
     <orderEntry type="library" scope="TEST" name="Maven: org.eclipse.jetty:jetty-alpn-openjdk8-client:9.4.31.v20200723" level="project" />
     <orderEntry type="library" scope="TEST" name="Maven: org.eclipse.jetty:jetty-alpn-java-client:9.4.31.v20200723" level="project" />
     <orderEntry type="library" scope="TEST" name="Maven: io.ktor:ktor-client-cio-jvm:1.4.2" level="project" />
-    <orderEntry type="library" scope="TEST" name="Maven: io.ktor:ktor-websockets:1.4.2" level="project" />
     <orderEntry type="library" scope="TEST" name="Maven: org.eclipse.jetty.http2:http2-client:9.4.31.v20200723" level="project" />
     <orderEntry type="library" scope="TEST" name="Maven: org.eclipse.jetty.http2:http2-common:9.4.31.v20200723" level="project" />
     <orderEntry type="library" scope="TEST" name="Maven: org.eclipse.jetty.http2:http2-hpack:9.4.31.v20200723" level="project" />
@@ -94,71 +94,7 @@
     <orderEntry type="library" scope="TEST" name="Maven: net.java.dev.jna:jna:5.5.0" level="project" />
     <orderEntry type="library" scope="TEST" name="Maven: net.java.dev.jna:jna-platform:5.5.0" level="project" />
     <orderEntry type="library" name="Maven: io.ktor:ktor-html-builder:1.4.2" level="project" />
-    <orderEntry type="library" name="Maven: org.jetbrains.kotlinx:kotlinx-html-jvm:0.7.2" level="project" />
-    <orderEntry type="library" name="Maven: org.jetbrains.kotlin:kotlin-stdlib-common:1.4.0" level="project" />
-    <orderEntry type="library" name="Maven: org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.4.10" level="project" />
-    <orderEntry type="library" name="Maven: org.jetbrains.kotlin:kotlin-stdlib:1.4.10" level="project" />
-    <orderEntry type="library" name="Maven: org.jetbrains:annotations:13.0" level="project" />
-    <orderEntry type="library" name="Maven: org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.4.10" level="project" />
-    <orderEntry type="library" name="Maven: io.ktor:ktor-server-netty:1.4.2" level="project" />
-    <orderEntry type="library" name="Maven: org.slf4j:slf4j-api:1.7.30" level="project" />
-    <orderEntry type="library" name="Maven: org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:1.3.9-native-mt-2" level="project" />
-    <orderEntry type="library" name="Maven: org.jetbrains.kotlinx:kotlinx-coroutines-core:1.3.9-native-mt-2" level="project" />
-    <orderEntry type="library" name="Maven: io.netty:netty-codec-http2:4.1.51.Final" level="project" />
-    <orderEntry type="library" name="Maven: io.netty:netty-common:4.1.51.Final" level="project" />
-    <orderEntry type="library" name="Maven: io.netty:netty-buffer:4.1.51.Final" level="project" />
-    <orderEntry type="library" name="Maven: io.netty:netty-transport:4.1.51.Final" level="project" />
-    <orderEntry type="library" name="Maven: io.netty:netty-resolver:4.1.51.Final" level="project" />
-    <orderEntry type="library" name="Maven: io.netty:netty-codec:4.1.51.Final" level="project" />
-    <orderEntry type="library" name="Maven: io.netty:netty-handler:4.1.51.Final" level="project" />
-    <orderEntry type="library" name="Maven: io.netty:netty-codec-http:4.1.51.Final" level="project" />
-    <orderEntry type="library" name="Maven: org.eclipse.jetty.alpn:alpn-api:1.1.3.v20160715" level="project" />
-    <orderEntry type="library" name="Maven: io.netty:netty-transport-native-kqueue:4.1.51.Final" level="project" />
-    <orderEntry type="library" name="Maven: io.netty:netty-transport-native-unix-common:4.1.51.Final" level="project" />
-    <orderEntry type="library" name="Maven: io.netty:netty-transport-native-epoll:4.1.51.Final" level="project" />
-    <orderEntry type="library" name="Maven: ch.qos.logback:logback-classic:1.2.1" level="project" />
-    <orderEntry type="library" name="Maven: ch.qos.logback:logback-core:1.2.1" level="project" />
-    <orderEntry type="library" name="Maven: io.ktor:ktor-server-core:1.4.2" level="project" />
-    <orderEntry type="library" name="Maven: io.ktor:ktor-utils-jvm:1.4.2" level="project" />
-    <orderEntry type="library" name="Maven: org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:1.3.9-native-mt-2" level="project" />
-    <orderEntry type="library" name="Maven: io.ktor:ktor-io-jvm:1.4.2" level="project" />
-    <orderEntry type="library" name="Maven: io.ktor:ktor-http-jvm:1.4.2" level="project" />
-    <orderEntry type="library" name="Maven: com.typesafe:config:1.3.1" level="project" />
-    <orderEntry type="library" name="Maven: org.jetbrains.kotlin:kotlin-reflect:1.4.10" level="project" />
-    <orderEntry type="library" name="Maven: io.ktor:ktor-server-host-common:1.4.2" level="project" />
-    <orderEntry type="library" name="Maven: io.ktor:ktor-http-cio-jvm:1.4.2" level="project" />
-    <orderEntry type="library" name="Maven: io.ktor:ktor-network-jvm:1.4.2" level="project" />
-    <orderEntry type="library" name="Maven: io.ktor:ktor-gson:1.4.2" level="project" />
-    <orderEntry type="library" name="Maven: com.google.code.gson:gson:2.8.6" level="project" />
-    <orderEntry type="library" scope="TEST" name="Maven: io.ktor:ktor-server-tests:1.4.2" level="project" />
-    <orderEntry type="library" scope="TEST" name="Maven: io.ktor:ktor-server-test-host:1.4.2" level="project" />
-    <orderEntry type="library" scope="TEST" name="Maven: io.ktor:ktor-network-tls-jvm:1.4.2" level="project" />
-    <orderEntry type="library" scope="TEST" name="Maven: io.ktor:ktor-network-tls-certificates:1.4.2" level="project" />
-    <orderEntry type="library" scope="TEST" name="Maven: io.ktor:ktor-client-core-jvm:1.4.2" level="project" />
-    <orderEntry type="library" scope="TEST" name="Maven: io.ktor:ktor-client-jetty:1.4.2" level="project" />
-    <orderEntry type="library" scope="TEST" name="Maven: org.eclipse.jetty:jetty-alpn-openjdk8-client:9.4.31.v20200723" level="project" />
-    <orderEntry type="library" scope="TEST" name="Maven: org.eclipse.jetty:jetty-alpn-java-client:9.4.31.v20200723" level="project" />
-    <orderEntry type="library" scope="TEST" name="Maven: io.ktor:ktor-client-cio-jvm:1.4.2" level="project" />
-    <orderEntry type="library" scope="TEST" name="Maven: io.ktor:ktor-websockets:1.4.2" level="project" />
-    <orderEntry type="library" scope="TEST" name="Maven: org.eclipse.jetty.http2:http2-client:9.4.31.v20200723" level="project" />
-    <orderEntry type="library" scope="TEST" name="Maven: org.eclipse.jetty.http2:http2-common:9.4.31.v20200723" level="project" />
-    <orderEntry type="library" scope="TEST" name="Maven: org.eclipse.jetty.http2:http2-hpack:9.4.31.v20200723" level="project" />
-    <orderEntry type="library" scope="TEST" name="Maven: org.eclipse.jetty:jetty-alpn-client:9.4.31.v20200723" level="project" />
-    <orderEntry type="library" scope="TEST" name="Maven: org.eclipse.jetty:jetty-client:9.4.31.v20200723" level="project" />
-    <orderEntry type="library" scope="TEST" name="Maven: org.eclipse.jetty:jetty-http:9.4.31.v20200723" level="project" />
-    <orderEntry type="library" scope="TEST" name="Maven: org.eclipse.jetty:jetty-util:9.4.31.v20200723" level="project" />
-    <orderEntry type="library" scope="TEST" name="Maven: org.eclipse.jetty:jetty-io:9.4.31.v20200723" level="project" />
-    <orderEntry type="library" scope="TEST" name="Maven: org.eclipse.jetty.http2:http2-http-client-transport:9.4.31.v20200723" level="project" />
-    <orderEntry type="library" scope="TEST" name="Maven: org.jetbrains.kotlin:kotlin-test-junit:1.4.10" level="project" />
-    <orderEntry type="library" scope="TEST" name="Maven: org.jetbrains.kotlin:kotlin-test-annotations-common:1.4.10" level="project" />
-    <orderEntry type="library" scope="TEST" name="Maven: org.jetbrains.kotlin:kotlin-test:1.4.10" level="project" />
-    <orderEntry type="library" scope="TEST" name="Maven: org.jetbrains.kotlin:kotlin-test-common:1.4.10" level="project" />
-    <orderEntry type="library" scope="TEST" name="Maven: junit:junit:4.12" level="project" />
-    <orderEntry type="library" scope="TEST" name="Maven: org.hamcrest:hamcrest-core:1.3" level="project" />
-    <orderEntry type="library" scope="TEST" name="Maven: org.jetbrains.kotlinx:kotlinx-coroutines-debug:1.3.9-native-mt-2" level="project" />
-    <orderEntry type="library" scope="TEST" name="Maven: net.java.dev.jna:jna:5.5.0" level="project" />
-    <orderEntry type="library" scope="TEST" name="Maven: net.java.dev.jna:jna-platform:5.5.0" level="project" />
-    <orderEntry type="library" name="Maven: io.ktor:ktor-html-builder:1.4.2" level="project" />
+    <orderEntry type="library" name="Maven: io.ktor:ktor-websockets:1.4.2" level="project" />
     <orderEntry type="library" name="Maven: org.jetbrains.kotlinx:kotlinx-html-jvm:0.7.2" level="project" />
     <orderEntry type="library" name="Maven: org.jetbrains.kotlin:kotlin-stdlib-common:1.4.0" level="project" />
   </component>
