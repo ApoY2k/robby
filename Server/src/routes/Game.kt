@@ -2,7 +2,6 @@ package apoy2k.robby.routes
 
 import apoy2k.robby.engine.Engine
 import apoy2k.robby.engine.ResetBoardCommand
-import apoy2k.robby.engine.SwitchFieldCommand
 import io.ktor.application.*
 import io.ktor.http.*
 import io.ktor.response.*

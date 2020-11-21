@@ -2,7 +2,7 @@ package apoy2k.robby.routes
 
 import apoy2k.robby.VIEW_BOARD
 import apoy2k.robby.data.Storage
-import apoy2k.robby.templates.gameRender
+import apoy2k.robby.templates.renderBoard
 import io.ktor.application.*
 import io.ktor.html.*
 import io.ktor.routing.*
@@ -12,7 +12,7 @@ fun Route.views(storage: Storage) {
     get(VIEW_BOARD) {
         call.respondHtml {
             body {
-                gameRender(storage.game)
+                renderBoard(storage.game.board)
             }
         }
     }

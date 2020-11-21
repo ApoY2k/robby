@@ -1,7 +1,7 @@
 package apoy2k.robby.routes
 
 import apoy2k.robby.data.Storage
-import apoy2k.robby.templates.gameRender
+import apoy2k.robby.templates.renderGame
 import io.ktor.application.*
 import io.ktor.html.*
 import io.ktor.http.content.*
@@ -32,7 +32,7 @@ fun Route.base(storage: Storage) {
                     }
                 }
                 div(classes = "container") {
-                    gameRender(storage.game)
+                    renderGame(storage.game)
                 }
                 script(src = "/static/main.js") { }
             }
