@@ -5,6 +5,7 @@ import apoy2k.robby.engine.Engine
 import apoy2k.robby.routes.base
 import apoy2k.robby.routes.game
 import apoy2k.robby.routes.socket
+import apoy2k.robby.routes.views
 import io.ktor.application.*
 import io.ktor.features.*
 import io.ktor.gson.*
@@ -39,5 +40,6 @@ fun Application.module(testing: Boolean = false) {
         base(storage)
         game(engine)
         socket(engine)
+        views(storage)
     }
 }

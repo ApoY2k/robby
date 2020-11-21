@@ -13,16 +13,4 @@ fun Route.game(engine: Engine) {
         engine.perform(listOf(ResetBoardCommand()))
         call.respond(HttpStatusCode.OK)
     }
-
-    get("/switchfield/{id}") {
-        val id = call.parameters["id"]
-        if (id.isNullOrEmpty()) {
-            call.respond(HttpStatusCode.BadRequest)
-            return@get
-        }
-
-        engine.perform(listOf(SwitchFieldCommand(id)))
-
-        call.respond(HttpStatusCode.OK)
-    }
 }

@@ -23,13 +23,6 @@ fun Route.base(storage: Storage) {
                 div(classes = "container") {
                     div(classes = "row") {
                         div(classes = "col") {
-                            h1() {
-                                +"robby"
-                            }
-                        }
-                    }
-                    div(classes = "row") {
-                        div(classes = "col") {
                             p {
                                 a(href = "/reset") {
                                     +"Reset"
@@ -38,7 +31,9 @@ fun Route.base(storage: Storage) {
                         }
                     }
                 }
-                gameRender(storage.game)
+                div(classes = "container") {
+                    gameRender(storage.game)
+                }
                 script(src = "/static/main.js") { }
             }
         }

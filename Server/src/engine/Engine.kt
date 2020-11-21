@@ -35,7 +35,7 @@ class Engine(private val storage: Storage) {
      */
     private suspend fun send(commands: Set<Command>) {
         commands.forEach { command ->
-            logger.debug("Sending [$command]")
+            logger.debug("Sending [$command] to [${sessions.count()}] sessions")
             sessions.forEach { it.send(Frame.Text(command.toString())) }
         }
     }

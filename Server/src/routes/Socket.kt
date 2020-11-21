@@ -20,17 +20,16 @@ fun Route.socket(engine: Engine) {
                 when (it) {
                     is Frame.Text -> {
                         val data = it.readText()
-                        logger.debug("Received [$data]")
+                        logger.debug("Received message [$data]")
                         engine.perform(data)
                     }
                     else -> {
                         val data = it.readBytes().toString()
-                        logger.warn("Unknown socket data [$data]")
+                        logger.warn("Unknown socket message [$data]")
                     }
                 }
             }
         } finally {
-            logger.info("Disconnecting websocket session")
             engine.sessions.remove(this)
         }
     }

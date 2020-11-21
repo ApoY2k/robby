@@ -12,11 +12,11 @@ class Game(val board: Board) {
         fun create(): Game {
             return Game(
                 Board(
-                    arrayOf(
-                        arrayOf(Field(), Field(), Field(), Field()),
-                        arrayOf(Field(), Field(), Field(), Field()),
-                        arrayOf(Field(), Field(), Field(), Field()),
-                        arrayOf(Field(), Field(), Field(), Field()),
+                    listOf(
+                        listOf(Field(), Field(), Field(), Field()),
+                        listOf(Field(), Field(), Field(), Field()),
+                        listOf(Field(), Field(), Field(), Field()),
+                        listOf(Field(), Field(), Field(), Field()),
                     )
                 )
             )
