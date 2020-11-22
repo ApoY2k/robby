@@ -9,7 +9,9 @@ import apoy2k.robby.routes.views
 import io.ktor.application.*
 import io.ktor.features.*
 import io.ktor.gson.*
+import io.ktor.http.*
 import io.ktor.request.*
+import io.ktor.response.*
 import io.ktor.routing.*
 import io.ktor.server.netty.*
 import io.ktor.websocket.*
@@ -31,6 +33,17 @@ fun Application.module(testing: Boolean = false) {
     }
 
     install(WebSockets) {
+    }
+
+    install(StatusPages) {
+        exception<Throwable> {
+            call.respond(HttpStatusCode.InternalServerError, it.message.toString())
+            throw it
+        }
+
+        status(HttpStatusCode.NotFound) {
+            call.respond(HttpStatusCode.NotFound, "Route to ${call.request.uri} not found")
+        }
     }
 
     val storage = MemoryStorage()

@@ -1,5 +1,7 @@
 package apoy2k.robby.engine
 
+import apoy2k.robby.VIEW_BOARD
+import apoy2k.robby.VIEW_PLAYERS
 import apoy2k.robby.exceptions.UnknownCommandException
 import apoy2k.robby.model.*
 import java.util.*
@@ -42,18 +44,18 @@ class Game(val board: Board) {
 
     private fun removePlayer(name: String): Set<Command> {
         players.remove(Player(name))
-        return setOf(RefreshPlayersCommand())
+        return setOf(RefreshViewCommand(VIEW_BOARD))
     }
 
     private fun addPlayer(name: String): Set<Command> {
         val player = Player(name)
         DEFAULT_DECK.forEach { player.cards.add(it.copy()) }
         players.add(player)
-        return setOf(RefreshPlayersCommand())
+        return setOf(RefreshViewCommand(VIEW_PLAYERS))
     }
 
     private fun placeRobot(fieldId: String, model: String): Set<Command> {
         board.place(UUID.fromString(fieldId), Robot.create(model))
-        return setOf(RefreshBoardCommand())
+        return setOf(RefreshViewCommand(VIEW_BOARD))
     }
 }

@@ -2,7 +2,7 @@ package apoy2k.robby.engine
 
 import apoy2k.robby.CommandLabel
 import apoy2k.robby.exceptions.UnknownCommandException
-import java.util.*
+import java.lang.IndexOutOfBoundsException
 
 /**
  * Base class for all commands, handles serialization and comparing between command instances
@@ -37,10 +37,8 @@ class PlaceRobotCommand(val fieldId: String, val model: String): Command(Command
 class SelectCardCommand(val cardId: String): Command(CommandLabel.SELECT_CARD, cardId)
 class RemoveCardCommand(val cardId: String): Command(CommandLabel.JOIN_GAME, cardId)
 class ConfirmCardsCommand(): Command(CommandLabel.CONFIRM_CARDS)
-class RefreshCardsCommand(): Command(CommandLabel.REFRESH_CARDS)
-class RefreshPlayersCommand(): Command(CommandLabel.REFRESH_PLAYERS)
-class RefreshBoardCommand(): Command(CommandLabel.REFRESH_BOARD)
 class ResetBoardCommand(): Command(CommandLabel.RESET_BOARD)
+class RefreshViewCommand(val name: String): Command(CommandLabel.REFRESH_VIEW, name)
 
 /**
  * Convert a string to a typed Command instance
@@ -55,16 +53,18 @@ fun String.toCommand(): Command {
 
     val label = CommandLabel.values().find { it.toString() == parts[0] } ?: throw UnknownCommandException(this)
 
-    return when (label) {
-        CommandLabel.JOIN_GAME -> JoinGameCommand(parts[1])
-        CommandLabel.LEAVE_GAME -> LeaveGameCommand(parts[1])
-        CommandLabel.PLACE_ROBOT -> PlaceRobotCommand(parts[1], parts[2])
-        CommandLabel.SELECT_CARD -> SelectCardCommand(parts[1])
-        CommandLabel.REMOVE_CARD -> RemoveCardCommand(parts[1])
-        CommandLabel.CONFIRM_CARDS -> ConfirmCardsCommand()
-        CommandLabel.REFRESH_CARDS -> RefreshCardsCommand()
-        CommandLabel.REFRESH_PLAYERS -> RefreshPlayersCommand()
-        CommandLabel.REFRESH_BOARD -> RefreshBoardCommand()
-        CommandLabel.RESET_BOARD -> ResetBoardCommand()
+    try {
+        return when (label) {
+            CommandLabel.JOIN_GAME -> JoinGameCommand(parts[1])
+            CommandLabel.LEAVE_GAME -> LeaveGameCommand(parts[1])
+            CommandLabel.PLACE_ROBOT -> PlaceRobotCommand(parts[1], parts[2])
+            CommandLabel.SELECT_CARD -> SelectCardCommand(parts[1])
+            CommandLabel.REMOVE_CARD -> RemoveCardCommand(parts[1])
+            CommandLabel.CONFIRM_CARDS -> ConfirmCardsCommand()
+            CommandLabel.RESET_BOARD -> ResetBoardCommand()
+            CommandLabel.REFRESH_VIEW -> RefreshViewCommand(parts[1])
+        }
+    } catch (err: IndexOutOfBoundsException) {
+        throw UnknownCommandException(this)
     }
 }

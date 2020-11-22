@@ -5,12 +5,8 @@ const ATTR_ACTION = "data-action";
 const ATTR_BIND = "data-bind";
 
 const COMMANDS = {
-    SWITCH_FIELD: "SWITCH_FIELD",
-    REFRESH_BOARD: "REFRESH_BOARD",
-    RESET_BOARD: "RESET_BOARD",
+    REFRESH_VIEW: "REFRESH_VIEW",
 };
-
-const VIEW_BOARD = "/views/board";
 
 // -------------------------------- DOM manipulation
 
@@ -37,12 +33,13 @@ const updateView = (view) => {
         })
         .then((response) => {
             if (!response.ok) {
-                throw new Error("Could not refresh view [" + view + "]");
+                return response.text().then((text) => {
+                    throw new Error("Could not refresh view [" + view + "]: " + text);
+                });
+            } else {
+                return response.text().then((text) => replaceDom(element, text));
             }
-            return response;
         })
-        .then((response) => response.text())
-        .then((text) => replaceDom(element, text))
         .catch((err) => console.log(err));
     });
 };
@@ -62,8 +59,8 @@ socket.addEventListener("message", (event) => {
     const message = event.data;
     const command = parseCommand(message);
     switch (command.command) {
-        case COMMANDS.REFRESH_BOARD:
-            updateView(VIEW_BOARD);
+        case COMMANDS.REFRESH_VIEW:
+            updateView(command.params[0]);
             break;
 
         default:
@@ -71,14 +68,21 @@ socket.addEventListener("message", (event) => {
     }
 });
 
+// Event listener for any element that has actions associated with it
+const actionEventListener = (element) => (event) => {
+    event.stopPropagation();
+    event.preventDefault();
+    socket.send(element.attributes[ATTR_ACTION].value);
+};
+
 // Add the action event listener to all action-elements, starting from a given root element
 const addActionEventListeners = (rootElement) => {
     rootElement.querySelectorAll("[" + ATTR_ACTION + "]").forEach((element) => {
-        element.addEventListener("click", (event) => {
-            event.stopPropagation();
-            event.preventDefault();
-            socket.send(element.attributes[ATTR_ACTION].value);
-        });
+        if (element.nodeName === "A" || element.nodeName === "BUTTON") {
+            element.addEventListener("click", actionEventListener(element));
+        } else if (element.nodeName === "FORM") {
+            element.addEventListener("submit", actionEventListener(element));
+        }
     });
 };
 

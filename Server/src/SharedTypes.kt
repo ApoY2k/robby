@@ -12,10 +12,9 @@ enum class CommandLabel {
     SELECT_CARD,
     REMOVE_CARD,
     CONFIRM_CARDS,
-    REFRESH_CARDS,
-    REFRESH_BOARD,
-    REFRESH_PLAYERS,
     RESET_BOARD,
+    REFRESH_VIEW,
 }
 
 const val VIEW_BOARD = "/views/board"
+const val VIEW_PLAYERS = "/views/players"
