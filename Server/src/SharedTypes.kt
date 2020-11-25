@@ -16,5 +16,14 @@ enum class CommandLabel {
     REFRESH_VIEW,
 }
 
+enum class CommandField {
+    LABEL,
+    PLAYER_NAME,
+    FIELD_ID,
+    CARD_ID,
+    MODEL,
+    VIEW_NAME,
+}
+
 const val VIEW_BOARD = "/views/board"
 const val VIEW_PLAYERS = "/views/players"

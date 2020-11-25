@@ -1,6 +1,7 @@
 package apoy2k.robby.engine
 
 import apoy2k.robby.data.Storage
+import apoy2k.robby.model.Command
 import io.ktor.http.cio.websocket.*
 import io.ktor.websocket.*
 import org.slf4j.LoggerFactory
@@ -24,7 +25,7 @@ class Engine(private val storage: Storage) {
      */
     suspend fun perform(str: String) {
         try {
-            perform(listOf(str.toCommand()))
+            perform(listOf(Command.fromString(str)))
         } catch (exc: Exception) {
             logger.error("Engine error: ${exc.message}", exc)
         }

@@ -2,6 +2,7 @@ package apoy2k.robby.engine
 
 import apoy2k.robby.VIEW_BOARD
 import apoy2k.robby.VIEW_PLAYERS
+import apoy2k.robby.exceptions.IncompleteCommandException
 import apoy2k.robby.exceptions.UnknownCommandException
 import apoy2k.robby.model.*
 import java.util.*
@@ -48,6 +49,10 @@ class Game(val board: Board) {
     }
 
     private fun addPlayer(name: String): Set<Command> {
+        if (name.isBlank()) {
+            throw IncompleteCommandException("Cannot add player without name")
+        }
+
         val player = Player(name)
         DEFAULT_DECK.forEach { player.cards.add(it.copy()) }
         players.add(player)

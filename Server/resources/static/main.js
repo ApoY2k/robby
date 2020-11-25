@@ -8,16 +8,12 @@ const COMMANDS = {
     REFRESH_VIEW: "REFRESH_VIEW",
 };
 
-// -------------------------------- DOM manipulation
-
-// Parse a command string and split it into the command itself and its parameters
-const parseCommand = (command) => {
-    const parts = command.split(":");
-    return {
-        command: parts[0],
-        params: parts[1].split(";"),
-    };
+const FIELDS = {
+    LABEL: "LABEL",
+    VIEW_NAME: "VIEW_NAME",
 };
+
+// -------------------------------- DOM manipulation
 
 // Update a view component if it exists in the current DOM
 const updateView = (view) => {
@@ -56,15 +52,16 @@ const replaceDom = (element, text) => {
 
 const socket = new WebSocket("ws://" + window.location.host + "/ws");
 socket.addEventListener("message", (event) => {
-    const message = event.data;
-    const command = parseCommand(message);
-    switch (command.command) {
+    const command = new URLSearchParams(event.data);
+    const label = command.get(FIELDS.LABEL);
+
+    switch (label) {
         case COMMANDS.REFRESH_VIEW:
-            updateView(command.params[0]);
+            updateView(command.get(FIELDS.VIEW_NAME));
             break;
 
         default:
-            console.error("Command [" + message + "] is unknown");
+            console.error("Command [" + label + "] is unknown");
     }
 });
 
@@ -72,15 +69,32 @@ socket.addEventListener("message", (event) => {
 const actionEventListener = (element) => (event) => {
     event.stopPropagation();
     event.preventDefault();
-    socket.send(element.attributes[ATTR_ACTION].value);
+
+    const action = new URLSearchParams(element.attributes[ATTR_ACTION].value);
+    console.log(action);
+    const actionForm = new FormData();
+    action.forEach((value, key) => actionForm.append(key, value));
+    console.log(actionForm);
+
+    if (element.nodeName === "FORM") {
+        const dynamicForm = new FormData(element);
+        console.log(dynamicForm);
+        dynamicForm.forEach((value, key) => actionForm.append(key, value));
+    }
+
+    console.log(actionForm);
+
+    socket.send(new URLSearchParams(actionForm).toString());
 };
 
 // Add the action event listener to all action-elements, starting from a given root element
 const addActionEventListeners = (rootElement) => {
     rootElement.querySelectorAll("[" + ATTR_ACTION + "]").forEach((element) => {
-        if (element.nodeName === "A" || element.nodeName === "BUTTON") {
+        if (["A", "DIV", "BUTTON"].includes(element.nodeName)) {
             element.addEventListener("click", actionEventListener(element));
-        } else if (element.nodeName === "FORM") {
+        }
+
+        if (element.nodeName === "FORM") {
             element.addEventListener("submit", actionEventListener(element));
         }
     });

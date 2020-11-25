@@ -1,13 +1,9 @@
 package apoy2k.robby.templates
 
-import apoy2k.robby.ATTR_ACTION
-import apoy2k.robby.ATTR_BIND
-import apoy2k.robby.VIEW_BOARD
-import apoy2k.robby.VIEW_PLAYERS
-import apoy2k.robby.engine.Command
+import apoy2k.robby.*
 import apoy2k.robby.engine.Game
-import apoy2k.robby.engine.JoinGameCommand
-import apoy2k.robby.engine.PlaceRobotCommand
+import apoy2k.robby.model.JoinGameCommand
+import apoy2k.robby.model.PlaceRobotCommand
 import apoy2k.robby.model.Board
 import apoy2k.robby.model.Player
 import apoy2k.robby.model.RobotModel
@@ -49,10 +45,10 @@ fun HtmlBlockTag.renderPlayers(players: Set<Player>) {
     div(classes = "row") {
         div(classes = "col") {
             form(classes = "form") {
-                attributes[ATTR_ACTION] = JoinGameCommand("").toString()
+                attributes[ATTR_ACTION] = JoinGameCommand().toString()
 
                 div(classes = "form-group") {
-                    input(classes = "form-control")
+                    input(classes = "form-control", name = CommandField.PLAYER_NAME.name)
                 }
 
                 button(classes = "btn btn-primary", type = ButtonType.submit) {
