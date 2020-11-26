@@ -36,7 +36,7 @@ const updateView = (view) => {
                 return response.text().then((text) => replaceDom(element, text));
             }
         })
-        .catch((err) => console.log(err));
+        .catch(console.error);
     });
 };
 
@@ -71,18 +71,15 @@ const actionEventListener = (element) => (event) => {
     event.preventDefault();
 
     const action = new URLSearchParams(element.attributes[ATTR_ACTION].value);
-    console.log(action);
     const actionForm = new FormData();
+
     action.forEach((value, key) => actionForm.append(key, value));
-    console.log(actionForm);
 
     if (element.nodeName === "FORM") {
         const dynamicForm = new FormData(element);
-        console.log(dynamicForm);
         dynamicForm.forEach((value, key) => actionForm.append(key, value));
+        element.reset();
     }
-
-    console.log(actionForm);
 
     socket.send(new URLSearchParams(actionForm).toString());
 };

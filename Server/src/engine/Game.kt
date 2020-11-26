@@ -8,7 +8,7 @@ import apoy2k.robby.model.*
 import java.util.*
 
 /**
- * Represents all information about a single game being played
+ * Game engine that holds a single games' state and mutates it via commands
  */
 class Game(val board: Board) {
     companion object Factory {
@@ -43,14 +43,18 @@ class Game(val board: Board) {
         }.toSet()
     }
 
-    private fun removePlayer(name: String): Set<Command> {
+    private fun removePlayer(name: String?): Set<Command> {
+        if (name.isNullOrBlank()) {
+            return emptySet()
+        }
+
         players.remove(Player(name))
         return setOf(RefreshViewCommand(VIEW_BOARD))
     }
 
-    private fun addPlayer(name: String): Set<Command> {
-        if (name.isBlank()) {
-            throw IncompleteCommandException("Cannot add player without name")
+    private fun addPlayer(name: String?): Set<Command> {
+        if (name.isNullOrBlank()) {
+            throw IncompleteCommandException("Player name missing")
         }
 
         val player = Player(name)
@@ -59,7 +63,11 @@ class Game(val board: Board) {
         return setOf(RefreshViewCommand(VIEW_PLAYERS))
     }
 
-    private fun placeRobot(fieldId: String, model: String): Set<Command> {
+    private fun placeRobot(fieldId: String?, model: String?): Set<Command> {
+        if (fieldId.isNullOrBlank() || model.isNullOrBlank()) {
+            throw IncompleteCommandException("Field or model missing")
+        }
+
         board.place(UUID.fromString(fieldId), Robot.create(model))
         return setOf(RefreshViewCommand(VIEW_BOARD))
     }

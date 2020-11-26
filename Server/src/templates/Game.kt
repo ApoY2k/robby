@@ -37,15 +37,18 @@ fun HtmlBlockTag.renderPlayers(players: Set<Player>) {
         players.forEach {
             div(classes = "row") {
                 div(classes = "col") {
-                    it.name
+                    +it.name
                 }
             }
         }
     }
+}
+
+fun HtmlBlockTag.renderJoinForm() {
     div(classes = "row") {
         div(classes = "col") {
             form(classes = "form") {
-                attributes[ATTR_ACTION] = JoinGameCommand().toString()
+                attributes[ATTR_ACTION] = JoinGameCommand(null).toString()
 
                 div(classes = "form-group") {
                     input(classes = "form-control", name = CommandField.PLAYER_NAME.name)
@@ -66,6 +69,7 @@ fun HtmlBlockTag.renderGame(game: Game) {
         }
         div(classes = "col-2") {
             renderPlayers(game.players)
+            renderJoinForm()
         }
     }
 }

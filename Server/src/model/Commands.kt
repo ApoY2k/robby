@@ -17,11 +17,9 @@ abstract class Command {
 
     constructor(label: CommandLabel) : this(label, emptyMap())
 
-    constructor(label: CommandLabel, rest: Map<CommandField, String>) {
+    constructor(label: CommandLabel, rest: Map<CommandField, String?>) {
         parameters = listOf(BasicNameValuePair(CommandField.LABEL.name, label.name))
-            .plus(rest
-                .filter { it.value.isNotBlank() }
-                .map { BasicNameValuePair(it.key.name, it.value) })
+            .plus(rest.map { BasicNameValuePair(it.key.name, it.value) })
     }
 
     companion object {
@@ -48,7 +46,7 @@ abstract class Command {
                     CommandLabel.RESET_BOARD -> ResetBoardCommand()
                     CommandLabel.REFRESH_VIEW -> RefreshViewCommand(query.first(CommandField.VIEW_NAME))
                 }
-            } catch (err: Exception) {
+            } catch (err: Throwable) {
                 throw UnknownCommandException(input, err)
             }
         }
@@ -58,12 +56,12 @@ abstract class Command {
         return parameters.filter { field.name == it.name }.map { it.value }
     }
 
-    fun getFirst(field: CommandField): String {
-        return get(field).firstOrNull() ?: throw IncompleteCommandException(this)
+    fun getFirst(field: CommandField): String? {
+        return get(field).firstOrNull()
     }
 
     override fun toString(): String {
-        return URLEncodedUtils.format(parameters, Charset.defaultCharset())
+        return URLEncodedUtils.format(parameters.filter { !it.value.isNullOrBlank() }, Charset.defaultCharset())
     }
 
     override fun equals(other: Any?): Boolean {
@@ -82,32 +80,32 @@ abstract class Command {
     }
 }
 
-fun List<NameValuePair>.first(field: CommandField, fallback: String = ""): String {
-    return this.firstOrNull { it.name == field.name }?.value ?: fallback
+fun List<NameValuePair>.first(field: CommandField): String? {
+    return this.firstOrNull { it.name == field.name }?.value
 }
 
-class JoinGameCommand(name: String = "") :
+class JoinGameCommand(name: String?) :
     Command(CommandLabel.JOIN_GAME, mapOf(CommandField.PLAYER_NAME to name)) {
     val name get() = getFirst(CommandField.PLAYER_NAME)
 }
 
-class LeaveGameCommand(name: String = "") :
+class LeaveGameCommand(name: String?) :
     Command(CommandLabel.LEAVE_GAME, mapOf(CommandField.PLAYER_NAME to name)) {
     val name get() = getFirst(CommandField.PLAYER_NAME)
 }
 
-class PlaceRobotCommand(fieldId: String = "", model: String = "") :
+class PlaceRobotCommand(fieldId: String?, model: String?) :
     Command(CommandLabel.PLACE_ROBOT, mapOf(CommandField.FIELD_ID to fieldId, CommandField.MODEL to model)) {
     val fieldId get() = getFirst(CommandField.FIELD_ID)
     val model get() = getFirst(CommandField.MODEL)
 }
 
-class SelectCardCommand(cardId: String = "") :
+class SelectCardCommand(cardId: String?) :
     Command(CommandLabel.SELECT_CARD, mapOf(CommandField.CARD_ID to cardId)) {
     val cardId get() = getFirst(CommandField.CARD_ID)
 }
 
-class RemoveCardCommand(cardId: String = "") :
+class RemoveCardCommand(cardId: String?) :
     Command(CommandLabel.JOIN_GAME, mapOf(CommandField.CARD_ID to cardId)) {
     val cardId get() = getFirst(CommandField.CARD_ID)
 }
@@ -118,7 +116,7 @@ class ConfirmCardsCommand :
 class ResetBoardCommand :
     Command(CommandLabel.RESET_BOARD)
 
-class RefreshViewCommand(name: String = "") :
+class RefreshViewCommand(name: String?) :
     Command(CommandLabel.REFRESH_VIEW, mapOf(CommandField.VIEW_NAME to name)) {
     val name get() = getFirst(CommandField.VIEW_NAME)
 }

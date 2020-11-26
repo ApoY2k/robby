@@ -7,7 +7,7 @@ import io.ktor.websocket.*
 import org.slf4j.LoggerFactory
 
 /**
- * Root game engine that handles changing the game state and messaging socket sessions to inform about updates
+ * Connecting engine between the game all socket sessions
  */
 class Engine(private val storage: Storage) {
     private val logger = LoggerFactory.getLogger(this.javaClass)
@@ -17,18 +17,19 @@ class Engine(private val storage: Storage) {
      * Perform a set of command on to mutate the game state, in order
      */
     suspend fun perform(commands: List<Command>) {
-        send(storage.game.perform(commands))
+        try {
+            send(storage.game.perform(commands))
+            logger.info(storage.game.players.toString())
+        } catch (err: Throwable) {
+            logger.error("Engine error: ${err.message}", err)
+        }
     }
 
     /**
      * Parse a command and perform it
      */
     suspend fun perform(str: String) {
-        try {
-            perform(listOf(Command.fromString(str)))
-        } catch (exc: Exception) {
-            logger.error("Engine error: ${exc.message}", exc)
-        }
+        perform(listOf(Command.fromString(str)))
     }
 
     /**
