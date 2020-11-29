@@ -6,6 +6,7 @@ import apoy2k.robby.model.Session
 import io.ktor.http.cio.websocket.*
 import io.ktor.websocket.*
 import org.slf4j.LoggerFactory
+import kotlin.math.log
 
 /**
  * Connecting engine between the game all socket sessions
@@ -25,27 +26,26 @@ class Engine(private val storage: Storage) {
         }
 
         try {
-            val resultCommands = commands.flatMap { storage.game.perform(it, session) }.toSet()
-            send(resultCommands)
+            commands
+                .flatMap {
+                    logger.debug("Performing [$it]")
+                    storage.game.perform(it, session)
+                }
+                // Convert to set to remove duplicate commands
+                .toSet()
+                .forEach { command ->
+                    sessions
+                        .filter { session ->
+                            command.recipients.isEmpty() || command.recipients.any { r -> r.session == session.key }
+                        }
+                        .forEach { entry ->
+                            val sockets = entry.value
+                            logger.debug("Sending [$command] to session [${entry.key}] (${sockets.count()} sockets)")
+                            sockets.forEach { it.send(Frame.Text(command.toString())) }
+                        }
+                }
         } catch (err: Throwable) {
             logger.error("Engine error: ${err.message}", err)
-        }
-    }
-
-    /**
-     * Send a set of commands to all sessions
-     */
-    private suspend fun send(commands: Set<Command>) {
-        logger.debug(commands.toString())
-        commands.forEach { command ->
-            logger.debug(command.toString())
-            sessions
-                .filter { s -> command.recipients.isEmpty() || command.recipients.any { r -> r.session == s.key } }
-                .forEach { sessionEntry ->
-                    val sockets = sessionEntry.value
-                    logger.debug("Sending [$command] to session [${sessionEntry.key}] (${sockets.count()} sockets)")
-                    sockets.forEach { it.send(Frame.Text(command.toString())) }
-                }
         }
     }
 }

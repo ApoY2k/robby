@@ -1,6 +1,6 @@
 package apoy2k.robby.model
 
-import apoy2k.robby.exceptions.UnknownRobotModelException
+import apoy2k.robby.exceptions.UnknownRobotModel
 
 enum class RobotModel {
     ZIPPY,
@@ -13,7 +13,7 @@ data class Robot(val model: RobotModel) {
     companion object {
         fun create(model: String): Robot {
             val robotModel = RobotModel.values().find { it.toString() == model }
-                ?: throw UnknownRobotModelException(model)
+                ?: throw UnknownRobotModel(model)
             return Robot(robotModel)
         }
     }

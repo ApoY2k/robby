@@ -1,5 +1,7 @@
 package apoy2k.robby.model
 
+import java.util.*
+
 enum class Movement {
     STRAIGHT,
     STRAIGHT_2,
@@ -13,4 +15,6 @@ enum class Movement {
     HOLD,
 }
 
-data class MovementCard(val direction: Movement, val priority: Int) {}
+data class MovementCard(val movement: Movement, val priority: Int) {
+    val id = UUID.randomUUID()
+}

@@ -2,7 +2,7 @@ package apoy2k.robby.engine
 
 import apoy2k.robby.CommandField
 import apoy2k.robby.CommandLabel
-import apoy2k.robby.exceptions.UnknownCommandException
+import apoy2k.robby.exceptions.UnknownCommand
 import apoy2k.robby.model.Command
 import apoy2k.robby.model.JoinGameCommand
 import org.junit.Test
@@ -24,14 +24,14 @@ class CommandsTest {
 
     @Test
     fun testToCommandWrongSyntaxParam() {
-        assertFailsWith(UnknownCommandException::class) {
+        assertFailsWith(UnknownCommand::class) {
             Command.fromString("${CommandField.LABEL}=${CommandLabel.JOIN_GAME}_player1")
         }
     }
 
     @Test
     fun testToCommandFailsUnknown() {
-        assertFailsWith(UnknownCommandException::class) {
+        assertFailsWith(UnknownCommand::class) {
             Command.fromString("test")
         }
     }

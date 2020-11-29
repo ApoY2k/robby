@@ -2,8 +2,7 @@ package apoy2k.robby.model
 
 import apoy2k.robby.CommandField
 import apoy2k.robby.CommandLabel
-import apoy2k.robby.exceptions.IncompleteCommandException
-import apoy2k.robby.exceptions.UnknownCommandException
+import apoy2k.robby.exceptions.UnknownCommand
 import org.apache.http.NameValuePair
 import org.apache.http.client.utils.URLEncodedUtils
 import org.apache.http.message.BasicNameValuePair
@@ -36,7 +35,7 @@ abstract class Command {
 
         /**
          * Convert a url encoded query string to a typed Command instance
-         * @throws UnknownCommandException if the string cannot be converted
+         * @throws UnknownCommand if the string cannot be converted
          */
         fun fromString(input: String): Command {
             try {
@@ -55,9 +54,10 @@ abstract class Command {
                     CommandLabel.CONFIRM_CARDS -> ConfirmCardsCommand()
                     CommandLabel.RESET_BOARD -> ResetBoardCommand()
                     CommandLabel.REFRESH_VIEW -> RefreshViewCommand(query.first(CommandField.VIEW_NAME))
+                    CommandLabel.DRAW_CARDS -> DrawCardsCommand()
                 }
             } catch (err: Throwable) {
-                throw UnknownCommandException(input, err)
+                throw UnknownCommand(input, err)
             }
         }
     }
@@ -121,13 +121,13 @@ class RemoveCardCommand(cardId: String?, recipients: Set<Player> = emptySet()) :
     val cardId get() = getFirst(CommandField.CARD_ID)
 }
 
-class ConfirmCardsCommand(recipients: Set<Player> = emptySet()) :
-    Command(CommandLabel.CONFIRM_CARDS, recipients)
+class ConfirmCardsCommand(recipients: Set<Player> = emptySet()) : Command(CommandLabel.CONFIRM_CARDS, recipients)
 
-class ResetBoardCommand(recipients: Set<Player> = emptySet()) :
-    Command(CommandLabel.RESET_BOARD, recipients)
+class ResetBoardCommand(recipients: Set<Player> = emptySet()) : Command(CommandLabel.RESET_BOARD, recipients)
 
 class RefreshViewCommand(name: String?, recipients: Set<Player> = emptySet()) :
     Command(CommandLabel.REFRESH_VIEW, mapOf(CommandField.VIEW_NAME to name), recipients) {
     val name get() = getFirst(CommandField.VIEW_NAME)
 }
+
+class DrawCardsCommand(recipients: Set<Player> = emptySet()) : Command(CommandLabel.DRAW_CARDS, recipients)

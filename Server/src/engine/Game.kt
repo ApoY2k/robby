@@ -1,12 +1,11 @@
 package apoy2k.robby.engine
 
 import apoy2k.robby.VIEW_BOARD
+import apoy2k.robby.VIEW_CARDS
 import apoy2k.robby.VIEW_GAME
-import apoy2k.robby.VIEW_JOIN_FORM
-import apoy2k.robby.VIEW_PLAYERS
-import apoy2k.robby.exceptions.IncompleteCommandException
+import apoy2k.robby.exceptions.IncompleteCommand
 import apoy2k.robby.exceptions.InvalidGameState
-import apoy2k.robby.exceptions.UnknownCommandException
+import apoy2k.robby.exceptions.UnknownCommand
 import apoy2k.robby.model.*
 import org.slf4j.LoggerFactory
 import java.util.*
@@ -38,7 +37,14 @@ class Game(val board: Board) {
      * Check if a specific session has joined this game ( = is associated with a player)
      */
     fun hasJoined(session: Session?): Boolean {
-        return session != null && players.any { it.session == session }
+        return playerFor(session) != null
+    }
+
+    /**
+     * Find the player associated with a session
+     */
+    fun playerFor(session: Session?): Player? {
+        return players.firstOrNull { it.session == session }
     }
 
     /**
@@ -61,8 +67,19 @@ class Game(val board: Board) {
 
         return when (command) {
             is LeaveGameCommand -> removePlayer(player)
-            is PlaceRobotCommand -> placeRobot(command.fieldId, command.model)
-            else -> throw UnknownCommandException(command)
+            is PlaceRobotCommand -> placeRobot(player, command.fieldId, command.model)
+            is DrawCardsCommand -> {
+                player.drawCards()
+                return setOf(RefreshViewCommand(VIEW_CARDS, setOf(player)))
+            }
+            is SelectCardCommand -> {
+                player.selectCard(command.cardId)
+                return setOf(RefreshViewCommand(VIEW_CARDS, setOf(player)))
+            }
+            else -> {
+                logger.warn("No cation mapped for [$command]")
+                return emptySet()
+            }
         }
     }
 
@@ -73,7 +90,7 @@ class Game(val board: Board) {
 
     private fun addPlayer(name: String?, session: Session): Set<Command> {
         if (name.isNullOrBlank()) {
-            throw IncompleteCommandException("Player name missing")
+            throw IncompleteCommand("Player name missing")
         }
 
         if (players.any { it.name == name }) {
@@ -85,17 +102,19 @@ class Game(val board: Board) {
         }
 
         val player = Player(name, session)
-        DEFAULT_DECK.forEach { player.cards.add(it.copy()) }
+        DEFAULT_DECK.forEach { player.drawPile.add(it.copy()) }
         players.add(player)
         return setOf(RefreshViewCommand(VIEW_GAME, setOf(player)))
     }
 
-    private fun placeRobot(fieldId: String?, model: String?): Set<Command> {
+    private fun placeRobot(player: Player, fieldId: String?, model: String?): Set<Command> {
         if (fieldId.isNullOrBlank() || model.isNullOrBlank()) {
-            throw IncompleteCommandException("Field or model missing")
+            throw IncompleteCommand("Field or model missing")
         }
 
-        board.place(UUID.fromString(fieldId), Robot.create(model))
+        val robot = Robot.create(model)
+        player.robot = robot
+        board.place(UUID.fromString(fieldId), robot)
         return setOf(RefreshViewCommand(VIEW_BOARD))
     }
 }

@@ -1,7 +1,6 @@
 package apoy2k.robby.routes
 
 import apoy2k.robby.engine.Engine
-import apoy2k.robby.exceptions.UnknownCommandException
 import apoy2k.robby.model.Command
 import apoy2k.robby.model.Session
 import io.ktor.http.cio.websocket.*
