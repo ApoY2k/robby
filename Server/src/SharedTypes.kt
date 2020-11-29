@@ -25,5 +25,7 @@ enum class CommandField {
     VIEW_NAME,
 }
 
+const val VIEW_GAME = "/views/game"
 const val VIEW_BOARD = "/views/board"
 const val VIEW_PLAYERS = "/views/players"
+const val VIEW_JOIN_FORM = "/views/join_form"

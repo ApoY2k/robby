@@ -2,6 +2,7 @@ package apoy2k.robby
 
 import apoy2k.robby.data.MemoryStorage
 import apoy2k.robby.engine.Engine
+import apoy2k.robby.model.Session
 import apoy2k.robby.routes.base
 import apoy2k.robby.routes.game
 import apoy2k.robby.routes.socket
@@ -14,8 +15,10 @@ import io.ktor.request.*
 import io.ktor.response.*
 import io.ktor.routing.*
 import io.ktor.server.netty.*
+import io.ktor.sessions.*
 import io.ktor.websocket.*
 import org.slf4j.event.Level
+import java.util.concurrent.ThreadLocalRandom
 
 fun main(args: Array<String>): Unit = EngineMain.main(args)
 
@@ -33,6 +36,17 @@ fun Application.module(testing: Boolean = false) {
     }
 
     install(WebSockets) {
+    }
+
+    install(Sessions) {
+        cookie<Session>("SESSION", SessionStorageMemory())
+    }
+
+    intercept(ApplicationCallPipeline.Call) {
+        val session = call.sessions.get<Session>();
+        if (session == null) {
+            call.sessions.set(Session(ThreadLocalRandom.current().nextLong().toString()))
+        }
     }
 
     install(StatusPages) {

@@ -13,13 +13,23 @@ import java.nio.charset.Charset
  * Base class for all commands, handles serialization and comparing between command instances
  */
 abstract class Command {
+    /**
+     * Player that issued the command (null if server command)
+     */
+    var sender: Player? = null
+
+    /**
+     * Players that should receive the command (empty: broadcast to all players)
+     */
+    val recipients = emptySet<Player>()
+
     private var parameters: List<NameValuePair> = ArrayList()
 
-    constructor(label: CommandLabel) : this(label, emptyMap())
+    constructor(label: CommandLabel, recipients: Set<Player>) : this(label, emptyMap(), recipients)
 
-    constructor(label: CommandLabel, rest: Map<CommandField, String?>) {
+    constructor(label: CommandLabel, rest: Map<CommandField, String?>, recipients: Set<Player>) {
         parameters = listOf(BasicNameValuePair(CommandField.LABEL.name, label.name))
-            .plus(rest.map { BasicNameValuePair(it.key.name, it.value) })
+            .plus(rest.filter { !it.value.isNullOrBlank() }.map { BasicNameValuePair(it.key.name, it.value) })
     }
 
     companion object {
@@ -35,7 +45,7 @@ abstract class Command {
 
                 return when (CommandLabel.valueOf(labelField)) {
                     CommandLabel.JOIN_GAME -> JoinGameCommand(query.first(CommandField.PLAYER_NAME))
-                    CommandLabel.LEAVE_GAME -> LeaveGameCommand(query.first(CommandField.PLAYER_NAME))
+                    CommandLabel.LEAVE_GAME -> LeaveGameCommand()
                     CommandLabel.PLACE_ROBOT -> PlaceRobotCommand(
                         query.first(CommandField.FIELD_ID),
                         query.first(CommandField.MODEL)
@@ -84,39 +94,40 @@ fun List<NameValuePair>.first(field: CommandField): String? {
     return this.firstOrNull { it.name == field.name }?.value
 }
 
-class JoinGameCommand(name: String?) :
-    Command(CommandLabel.JOIN_GAME, mapOf(CommandField.PLAYER_NAME to name)) {
+class JoinGameCommand(name: String?, recipients: Set<Player> = emptySet()) :
+    Command(CommandLabel.JOIN_GAME, mapOf(CommandField.PLAYER_NAME to name), recipients) {
     val name get() = getFirst(CommandField.PLAYER_NAME)
 }
 
-class LeaveGameCommand(name: String?) :
-    Command(CommandLabel.LEAVE_GAME, mapOf(CommandField.PLAYER_NAME to name)) {
-    val name get() = getFirst(CommandField.PLAYER_NAME)
-}
+class LeaveGameCommand(recipients: Set<Player> = emptySet()) : Command(CommandLabel.LEAVE_GAME, recipients)
 
-class PlaceRobotCommand(fieldId: String?, model: String?) :
-    Command(CommandLabel.PLACE_ROBOT, mapOf(CommandField.FIELD_ID to fieldId, CommandField.MODEL to model)) {
+class PlaceRobotCommand(fieldId: String?, model: String?, recipients: Set<Player> = emptySet()) :
+    Command(
+        CommandLabel.PLACE_ROBOT,
+        mapOf(CommandField.FIELD_ID to fieldId, CommandField.MODEL to model),
+        recipients
+    ) {
     val fieldId get() = getFirst(CommandField.FIELD_ID)
     val model get() = getFirst(CommandField.MODEL)
 }
 
-class SelectCardCommand(cardId: String?) :
-    Command(CommandLabel.SELECT_CARD, mapOf(CommandField.CARD_ID to cardId)) {
+class SelectCardCommand(cardId: String?, recipients: Set<Player> = emptySet()) :
+    Command(CommandLabel.SELECT_CARD, mapOf(CommandField.CARD_ID to cardId), recipients) {
     val cardId get() = getFirst(CommandField.CARD_ID)
 }
 
-class RemoveCardCommand(cardId: String?) :
-    Command(CommandLabel.JOIN_GAME, mapOf(CommandField.CARD_ID to cardId)) {
+class RemoveCardCommand(cardId: String?, recipients: Set<Player> = emptySet()) :
+    Command(CommandLabel.JOIN_GAME, mapOf(CommandField.CARD_ID to cardId), recipients) {
     val cardId get() = getFirst(CommandField.CARD_ID)
 }
 
-class ConfirmCardsCommand :
-    Command(CommandLabel.CONFIRM_CARDS)
+class ConfirmCardsCommand(recipients: Set<Player> = emptySet()) :
+    Command(CommandLabel.CONFIRM_CARDS, recipients)
 
-class ResetBoardCommand :
-    Command(CommandLabel.RESET_BOARD)
+class ResetBoardCommand(recipients: Set<Player> = emptySet()) :
+    Command(CommandLabel.RESET_BOARD, recipients)
 
-class RefreshViewCommand(name: String?) :
-    Command(CommandLabel.REFRESH_VIEW, mapOf(CommandField.VIEW_NAME to name)) {
+class RefreshViewCommand(name: String?, recipients: Set<Player> = emptySet()) :
+    Command(CommandLabel.REFRESH_VIEW, mapOf(CommandField.VIEW_NAME to name), recipients) {
     val name get() = getFirst(CommandField.VIEW_NAME)
 }

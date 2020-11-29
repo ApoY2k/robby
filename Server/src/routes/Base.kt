@@ -1,11 +1,13 @@
 package apoy2k.robby.routes
 
 import apoy2k.robby.data.Storage
+import apoy2k.robby.model.Session
 import apoy2k.robby.templates.renderGame
 import io.ktor.application.*
 import io.ktor.html.*
 import io.ktor.http.content.*
 import io.ktor.routing.*
+import io.ktor.sessions.*
 import kotlinx.html.*
 
 fun Route.base(storage: Storage) {
@@ -32,7 +34,7 @@ fun Route.base(storage: Storage) {
                     }
                 }
                 div(classes = "container") {
-                    renderGame(storage.game)
+                    renderGame(storage.game, call.sessions.get<Session>())
                 }
                 script(src = "/static/main.js") { }
             }
