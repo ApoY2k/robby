@@ -37,6 +37,10 @@ fun HtmlBlockTag.renderPlayers(game: Game, session: Session?) {
 
             div(classes = "row") {
                 div(classes = "col") {
+                    if (it.cardsConfirmed) {
+                        attributes["class"] += " text-success"
+                    }
+
                     if (isSessionPlayer) {
                         strong {
                             +it.name
@@ -96,7 +100,9 @@ fun HtmlBlockTag.renderCards(game: Game, session: Session?) {
 
             div(classes = "col") {
                 div(classes = "card") {
-                    attributes[ATTR_ACTION] = SelectCardCommand(card.id.toString()).toString()
+                    if (!player.cardsConfirmed) {
+                        attributes[ATTR_ACTION] = SelectCardCommand(card.id.toString()).toString()
+                    }
 
                     div(classes = "card-body") {
                         div(classes = "card-text") {
@@ -110,6 +116,22 @@ fun HtmlBlockTag.renderCards(game: Game, session: Session?) {
                                 }
                             }
                         }
+                    }
+                }
+            }
+        }
+
+        if (player.selectedCards.count() == 3) {
+            div(classes = "col") {
+                button(classes = "btn") {
+                    attributes[ATTR_ACTION] = ConfirmCardsCommand().toString()
+
+                    if (player.cardsConfirmed) {
+                        attributes["class"] += " btn-danger"
+                        +"Revoke confirm"
+                    } else {
+                        attributes["class"] += " btn-primary"
+                        +"Confirm cards"
                     }
                 }
             }

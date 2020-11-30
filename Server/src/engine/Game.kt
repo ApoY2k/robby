@@ -3,6 +3,7 @@ package apoy2k.robby.engine
 import apoy2k.robby.VIEW_BOARD
 import apoy2k.robby.VIEW_CARDS
 import apoy2k.robby.VIEW_GAME
+import apoy2k.robby.VIEW_PLAYERS
 import apoy2k.robby.exceptions.IncompleteCommand
 import apoy2k.robby.exceptions.InvalidGameState
 import apoy2k.robby.exceptions.UnknownCommand
@@ -65,7 +66,7 @@ class Game(val board: Board) {
 
         command.sender = player
 
-        return when (command) {
+        var result = when (command) {
             is LeaveGameCommand -> removePlayer(player)
             is PlaceRobotCommand -> placeRobot(player, command.fieldId, command.model)
             is DrawCardsCommand -> {
@@ -76,11 +77,24 @@ class Game(val board: Board) {
                 player.selectCard(command.cardId)
                 return setOf(RefreshViewCommand(VIEW_CARDS, setOf(player)))
             }
+            is ConfirmCardsCommand -> {
+                player.confirmCards()
+                return setOf(
+                    RefreshViewCommand(VIEW_CARDS, setOf(player)),
+                    RefreshViewCommand(VIEW_PLAYERS)
+                )
+            }
             else -> {
-                logger.warn("No cation mapped for [$command]")
+                logger.warn("No action mapped for [$command]")
                 return emptySet()
             }
         }
+
+        if (players.all { it.cardsConfirmed }) {
+            // TODO : Trigger execution of commands
+        }
+
+        return result
     }
 
     private fun removePlayer(player: Player): Set<Command> {

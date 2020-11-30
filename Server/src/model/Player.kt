@@ -1,6 +1,5 @@
 package apoy2k.robby.model
 
-import apoy2k.robby.VIEW_CARDS
 import apoy2k.robby.exceptions.IncompleteCommand
 import apoy2k.robby.exceptions.InvalidGameState
 import java.util.*
@@ -11,6 +10,7 @@ data class Player(val name: String, val session: Session) {
     val discardPile = mutableListOf<MovementCard>()
     val selectedCards = mutableListOf<MovementCard>()
     var robot: Robot? = null
+    var cardsConfirmed = false
 
     fun drawCards() {
         drawPile.removeIf {
@@ -34,7 +34,17 @@ data class Player(val name: String, val session: Session) {
         if (selectedCards.contains(card)) {
             selectedCards.remove(card)
         } else {
-            selectedCards.add(card)
+            if (selectedCards.count() < 3) {
+                selectedCards.add(card)
+            }
         }
+    }
+
+    fun confirmCards() {
+        if (selectedCards.count() < 3) {
+            throw InvalidGameState("Must choose three cards before confirming")
+        }
+
+        cardsConfirmed = !cardsConfirmed
     }
 }
