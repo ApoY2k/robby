@@ -13,13 +13,17 @@ import kotlin.math.log
  */
 class Engine(private val storage: Storage) {
     private val logger = LoggerFactory.getLogger(this.javaClass)
+
+    /**
+     * Map HTTP Sessions to WebSocketSessions. Each HTTP Session can have multiple WebSocketSessions associated with it
+     */
     val sessions = HashMap<Session, MutableSet<WebSocketServerSession>>()
 
     /**
      * Perform a set of command on to mutate the game state, in order, executed in the context
      * of a given session
      */
-    suspend fun perform(commands: List<Command>, session: Session?) {
+    suspend fun perform(commands: Iterable<Command>, session: Session?) {
         if (session == null) {
             logger.error("No session associated with command list")
             return
@@ -47,5 +51,19 @@ class Engine(private val storage: Storage) {
         } catch (err: Throwable) {
             logger.error("Engine error: ${err.message}", err)
         }
+    }
+
+    /**
+     * Send a set of commands to all WebSocketSessiosnt hat match a set of recipients
+     */
+    suspend fun sendTo(recipients: Iterable<Session>, commands: Iterable<Command>) {
+        sessions.filter { recipients.contains(it.key) }
+            .forEach { entry ->
+                val sockets = entry.value
+                commands.forEach { command ->
+                    logger.debug("Sending [$command] to session [${entry.key}] (${sockets.count()} sockets)")
+                    entry.value.forEach { it.send(Frame.Text(command.toString())) }
+                }
+            }
     }
 }

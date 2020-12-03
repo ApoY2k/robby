@@ -1,15 +1,12 @@
 package apoy2k.robby.engine
 
-import apoy2k.robby.VIEW_BOARD
 import apoy2k.robby.VIEW_CARDS
 import apoy2k.robby.VIEW_GAME
 import apoy2k.robby.VIEW_PLAYERS
 import apoy2k.robby.exceptions.IncompleteCommand
 import apoy2k.robby.exceptions.InvalidGameState
-import apoy2k.robby.exceptions.UnknownCommand
 import apoy2k.robby.model.*
 import org.slf4j.LoggerFactory
-import java.util.*
 
 /**
  * Game engine that holds a single games' state and mutates it via commands
@@ -60,15 +57,14 @@ class Game(val board: Board) {
 
         val player = players.firstOrNull { it.session == session }
         if (player == null) {
-            logger.warn("No player with session $session found")
+            logger.warn("No player with session [$session] found")
             return emptySet()
         }
 
         command.sender = player
 
-        var result = when (command) {
+        val result = when (command) {
             is LeaveGameCommand -> removePlayer(player)
-            is PlaceRobotCommand -> placeRobot(player, command.fieldId, command.model)
             is DrawCardsCommand -> {
                 player.drawCards()
                 return setOf(RefreshViewCommand(VIEW_CARDS, setOf(player)))
@@ -91,7 +87,7 @@ class Game(val board: Board) {
         }
 
         if (players.all { it.cardsConfirmed }) {
-            // TODO : Trigger execution of commands
+            // TODO : Trigger execution of confirmed movement cards of players
         }
 
         return result
@@ -99,6 +95,11 @@ class Game(val board: Board) {
 
     private fun removePlayer(player: Player): Set<Command> {
         players.remove(player)
+
+        board.cells.flatten()
+            .first { it.robot == player.robot }
+            .let { it.robot = null }
+
         return setOf(RefreshViewCommand(VIEW_GAME))
     }
 
@@ -108,27 +109,27 @@ class Game(val board: Board) {
         }
 
         if (players.any { it.name == name }) {
-            throw InvalidGameState("Name $name is alread taken")
+            throw InvalidGameState("Name [$name] is alread taken")
         }
 
         if (players.any { it.session == session }) {
-            throw InvalidGameState("Session $session already joined")
+            throw InvalidGameState("Session [$session] already joined")
         }
 
         val player = Player(name, session)
+
         DEFAULT_DECK.forEach { player.drawPile.add(it.copy()) }
-        players.add(player)
-        return setOf(RefreshViewCommand(VIEW_GAME, setOf(player)))
-    }
+        player.shuffle()
 
-    private fun placeRobot(player: Player, fieldId: String?, model: String?): Set<Command> {
-        if (fieldId.isNullOrBlank() || model.isNullOrBlank()) {
-            throw IncompleteCommand("Field or model missing")
-        }
-
-        val robot = Robot.create(model)
+        val robot = Robot(RobotModel.ZIPPY)
         player.robot = robot
-        board.place(UUID.fromString(fieldId), robot)
-        return setOf(RefreshViewCommand(VIEW_BOARD))
+
+        players.add(player)
+
+        board.cells.flatten()
+            .first { it.robot == null }
+            .let { it.robot = robot }
+
+        return setOf(RefreshViewCommand(VIEW_GAME))
     }
 }

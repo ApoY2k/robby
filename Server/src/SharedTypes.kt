@@ -8,10 +8,8 @@ const val ATTR_BIND = "data-bind"
 enum class CommandLabel {
     JOIN_GAME,
     LEAVE_GAME,
-    PLACE_ROBOT,
     DRAW_CARDS,
     SELECT_CARD,
-    REMOVE_CARD,
     CONFIRM_CARDS,
     RESET_BOARD,
     REFRESH_VIEW,
@@ -20,9 +18,7 @@ enum class CommandLabel {
 enum class CommandField {
     LABEL,
     PLAYER_NAME,
-    FIELD_ID,
     CARD_ID,
-    MODEL,
     VIEW_NAME,
 }
 

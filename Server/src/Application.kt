@@ -56,7 +56,7 @@ fun Application.module(testing: Boolean = false) {
         }
 
         status(HttpStatusCode.NotFound) {
-            call.respond(HttpStatusCode.NotFound, "Route to ${call.request.uri} not found")
+            call.respond(HttpStatusCode.NotFound, "Route to [${call.request.uri}] not found")
         }
     }
 

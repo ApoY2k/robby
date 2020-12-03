@@ -1,6 +1,7 @@
 package apoy2k.robby.model
 
 import apoy2k.robby.exceptions.UnknownRobotModel
+import java.util.*
 
 enum class RobotModel {
     ZIPPY,
@@ -9,12 +10,13 @@ enum class RobotModel {
     HUZZA,
 }
 
-data class Robot(val model: RobotModel) {
-    companion object {
-        fun create(model: String): Robot {
-            val robotModel = RobotModel.values().find { it.toString() == model }
-                ?: throw UnknownRobotModel(model)
-            return Robot(robotModel)
-        }
-    }
+enum class Orientation {
+    UP,
+    RIGHT,
+    DOWN,
+    LEFT
+}
+
+data class Robot(val model: RobotModel, val id: UUID = UUID.randomUUID()) {
+    var orientation = Orientation.DOWN
 }

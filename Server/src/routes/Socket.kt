@@ -36,7 +36,7 @@ fun Route.socket(engine: Engine) {
                         val data = it.readText()
                         try {
                             val command = Command.fromString(data)
-                            engine.perform(listOf(command), session)
+                            engine.perform(setOf(command), session)
                         } catch (err: Throwable) {
                             logger.error(err.message, err)
                         }

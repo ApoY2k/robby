@@ -25,15 +25,11 @@ fun Route.base(storage: Storage) {
                 div(classes = "container") {
                     div(classes = "row") {
                         div(classes = "col") {
-                            p {
-                                a(href = "/reset") {
-                                    +"Reset"
-                                }
+                            h1 {
+                                +"robby"
                             }
                         }
                     }
-                }
-                div(classes = "container") {
                     renderGame(storage.game, call.sessions.get<Session>())
                 }
                 script(src = "/static/main.js") { }

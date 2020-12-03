@@ -7,7 +7,7 @@ enum class FieldType {
     BLOCKED,
 }
 
-data class Field(var type: FieldType = FieldType.BLANK) {
-    val id: UUID = UUID.randomUUID()
+data class Field(var type: FieldType = FieldType.BLANK,
+                 val id: UUID = UUID.randomUUID()) {
     var robot: Robot? = null
 }
