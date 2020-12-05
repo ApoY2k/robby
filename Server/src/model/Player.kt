@@ -5,25 +5,17 @@ import apoy2k.robby.exceptions.InvalidGameState
 import java.util.*
 
 data class Player(val name: String, val session: Session, val id: UUID = UUID.randomUUID()) {
-    val drawPile = mutableListOf<MovementCard>()
-    val drawnCards = mutableListOf<MovementCard>()
-    val discardPile = mutableListOf<MovementCard>()
-    val selectedCards = mutableListOf<MovementCard>()
     var robot: Robot? = null
-    var cardsConfirmed = false
+
+    private val selectedCards = mutableListOf<MovementCard>()
+    private var drawnCards = emptyList<MovementCard>()
+    private var cardsConfirmed = false
 
     /**
      * Draw a new set of cards
      */
-    fun drawCards() {
-        drawPile.removeIf {
-            if (drawnCards.count() < 5) {
-                drawnCards.add(it)
-                true
-            } else {
-                false
-            }
-        }
+    fun takeCards(cards: List<MovementCard>) {
+        drawnCards = cards.onEach { it.player = this }
     }
 
     /**
@@ -57,10 +49,19 @@ data class Player(val name: String, val session: Session, val id: UUID = UUID.ra
         cardsConfirmed = !cardsConfirmed
     }
 
-    /**
-     * Shuffle this players draw pile
-     */
-    fun shuffle() {
-        drawPile.shuffle()
+    fun getSelectedCards(): List<MovementCard> {
+        return selectedCards
+    }
+
+    fun hasCardsConfirmed(): Boolean {
+        return cardsConfirmed
+    }
+
+    fun hasDrawnCards(): Boolean {
+        return drawnCards.isEmpty()
+    }
+
+    fun getDrawnCards(): List<MovementCard> {
+        return drawnCards
     }
 }

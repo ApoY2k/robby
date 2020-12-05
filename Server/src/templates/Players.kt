@@ -12,12 +12,12 @@ fun HtmlBlockTag.renderPlayers(game: Game, session: Session?) {
     div {
         attributes[ATTR_BIND] = VIEW_PLAYERS
 
-        game.players.forEach {
+        game.getPlayers().forEach {
             val isSessionPlayer = it.session == session
 
             div(classes = "row") {
                 div(classes = "col") {
-                    if (it.cardsConfirmed) {
+                    if (it.hasCardsConfirmed()) {
                         attributes["class"] += " text-success"
                     }
 

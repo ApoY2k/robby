@@ -17,4 +17,5 @@ enum class Movement {
 
 data class MovementCard(val movement: Movement, val priority: Int) {
     val id = UUID.randomUUID()
+    var player: Player? = null
 }

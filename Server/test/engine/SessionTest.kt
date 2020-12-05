@@ -11,19 +11,19 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 
 class SessionTest {
-    private var game = Game.create()
+    private var game = Game()
     private val s1 = Session("s1")
     private val s2 = Session("s2")
 
     @Before
     fun setup() {
-        game = Game.create()
+        game = Game()
     }
 
     @Test
     fun testPlayerAdd() {
         game.perform(JoinGameCommand("player1"), s1)
-        assertEquals(1, game.players.count())
+        assertEquals(1, game.getPlayers().count())
     }
 
     @Test
@@ -37,7 +37,7 @@ class SessionTest {
     fun testPlayerAddMulti() {
         game.perform(JoinGameCommand("player1"), s1)
         game.perform(JoinGameCommand("player2"), s2)
-        assertEquals(2, game.players.count())
+        assertEquals(2, game.getPlayers().count())
     }
 
     @Test
@@ -60,7 +60,7 @@ class SessionTest {
     fun testPlayerRemove() {
         game.perform(JoinGameCommand("player1"), s1)
         game.perform(LeaveGameCommand(), s1)
-        assertEquals(0, game.players.count())
+        assertEquals(0, game.getPlayers().count())
     }
 
     @Test
@@ -68,6 +68,6 @@ class SessionTest {
         game.perform(JoinGameCommand("player1"), s1)
         game.perform(JoinGameCommand("player2"), s2)
         game.perform(LeaveGameCommand(), s1)
-        assertEquals(1, game.players.count())
+        assertEquals(1, game.getPlayers().count())
     }
 }

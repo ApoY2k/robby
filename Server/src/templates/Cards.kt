@@ -20,7 +20,7 @@ fun HtmlBlockTag.renderCards(game: Game, session: Session?) {
     div(classes = "row mt-3") {
         attributes[ATTR_BIND] = VIEW_CARDS
 
-        if (player.drawnCards.isEmpty()) {
+        if (player.hasDrawnCards()) {
             div(classes = "col") {
                 button(classes = "btn btn-primary") {
                     attributes[ATTR_ACTION] = DrawCardsCommand().toString()
@@ -29,12 +29,12 @@ fun HtmlBlockTag.renderCards(game: Game, session: Session?) {
             }
         }
 
-        player.drawnCards.forEach { card ->
-            val selectedOrder = player.selectedCards.indexOf(card) + 1
+        player.getDrawnCards().forEach { card ->
+            val selectedOrder = player.getDrawnCards().indexOf(card) + 1
 
             div(classes = "col") {
                 div(classes = "card") {
-                    if (!player.cardsConfirmed) {
+                    if (!player.hasCardsConfirmed()) {
                         attributes[ATTR_ACTION] = SelectCardCommand(card.id.toString()).toString()
                     }
 
@@ -55,12 +55,12 @@ fun HtmlBlockTag.renderCards(game: Game, session: Session?) {
             }
         }
 
-        if (player.selectedCards.count() == 3) {
+        if (player.getSelectedCards().count() == 3) {
             div(classes = "col") {
                 button(classes = "btn") {
                     attributes[ATTR_ACTION] = ConfirmCardsCommand().toString()
 
-                    if (player.cardsConfirmed) {
+                    if (player.hasCardsConfirmed()) {
                         attributes["class"] += " btn-danger"
                         +"Revoke confirm"
                     } else {

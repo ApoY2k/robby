@@ -11,25 +11,39 @@ import org.slf4j.LoggerFactory
 /**
  * Game engine that holds a single games' state and mutates it via commands
  */
-class Game(val board: Board) {
+class Game {
     private val logger = LoggerFactory.getLogger(this.javaClass)
+    private val players = mutableSetOf<Player>()
 
-    companion object Factory {
-        fun create(): Game {
-            return Game(
-                Board(
-                    listOf(
-                        listOf(Field(), Field(), Field(), Field()),
-                        listOf(Field(), Field(), Field(), Field()),
-                        listOf(Field(), Field(), Field(), Field()),
-                        listOf(Field(), Field(), Field(), Field()),
-                    )
-                )
-            )
-        }
+    val board = Board(
+        listOf(
+            listOf(Field(), Field(), Field(), Field()),
+            listOf(Field(), Field(), Field(), Field()),
+            listOf(Field(), Field(), Field(), Field()),
+            listOf(Field(), Field(), Field(), Field()),
+        )
+    )
+
+    val deck = mutableListOf(
+        MovementCard(Movement.STRAIGHT, 1),
+        MovementCard(Movement.STRAIGHT_2, 1),
+        MovementCard(Movement.STRAIGHT_3, 1),
+        MovementCard(Movement.BACKWARDS, 1),
+        MovementCard(Movement.BACKWARDS_2, 1),
+        MovementCard(Movement.BACKWARDS_3, 1),
+        MovementCard(Movement.HOLD, 1),
+        MovementCard(Movement.TURN_180, 1),
+        MovementCard(Movement.TURN_LEFT, 1),
+        MovementCard(Movement.TURN_RIGHT, 1),
+    )
+
+    // Sequence of all recorded moves for replayability
+    val movements = mutableListOf<MovementCard>()
+    val movementsToExecute = mutableListOf<MovementCard>()
+
+    init {
+        deck.shuffle()
     }
-
-    val players = mutableSetOf<Player>()
 
     /**
      * Check if a specific session has joined this game ( = is associated with a player)
@@ -63,12 +77,9 @@ class Game(val board: Board) {
 
         command.sender = player
 
-        val result = when (command) {
+        var result = when (command) {
             is LeaveGameCommand -> removePlayer(player)
-            is DrawCardsCommand -> {
-                player.drawCards()
-                return setOf(RefreshViewCommand(VIEW_CARDS, setOf(player)))
-            }
+            is DrawCardsCommand -> drawCards(player)
             is SelectCardCommand -> {
                 player.selectCard(command.cardId)
                 return setOf(RefreshViewCommand(VIEW_CARDS, setOf(player)))
@@ -86,11 +97,25 @@ class Game(val board: Board) {
             }
         }
 
-        if (players.all { it.cardsConfirmed }) {
-            // TODO : Trigger execution of confirmed movement cards of players
+        if (players.all { it.hasCardsConfirmed() }) {
+            movementsToExecute.addAll(players
+                .flatMap { it.getSelectedCards() }
+                .filter { it.player?.robot != null }
+                .sortedBy { it.priority })
         }
 
         return result
+    }
+
+    fun getPlayers(): Set<Player> {
+        return players
+    }
+
+    private fun drawCards(player: Player): Set<Command> {
+        val drawnCards = deck.take(5)
+        deck.removeAll(drawnCards)
+        player.takeCards(drawnCards)
+        return setOf(RefreshViewCommand(VIEW_CARDS, setOf(player)))
     }
 
     private fun removePlayer(player: Player): Set<Command> {
@@ -117,9 +142,6 @@ class Game(val board: Board) {
         }
 
         val player = Player(name, session)
-
-        DEFAULT_DECK.forEach { player.drawPile.add(it.copy()) }
-        player.shuffle()
 
         val robot = Robot(RobotModel.ZIPPY)
         player.robot = robot
