@@ -1,10 +1,10 @@
 package apoy2k.robby.engine
 
-import apoy2k.robby.CommandField
-import apoy2k.robby.CommandLabel
-import apoy2k.robby.exceptions.UnknownCommand
-import apoy2k.robby.model.Command
-import apoy2k.robby.model.JoinGameCommand
+import apoy2k.robby.exceptions.UnknownAction
+import apoy2k.robby.model.Action
+import apoy2k.robby.model.ActionField
+import apoy2k.robby.model.ActionLabel
+import apoy2k.robby.model.JoinGameAction
 import org.junit.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
@@ -12,27 +12,27 @@ import kotlin.test.assertFailsWith
 class CommandsTest {
     @Test
     fun testToCommandJoinGame() {
-        assertEquals(JoinGameCommand("player1"), Command.fromString(
-            "${CommandField.LABEL}=${CommandLabel.JOIN_GAME}&${CommandField.PLAYER_NAME}=player1"))
+        assertEquals(JoinGameAction("player1"), Action.fromString(
+            "${ActionField.LABEL}=${ActionLabel.JOIN_GAME}&${ActionField.PLAYER_NAME}=player1"))
     }
 
     @Test
     fun testToCommandMissingParam() {
-        assertEquals(JoinGameCommand(""), Command.fromString(
-            "${CommandField.LABEL}=${CommandLabel.JOIN_GAME}"))
+        assertEquals(JoinGameAction(""), Action.fromString(
+            "${ActionField.LABEL}=${ActionLabel.JOIN_GAME}"))
     }
 
     @Test
     fun testToCommandWrongSyntaxParam() {
-        assertFailsWith(UnknownCommand::class) {
-            Command.fromString("${CommandField.LABEL}=${CommandLabel.JOIN_GAME}_player1")
+        assertFailsWith(UnknownAction::class) {
+            Action.fromString("${ActionField.LABEL}=${ActionLabel.JOIN_GAME}_player1")
         }
     }
 
     @Test
     fun testToCommandFailsUnknown() {
-        assertFailsWith(UnknownCommand::class) {
-            Command.fromString("test")
+        assertFailsWith(UnknownAction::class) {
+            Action.fromString("test")
         }
     }
 }

@@ -1,11 +1,7 @@
 package apoy2k.robby.templates
 
 import apoy2k.robby.ATTR_BIND
-import apoy2k.robby.VIEW_BOARD
-import apoy2k.robby.engine.Game
-import apoy2k.robby.model.Field
-import apoy2k.robby.model.Orientation
-import apoy2k.robby.model.Session
+import apoy2k.robby.model.*
 import kotlinx.html.*
 
 fun HtmlBlockTag.renderOrientation(orientation: Orientation) {
@@ -41,10 +37,10 @@ fun HtmlBlockTag.renderField(game: Game, field: Field, session: Session?) {
 
 fun HtmlBlockTag.renderBoard(game: Game, session: Session?) {
     div(classes = "row") {
-        attributes[ATTR_BIND] = VIEW_BOARD
+        attributes[ATTR_BIND] = View.BOARD.toString()
 
         div(classes = "col") {
-            game.board.cells.forEach {
+            game.board.fields.forEach {
                 div(classes = "row") {
                     it.forEach { renderField(game, it, session) }
                 }

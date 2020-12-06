@@ -2,16 +2,17 @@ package apoy2k.robby.model
 
 import apoy2k.robby.exceptions.InvalidGameState
 import org.slf4j.LoggerFactory
-import java.lang.IndexOutOfBoundsException
-import java.util.*
 
-class Board(internal val cells: List<List<Field>>) {
+data class Board(val fields: List<List<Field>>) {
+    private val logger = LoggerFactory.getLogger(this.javaClass)
 
     /**
      * Execute a single movement card with the associated robot
      */
     fun execute(card: MovementCard) {
         val robot = card.player?.robot ?: throw InvalidGameState("Movement $card has no player or robot")
+
+        logger.debug("Executing [$card] on [$robot]")
 
         val direction = robot.getOrientationFrom(card.movement)
         val steps = when (card.movement) {
@@ -28,7 +29,7 @@ class Board(internal val cells: List<List<Field>>) {
      * Move a robot an amount of steps in a defined direction
      */
     private fun moveRobot(robot: Robot, direction: Orientation, steps: Int) {
-        val sourceField = cells.flatten().firstOrNull { it.robot == robot }
+        val sourceField = fields.flatten().firstOrNull { it.robot == robot }
             ?: throw InvalidGameState("Robot [$robot] could not be found on board cells")
 
         val targetField = findField(sourceField, direction, steps)
@@ -41,8 +42,8 @@ class Board(internal val cells: List<List<Field>>) {
      * Find a field oriented an amount of steps away from a start field in a given direction
      */
     private fun findField(field: Field, direction: Orientation, steps: Int): Field {
-        val row = cells.indexOfFirst { it.contains(field) }
-        val col = cells[row].indexOf(field)
+        val row = fields.indexOfFirst { it.contains(field) }
+        val col = fields[row].indexOf(field)
 
         var newRow = when (direction) {
             Orientation.UP -> row - steps
@@ -57,16 +58,9 @@ class Board(internal val cells: List<List<Field>>) {
         }
 
         // Make sure robots can't move off grid by constraining them into the grid indexes
-        newRow = newRow.coerceIn(0..cells.lastIndex)
-        newCol = newCol.coerceIn(0..cells[newRow].lastIndex)
+        newRow = newRow.coerceIn(0..fields.lastIndex)
+        newCol = newCol.coerceIn(0..fields[newRow].lastIndex)
 
-        return cells[newRow][newCol]
-    }
-
-    /**
-     * Places a robot on a field
-     */
-    private fun place(fieldId: UUID, robot: Robot) {
-        cells.forEach { it.find { it.id == fieldId }?.robot = robot }
+        return fields[newRow][newCol]
     }
 }

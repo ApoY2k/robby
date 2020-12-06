@@ -1,18 +1,19 @@
 package apoy2k.robby.routes
 
-import apoy2k.robby.engine.Engine
-import apoy2k.robby.model.Command
+import apoy2k.robby.engine.WebSocketHandler
+import apoy2k.robby.model.Action
 import apoy2k.robby.model.Session
 import io.ktor.http.cio.websocket.*
 import io.ktor.routing.*
 import io.ktor.sessions.*
 import io.ktor.websocket.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.channels.SendChannel
 import kotlinx.coroutines.channels.consumeEach
 import org.slf4j.LoggerFactory
 
-@OptIn(ExperimentalCoroutinesApi::class)
-fun Route.socket(engine: Engine) {
+@ExperimentalCoroutinesApi
+fun Route.socket(webSocketHandler: WebSocketHandler, actions: SendChannel<Action>) {
     val logger = LoggerFactory.getLogger("routes/socket")
 
     webSocket("/ws") {
@@ -23,20 +24,21 @@ fun Route.socket(engine: Engine) {
         }
 
         logger.debug("Adding WebSocketSession to HttpSession [$session]");
-        if (engine.sessions.containsKey(session)) {
-            engine.sessions[session]?.add(this)
+        if (webSocketHandler.sessions.containsKey(session)) {
+            webSocketHandler.sessions[session]?.add(this)
         } else {
-            engine.sessions[session] = mutableSetOf(this)
+            webSocketHandler.sessions[session] = mutableSetOf(this)
         }
 
         try {
             incoming.consumeEach {
                 when (it) {
                     is Frame.Text -> {
-                        val data = it.readText()
                         try {
-                            val command = Command.fromString(data)
-                            engine.perform(setOf(command), session)
+                            val data = it.readText()
+                            val action = Action.fromString(data)
+                            action.session = session
+                            actions.send(action)
                         } catch (err: Throwable) {
                             logger.error(err.message, err)
                         }
@@ -49,7 +51,7 @@ fun Route.socket(engine: Engine) {
             }
         } finally {
             logger.debug("Removing WebSocketSession from HttpSession [$session]")
-            engine.sessions[session]?.remove(this)
+            webSocketHandler.sessions[session]?.remove(this)
         }
     }
 }

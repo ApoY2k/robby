@@ -26,15 +26,51 @@ class BoardMovementTest {
     }
 
     @Test
-    fun testMoveRobot1() {
+    fun testMoveStraight1() {
         val card = MovementCard(Movement.STRAIGHT, 1)
         card.player = player1
 
-        board.cells[1][1].robot = player1.robot
+        val source = board.fields[1][1]
+        val target = board.fields[2][1]
+
+        source.robot = player1.robot
         board.execute(card)
 
-        assertNull(board.cells[1][1].robot)
-        assertNotNull(board.cells[2][1].robot)
-        assertEquals(player1.robot, board.cells[2][1].robot)
+        assertNull(source.robot)
+        assertNotNull(target.robot)
+        assertEquals(player1.robot, target.robot)
+    }
+
+    @Test
+    fun testMoveBackwards2() {
+        val card = MovementCard(Movement.BACKWARDS_2, 1)
+        card.player = player1
+
+        val source = board.fields[1][1]
+        val target = board.fields[0][1]
+
+        source.robot = player1.robot
+        board.execute(card)
+
+        assertNull(source.robot)
+        assertNotNull(target.robot)
+        assertEquals(player1.robot, target.robot)
+    }
+
+    @Test
+    fun testMoveStraightRight3() {
+        val card = MovementCard(Movement.STRAIGHT_3, 1)
+        card.player = player1
+        player1.robot?.orientation = Orientation.RIGHT
+
+        val source = board.fields[1][1]
+        val target = board.fields[1][3]
+
+        source.robot = player1.robot
+        board.execute(card)
+
+        assertNull(source.robot)
+        assertNotNull(target.robot)
+        assertEquals(player1.robot, target.robot)
     }
 }

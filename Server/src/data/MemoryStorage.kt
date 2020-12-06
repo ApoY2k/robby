@@ -1,11 +1,11 @@
 package apoy2k.robby.data
 
-import apoy2k.robby.engine.Game
+import apoy2k.robby.model.Game
 
 class MemoryStorage : Storage {
-    private var gameField = Game()
+    private var _game = Game()
 
     override var game: Game
-        get() = gameField
-        set(value) { gameField = value }
+        get() = _game
+        set(value) { _game = value }
 }

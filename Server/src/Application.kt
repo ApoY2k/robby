@@ -1,8 +1,12 @@
 package apoy2k.robby
 
 import apoy2k.robby.data.MemoryStorage
-import apoy2k.robby.engine.Engine
+import apoy2k.robby.engine.GameEngine
+import apoy2k.robby.engine.WebSocketHandler
+import apoy2k.robby.engine.TickWorker
+import apoy2k.robby.model.Action
 import apoy2k.robby.model.Session
+import apoy2k.robby.model.ViewUpdate
 import apoy2k.robby.routes.base
 import apoy2k.robby.routes.game
 import apoy2k.robby.routes.socket
@@ -17,11 +21,14 @@ import io.ktor.routing.*
 import io.ktor.server.netty.*
 import io.ktor.sessions.*
 import io.ktor.websocket.*
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.channels.Channel
 import org.slf4j.event.Level
 import java.util.concurrent.ThreadLocalRandom
 
 fun main(args: Array<String>): Unit = EngineMain.main(args)
 
+@ExperimentalCoroutinesApi
 @Suppress("unused") // Referenced in application.conf
 @kotlin.jvm.JvmOverloads
 fun Application.module(testing: Boolean = false) {
@@ -61,12 +68,21 @@ fun Application.module(testing: Boolean = false) {
     }
 
     val storage = MemoryStorage()
-    val engine = Engine(storage)
+    val actionChannel = Channel<Action>()
+    val viewUpdateChannel = Channel<ViewUpdate>()
+
+    val engine = GameEngine(storage)
+    engine.connect(actionChannel, viewUpdateChannel)
+
+    val webSocketHandler = WebSocketHandler()
+    webSocketHandler.connect(viewUpdateChannel)
+
+    TickWorker(actionChannel).start()
 
     routing {
         base(storage)
-        game(engine)
-        socket(engine)
+        game(actionChannel)
+        socket(webSocketHandler, actionChannel)
         views(storage)
     }
 }

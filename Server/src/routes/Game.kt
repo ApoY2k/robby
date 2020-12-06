@@ -1,39 +1,32 @@
 package apoy2k.robby.routes
 
-import apoy2k.robby.CommandField
-import apoy2k.robby.engine.Engine
-import apoy2k.robby.model.JoinGameCommand
-import apoy2k.robby.model.LeaveGameCommand
-import apoy2k.robby.model.ResetBoardCommand
-import apoy2k.robby.model.Session
+import apoy2k.robby.model.*
 import io.ktor.application.*
 import io.ktor.http.*
 import io.ktor.request.*
 import io.ktor.response.*
 import io.ktor.routing.*
 import io.ktor.sessions.*
-import org.slf4j.LoggerFactory
+import kotlinx.coroutines.channels.SendChannel
 
-fun Route.game(engine: Engine) {
+fun Route.game(actions: SendChannel<Action>) {
     get("/reset") {
         val session = call.sessions.get<Session>()
-        engine.perform(listOf(ResetBoardCommand()), session)
+        actions.send(ResetBoardAction().also { it.session = session })
         call.respond(HttpStatusCode.OK)
     }
 
     post("/join") {
         val session = call.sessions.get<Session>()
         val form = call.receiveParameters()
-        engine.perform(listOf(JoinGameCommand(form[CommandField.PLAYER_NAME.name])), session)
+        actions.send(JoinGameAction(form[ActionField.PLAYER_NAME.name]).also { it.session = session })
         call.respondRedirect("/")
     }
 
     post("/leave") {
         val session = call.sessions.get<Session>()
-        engine.perform(listOf(LeaveGameCommand()), session)
+        actions.send(LeaveGameAction().also { it.session = session })
         call.sessions.clear<Session>()
         call.respondRedirect("/")
-
-
     }
 }

@@ -4,20 +4,21 @@
 const ATTR_ACTION = "data-action";
 const ATTR_BIND = "data-bind";
 
-const COMMANDS = {
-    REFRESH_VIEW: "REFRESH_VIEW",
-};
-
-const FIELDS = {
-    LABEL: "LABEL",
-    VIEW_NAME: "VIEW_NAME",
-};
-
 // -------------------------------- DOM manipulation
 
-// Update a view component if it exists in the current DOM
-const updateView = (view) => {
-    const elements = document.querySelectorAll("[" + ATTR_BIND + "='" + view + "']");
+// Replace the inner HTML of an element with the inner HTML of the body of an HTML string
+const replaceDom = (element, text) => {
+    const dom = new DOMParser().parseFromString(text, "text/html");
+    const newElement = dom.querySelector("body").firstElementChild;
+    addActionEventListeners(newElement);
+    element.parentNode.replaceChild(newElement, element);
+};
+
+// -------------------------------- WebSocket management
+
+const socket = new WebSocket("ws://" + window.location.host + "/ws");
+socket.addEventListener("message", (event) => {
+    const elements = document.querySelectorAll("[" + ATTR_BIND + "='" + event.data + "']");
 
     if (elements.length === 0) {
         return;
@@ -38,31 +39,6 @@ const updateView = (view) => {
         })
         .catch(console.error);
     });
-};
-
-// Replace the inner HTML of an element with the inner HTML of the body of an HTML string
-const replaceDom = (element, text) => {
-    const dom = new DOMParser().parseFromString(text, "text/html");
-    const newElement = dom.querySelector("body").firstElementChild;
-    addActionEventListeners(newElement);
-    element.parentNode.replaceChild(newElement, element);
-};
-
-// -------------------------------- WebSocket management
-
-const socket = new WebSocket("ws://" + window.location.host + "/ws");
-socket.addEventListener("message", (event) => {
-    const command = new URLSearchParams(event.data);
-    const label = command.get(FIELDS.LABEL);
-
-    switch (label) {
-        case COMMANDS.REFRESH_VIEW:
-            updateView(command.get(FIELDS.VIEW_NAME));
-            break;
-
-        default:
-            console.error("Command [" + label + "] is unknown");
-    }
 });
 
 // Event listener for any element that has actions associated with it

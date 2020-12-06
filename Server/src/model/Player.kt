@@ -1,15 +1,19 @@
 package apoy2k.robby.model
 
-import apoy2k.robby.exceptions.IncompleteCommand
+import apoy2k.robby.exceptions.IncompleteAction
 import apoy2k.robby.exceptions.InvalidGameState
 import java.util.*
 
 data class Player(val name: String, val session: Session, val id: UUID = UUID.randomUUID()) {
     var robot: Robot? = null
 
-    private val selectedCards = mutableListOf<MovementCard>()
-    private var drawnCards = emptyList<MovementCard>()
-    private var cardsConfirmed = false
+    val selectedCards = mutableListOf<MovementCard>()
+
+    var drawnCards = emptyList<MovementCard>()
+        private set
+
+    var cardsConfirmed = false
+        private set
 
     /**
      * Draw a new set of cards
@@ -23,7 +27,7 @@ data class Player(val name: String, val session: Session, val id: UUID = UUID.ra
      */
     fun selectCard(cardId: String?) {
         if (cardId.isNullOrBlank()) {
-            throw IncompleteCommand("cardId missing")
+            throw IncompleteAction("cardId missing")
         }
 
         val id = UUID.fromString(cardId)
@@ -47,21 +51,5 @@ data class Player(val name: String, val session: Session, val id: UUID = UUID.ra
         }
 
         cardsConfirmed = !cardsConfirmed
-    }
-
-    fun getSelectedCards(): List<MovementCard> {
-        return selectedCards
-    }
-
-    fun hasCardsConfirmed(): Boolean {
-        return cardsConfirmed
-    }
-
-    fun hasDrawnCards(): Boolean {
-        return drawnCards.isEmpty()
-    }
-
-    fun getDrawnCards(): List<MovementCard> {
-        return drawnCards
     }
 }
