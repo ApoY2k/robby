@@ -4,18 +4,19 @@ import apoy2k.robby.data.Storage
 import apoy2k.robby.exceptions.IncompleteAction
 import apoy2k.robby.exceptions.InvalidGameState
 import apoy2k.robby.model.*
+import com.sun.org.apache.xpath.internal.operations.Bool
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.ReceiveChannel
 import kotlinx.coroutines.channels.SendChannel
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.channels.consumeEach
 import org.slf4j.LoggerFactory
-import java.util.concurrent.Executors
+import kotlin.math.log
 
 /**
  * Game engine to advance the game state based on commands and game rules
  */
 class GameEngine(private val storage: Storage) {
     private val logger = LoggerFactory.getLogger(this.javaClass)
-    private val executorService = Executors.newFixedThreadPool(1)
 
     /**
      * Stores all movement cards that have to be executed once all players confirm their movements
@@ -26,25 +27,30 @@ class GameEngine(private val storage: Storage) {
      * Starts listening to message on the command channel and executes them, sending back
      * commands to be routed to the players
      */
-    fun connect(actions: ReceiveChannel<Action>, updates: SendChannel<ViewUpdate>) {
-        executorService.submit {
-            runBlocking {
-                for (action in actions) {
-                    logger.debug("Received [$action]")
+    @ExperimentalCoroutinesApi
+    suspend fun connect(actions: ReceiveChannel<Action>, updates: SendChannel<ViewUpdate>) {
+        logger.debug("Connecting Game Engine")
 
-                    // Catch the ExecuteMovement action as it's an entirely internal action
-                    // and can be executed without any associated session. It also always
-                    // returns a ViewUpdate for the board which is broadcast to all players
-                    if (action is ExecuteMovementAction) {
-                        executeNextMovement().also { updates.send(it) }
-                        continue
+        actions.consumeEach { action ->
+            try {
+                logger.debug("Received [$action]")
+
+                // Catch the ExecuteMovement action as it's an entirely internal action
+                // and can be executed without any associated session. If a movement was executed,
+                // trigger a ViewUpdate for the board which is broadcast to all players
+                if (action is ExecuteMovementAction) {
+                    if (executeNextMovement()) {
+                        updates.send(ViewUpdate(View.BOARD))
                     }
-
-                    // For each incoming action, perform the action on the game state
-                    // and send back view updates that will be distributed to the clients
-                    perform(action)
-                        .forEach { updates.send(it) }
+                    return@consumeEach
                 }
+
+                // For each incoming action, perform the action on the game state
+                // and send back view updates that will be distributed to the clients
+                perform(action)
+                    .forEach { updates.send(it) }
+            } catch (err: Throwable) {
+                logger.error("Error executing [$action]: [$err]", err)
             }
         }
     }
@@ -110,12 +116,15 @@ class GameEngine(private val storage: Storage) {
 
     /**
      * Execute the next movement of the current list of movement cards to be executed (if any).
-     *
      */
-    fun executeNextMovement(): ViewUpdate {
+    fun executeNextMovement(): Boolean {
+        if (movementsToExecute.isEmpty()) {
+            return false
+        }
+
         val nextMovement = movementsToExecute.removeAt(0)
         storage.game.board.execute(nextMovement)
-        return ViewUpdate(View.BOARD)
+        return true
     }
 
     private fun drawCards(player: Player): MutableSet<ViewUpdate> {

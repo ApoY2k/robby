@@ -3,8 +3,8 @@ package apoy2k.robby
 import apoy2k.robby.data.MemoryStorage
 import apoy2k.robby.engine.GameEngine
 import apoy2k.robby.engine.WebSocketHandler
-import apoy2k.robby.engine.TickWorker
 import apoy2k.robby.model.Action
+import apoy2k.robby.model.ExecuteMovementAction
 import apoy2k.robby.model.Session
 import apoy2k.robby.model.ViewUpdate
 import apoy2k.robby.routes.base
@@ -23,6 +23,8 @@ import io.ktor.sessions.*
 import io.ktor.websocket.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import org.slf4j.event.Level
 import java.util.concurrent.ThreadLocalRandom
 
@@ -50,7 +52,7 @@ fun Application.module(testing: Boolean = false) {
     }
 
     intercept(ApplicationCallPipeline.Call) {
-        val session = call.sessions.get<Session>();
+        val session = call.sessions.get<Session>()
         if (session == null) {
             call.sessions.set(Session(ThreadLocalRandom.current().nextLong().toString()))
         }
@@ -72,12 +74,21 @@ fun Application.module(testing: Boolean = false) {
     val viewUpdateChannel = Channel<ViewUpdate>()
 
     val engine = GameEngine(storage)
-    engine.connect(actionChannel, viewUpdateChannel)
+    launch {
+        engine.connect(actionChannel, viewUpdateChannel)
+    }
 
     val webSocketHandler = WebSocketHandler()
-    webSocketHandler.connect(viewUpdateChannel)
+    launch {
+        webSocketHandler.connect(viewUpdateChannel)
+    }
 
-    TickWorker(actionChannel).start()
+    launch {
+        while (true) {
+            actionChannel.send(ExecuteMovementAction())
+            delay(500)
+        }
+    }
 
     routing {
         base(storage)

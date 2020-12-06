@@ -18,7 +18,8 @@ const replaceDom = (element, text) => {
 
 const socket = new WebSocket("ws://" + window.location.host + "/ws");
 socket.addEventListener("message", (event) => {
-    const elements = document.querySelectorAll("[" + ATTR_BIND + "='" + event.data + "']");
+    const view = event.data;
+    const elements = document.querySelectorAll("[" + ATTR_BIND + "='" + view + "']");
 
     if (elements.length === 0) {
         return;
