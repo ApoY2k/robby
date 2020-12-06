@@ -29,12 +29,8 @@ class GameEngine(private val storage: Storage) {
      */
     @ExperimentalCoroutinesApi
     suspend fun connect(actions: ReceiveChannel<Action>, updates: SendChannel<ViewUpdate>) {
-        logger.debug("Connecting Game Engine")
-
         actions.consumeEach { action ->
             try {
-                logger.debug("Received [$action]")
-
                 // Catch the ExecuteMovement action as it's an entirely internal action
                 // and can be executed without any associated session. If a movement was executed,
                 // trigger a ViewUpdate for the board which is broadcast to all players
@@ -44,6 +40,8 @@ class GameEngine(private val storage: Storage) {
                     }
                     return@consumeEach
                 }
+
+                logger.debug("Received [$action]")
 
                 // For each incoming action, perform the action on the game state
                 // and send back view updates that will be distributed to the clients

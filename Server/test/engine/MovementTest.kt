@@ -7,7 +7,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 
-class BoardMovementTest {
+class MovementTest {
     private var board = Board(emptyList())
 
     private val sess1 = Session("s1")

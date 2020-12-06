@@ -9,7 +9,7 @@ import org.junit.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 
-class CommandsTest {
+class ActionsTest {
     @Test
     fun testToCommandJoinGame() {
         assertEquals(JoinGameAction("player1"), Action.fromString(

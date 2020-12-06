@@ -19,7 +19,7 @@ fun Route.socket(webSocketHandler: WebSocketHandler, actions: SendChannel<Action
     webSocket("/ws") {
         val session = call.sessions.get<Session>()
         if (session == null) {
-            logger.warn("No session associated with websocket connection")
+            logger.error("No session associated with websocket connection")
             return@webSocket
         }
 
