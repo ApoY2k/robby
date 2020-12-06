@@ -6,6 +6,7 @@ import org.junit.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
+import kotlin.test.asserter
 
 class MovementTest {
     private var board = Board(emptyList())
@@ -72,5 +73,36 @@ class MovementTest {
         assertNull(source.robot)
         assertNotNull(target.robot)
         assertEquals(player1.robot, target.robot)
+    }
+
+    @Test
+    fun testTurnLeft() {
+        val card = MovementCard(Movement.TURN_LEFT, 1)
+        card.player = player1
+
+        val field = board.fields[1][1]
+
+        field.robot = player1.robot
+        board.execute(card)
+
+        assertNotNull(field.robot)
+        assertEquals(player1.robot, field.robot)
+        assertEquals(Orientation.RIGHT, field.robot?.orientation)
+    }
+
+    @Test
+    fun testTurnRight() {
+        val card = MovementCard(Movement.TURN_RIGHT, 1)
+        card.player = player1
+        player1.robot?.orientation = Orientation.RIGHT
+
+        val field = board.fields[1][1]
+
+        field.robot = player1.robot
+        board.execute(card)
+
+        assertNotNull(field.robot)
+        assertEquals(player1.robot, field.robot)
+        assertEquals(Orientation.DOWN, field.robot?.orientation)
     }
 }

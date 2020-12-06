@@ -4,8 +4,8 @@ import apoy2k.robby.data.MemoryStorage
 import apoy2k.robby.engine.GameEngine
 import apoy2k.robby.engine.WebSocketHandler
 import apoy2k.robby.model.Action
-import apoy2k.robby.model.ExecuteMovementAction
 import apoy2k.robby.model.Session
+import apoy2k.robby.model.View
 import apoy2k.robby.model.ViewUpdate
 import apoy2k.robby.routes.base
 import apoy2k.robby.routes.game
@@ -25,6 +25,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import org.slf4j.LoggerFactory
 import org.slf4j.event.Level
 import java.util.concurrent.ThreadLocalRandom
 
@@ -34,6 +35,8 @@ fun main(args: Array<String>): Unit = EngineMain.main(args)
 @Suppress("unused") // Referenced in application.conf
 @kotlin.jvm.JvmOverloads
 fun Application.module(testing: Boolean = false) {
+    val logger = LoggerFactory.getLogger("root")
+
     install(CallLogging) {
         level = Level.INFO
         filter { call -> call.request.path().startsWith("/") }
@@ -85,7 +88,23 @@ fun Application.module(testing: Boolean = false) {
 
     launch {
         while (true) {
-            actionChannel.send(ExecuteMovementAction())
+            try {
+                // Catch the ExecuteMovement action as it's an entirely internal action
+                // and can be executed without any associated session. If a movement was executed,
+                // trigger a ViewUpdate for the board which is broadcast to all players
+                if (engine.movementsToExecute.isNotEmpty()) {
+                    engine.executeNextMovement()
+                    viewUpdateChannel.send(ViewUpdate(View.BOARD))
+
+                    // Before finishing, delay for some amount of time so the clients can render the new state
+                    // and players can see the new state nicely
+                    delay(1000)
+                    continue
+                }
+            } catch (err: Throwable) {
+                logger.error("Error in movement execution: [${err.message}]", err)
+            }
+
             delay(500)
         }
     }

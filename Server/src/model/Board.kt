@@ -35,7 +35,11 @@ data class Board(val fields: List<List<Field>>) {
         val targetField = findField(sourceField, direction, steps)
 
         targetField.robot = sourceField.robot
-        sourceField.robot = null
+        targetField.robot?.orientation = direction
+
+        if (steps > 0) {
+            sourceField.robot = null
+        }
     }
 
     /**

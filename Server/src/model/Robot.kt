@@ -32,7 +32,35 @@ data class Robot(val model: RobotModel, val id: UUID = UUID.randomUUID()) {
             }
         }
 
-        // For straight, turn or hold movements, just return the robot's orientation
+        // For turn movements, return the new direction to face
+        if (direction == Movement.TURN_RIGHT) {
+            return when(orientation) {
+                Orientation.UP -> Orientation.RIGHT
+                Orientation.DOWN -> Orientation.LEFT
+                Orientation.LEFT -> Orientation.UP
+                Orientation.RIGHT -> Orientation.DOWN
+            }
+        }
+
+        if (direction == Movement.TURN_LEFT) {
+            return when(orientation) {
+                Orientation.UP -> Orientation.LEFT
+                Orientation.DOWN -> Orientation.RIGHT
+                Orientation.LEFT -> Orientation.DOWN
+                Orientation.RIGHT -> Orientation.UP
+            }
+        }
+
+        if (direction == Movement.TURN_180) {
+            return when(orientation) {
+                Orientation.UP -> Orientation.DOWN
+                Orientation.DOWN -> Orientation.UP
+                Orientation.LEFT -> Orientation.RIGHT
+                Orientation.RIGHT -> Orientation.LEFT
+            }
+        }
+
+        // For straight or hold movements, just return the robot's current orientation
         return orientation
     }
 }

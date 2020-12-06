@@ -10,10 +10,14 @@ data class Game(val id: UUID = UUID.randomUUID()) {
 
     val board = Board(
         listOf(
-            listOf(Field(), Field(), Field(), Field()),
-            listOf(Field(), Field(), Field(), Field()),
-            listOf(Field(), Field(), Field(), Field()),
-            listOf(Field(), Field(), Field(), Field()),
+            listOf(Field(), Field(), Field(), Field(), Field(), Field(), Field(), Field()),
+            listOf(Field(), Field(), Field(), Field(), Field(), Field(), Field(), Field()),
+            listOf(Field(), Field(), Field(), Field(), Field(), Field(), Field(), Field()),
+            listOf(Field(), Field(), Field(), Field(), Field(), Field(), Field(), Field()),
+            listOf(Field(), Field(), Field(), Field(), Field(), Field(), Field(), Field()),
+            listOf(Field(), Field(), Field(), Field(), Field(), Field(), Field(), Field()),
+            listOf(Field(), Field(), Field(), Field(), Field(), Field(), Field(), Field()),
+            listOf(Field(), Field(), Field(), Field(), Field(), Field(), Field(), Field()),
         )
     )
 

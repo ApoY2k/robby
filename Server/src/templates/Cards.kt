@@ -25,7 +25,7 @@ fun HtmlBlockTag.renderCards(game: Game, session: Session?) {
         }
 
         player.drawnCards.forEach { card ->
-            val selectedOrder = player.drawnCards.indexOf(card) + 1
+            val selectedOrder = player.selectedCards.indexOf(card) + 1
 
             div(classes = "col") {
                 div(classes = "card") {

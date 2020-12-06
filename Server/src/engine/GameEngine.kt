@@ -4,13 +4,11 @@ import apoy2k.robby.data.Storage
 import apoy2k.robby.exceptions.IncompleteAction
 import apoy2k.robby.exceptions.InvalidGameState
 import apoy2k.robby.model.*
-import com.sun.org.apache.xpath.internal.operations.Bool
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.ReceiveChannel
 import kotlinx.coroutines.channels.SendChannel
 import kotlinx.coroutines.channels.consumeEach
 import org.slf4j.LoggerFactory
-import kotlin.math.log
 
 /**
  * Game engine to advance the game state based on commands and game rules
@@ -21,7 +19,8 @@ class GameEngine(private val storage: Storage) {
     /**
      * Stores all movement cards that have to be executed once all players confirm their movements
      */
-    private val movementsToExecute = mutableListOf<MovementCard>()
+    var movementsToExecute = listOf<MovementCard>()
+        private set
 
     /**
      * Starts listening to message on the command channel and executes them, sending back
@@ -31,16 +30,6 @@ class GameEngine(private val storage: Storage) {
     suspend fun connect(actions: ReceiveChannel<Action>, updates: SendChannel<ViewUpdate>) {
         actions.consumeEach { action ->
             try {
-                // Catch the ExecuteMovement action as it's an entirely internal action
-                // and can be executed without any associated session. If a movement was executed,
-                // trigger a ViewUpdate for the board which is broadcast to all players
-                if (action is ExecuteMovementAction) {
-                    if (executeNextMovement()) {
-                        updates.send(ViewUpdate(View.BOARD))
-                    }
-                    return@consumeEach
-                }
-
                 logger.debug("Received [$action]")
 
                 // For each incoming action, perform the action on the game state
@@ -96,10 +85,10 @@ class GameEngine(private val storage: Storage) {
             // If all players have confirmed their cards, add them to the movements
             // to execute list in order. The scheduler will later execute each movement
             // and notify all attached clients of the resulting game state
-            movementsToExecute.addAll(storage.game.players
+            movementsToExecute = storage.game.players
                 .flatMap { it.selectedCards }
                 .filter { it.player?.robot != null }
-                .sortedBy { it.priority })
+                .sortedBy { it.priority }
 
             // As their movement cards are now moved, remove them from all players and draw each player a new hand
             // which will also add new refresh commands to the players so they see their new hand
@@ -120,8 +109,9 @@ class GameEngine(private val storage: Storage) {
             return false
         }
 
-        val nextMovement = movementsToExecute.removeAt(0)
+        val nextMovement = movementsToExecute.first()
         storage.game.board.execute(nextMovement)
+        movementsToExecute = movementsToExecute.drop(1)
         return true
     }
 
@@ -136,8 +126,8 @@ class GameEngine(private val storage: Storage) {
         storage.game.players.remove(player)
 
         storage.game.board.fields.flatten()
-            .first { it.robot == player.robot }
-            .let { it.robot = null }
+            .firstOrNull { it.robot == player.robot }
+            .let { it?.robot = null }
 
         return mutableSetOf(ViewUpdate(View.GAME))
     }
