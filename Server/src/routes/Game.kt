@@ -10,12 +10,6 @@ import io.ktor.sessions.*
 import kotlinx.coroutines.channels.SendChannel
 
 fun Route.game(actions: SendChannel<Action>) {
-    get("/reset") {
-        val session = call.sessions.get<Session>()
-        actions.send(ResetBoardAction().also { it.session = session })
-        call.respond(HttpStatusCode.OK)
-    }
-
     post("/join") {
         val session = call.sessions.get<Session>()
         val form = call.receiveParameters()

@@ -14,7 +14,7 @@ data class Board(val fields: List<List<Field>>) {
 
         logger.debug("Executing [$card] on [$robot]")
 
-        val direction = robot.getOrientationFrom(card.movement)
+        val direction = robot.getMovementDirection(card.movement)
         val steps = when (card.movement) {
             Movement.STRAIGHT, Movement.BACKWARDS -> 1
             Movement.STRAIGHT_2, Movement.BACKWARDS_2 -> 2
@@ -22,42 +22,44 @@ data class Board(val fields: List<List<Field>>) {
             else -> 0
         }
 
+        robot.rotate(card.movement)
         moveRobot(robot, direction, steps)
     }
 
     /**
      * Move a robot an amount of steps in a defined direction
      */
-    private fun moveRobot(robot: Robot, direction: Orientation, steps: Int) {
+    private fun moveRobot(robot: Robot, direction: Direction, steps: Int) {
         val sourceField = fields.flatten().firstOrNull { it.robot == robot }
             ?: throw InvalidGameState("Robot [$robot] could not be found on board cells")
 
         val targetField = findField(sourceField, direction, steps)
 
-        targetField.robot = sourceField.robot
-        targetField.robot?.orientation = direction
+        if (targetField != sourceField) {
+            targetField.robot = sourceField.robot
 
-        if (steps > 0) {
-            sourceField.robot = null
+            if (steps > 0) {
+                sourceField.robot = null
+            }
         }
     }
 
     /**
      * Find a field oriented an amount of steps away from a start field in a given direction
      */
-    private fun findField(field: Field, direction: Orientation, steps: Int): Field {
+    private fun findField(field: Field, direction: Direction, steps: Int): Field {
         val row = fields.indexOfFirst { it.contains(field) }
         val col = fields[row].indexOf(field)
 
         var newRow = when (direction) {
-            Orientation.UP -> row - steps
-            Orientation.DOWN -> row + steps
+            Direction.UP -> row - steps
+            Direction.DOWN -> row + steps
             else -> row
         }
 
         var newCol = when (direction) {
-            Orientation.LEFT -> col - steps
-            Orientation.RIGHT -> col + steps
+            Direction.LEFT -> col - steps
+            Direction.RIGHT -> col + steps
             else -> col
         }
 

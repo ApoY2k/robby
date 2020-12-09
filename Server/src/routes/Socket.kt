@@ -23,7 +23,7 @@ fun Route.socket(webSocketHandler: WebSocketHandler, actions: SendChannel<Action
             return@webSocket
         }
 
-        logger.debug("Adding WebSocketSession to HttpSession [$session]");
+        logger.debug("Adding WebSocketSession to HttpSession [$session]")
         if (webSocketHandler.sessions.containsKey(session)) {
             webSocketHandler.sessions[session]?.add(this)
         } else {

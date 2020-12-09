@@ -12,7 +12,7 @@ import org.slf4j.LoggerFactory
 /**
  * Manages mapping between HTTP and WebSocket sessions
  */
-class WebSocketHandler {
+class WebSocketHandler(private val actions: Channel<ViewUpdate>) {
     private val logger = LoggerFactory.getLogger(this.javaClass)
 
     /**
@@ -26,7 +26,7 @@ class WebSocketHandler {
      * messages to a set of recipients, identified via their session
      */
     @ExperimentalCoroutinesApi
-    suspend fun connect(actions: Channel<ViewUpdate>) {
+    suspend fun connect() {
         actions.consumeEach { viewUpdate ->
             try {
                 sessions
@@ -34,7 +34,7 @@ class WebSocketHandler {
                         viewUpdate.recipients.isEmpty() || viewUpdate.recipients.contains(k)
                     }
                     .forEach { (k, v) ->
-                        logger.debug("Sending [$viewUpdate] to session [$k] (${v.count()} sockets)")
+                        logger.debug("Sending ViewUpdate [$viewUpdate] to session [$k] (${v.count()} sockets)")
                         v.forEach { it.send(Frame.Text(viewUpdate.toString())) }
                     }
             } catch (err: Throwable) {

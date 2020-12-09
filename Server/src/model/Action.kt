@@ -9,11 +9,8 @@ import java.nio.charset.Charset
 enum class ActionLabel {
     JOIN_GAME,
     LEAVE_GAME,
-    DRAW_CARDS,
     SELECT_CARD,
     CONFIRM_CARDS,
-    RESET_BOARD,
-    EXECUTE_MOVEMENT,
 }
 
 enum class ActionField {
@@ -67,9 +64,6 @@ abstract class Action {
                     ActionLabel.LEAVE_GAME -> LeaveGameAction()
                     ActionLabel.SELECT_CARD -> SelectCardAction(query.first(ActionField.CARD_ID))
                     ActionLabel.CONFIRM_CARDS -> ConfirmCardsAction()
-                    ActionLabel.RESET_BOARD -> ResetBoardAction()
-                    ActionLabel.DRAW_CARDS -> DrawCardsAction()
-                    ActionLabel.EXECUTE_MOVEMENT -> ExecuteMovementAction()
                 }
             } catch (err: Throwable) {
                 throw UnknownAction(input, err)
@@ -127,9 +121,3 @@ class SelectCardAction(cardId: String?) :
 }
 
 class ConfirmCardsAction : Action(ActionLabel.CONFIRM_CARDS)
-
-class ResetBoardAction : Action(ActionLabel.RESET_BOARD)
-
-class DrawCardsAction : Action(ActionLabel.DRAW_CARDS)
-
-class ExecuteMovementAction : Action(ActionLabel.EXECUTE_MOVEMENT)

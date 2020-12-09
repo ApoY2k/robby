@@ -6,6 +6,7 @@ import apoy2k.robby.exceptions.InvalidGameState
 import apoy2k.robby.model.JoinGameAction
 import apoy2k.robby.model.LeaveGameAction
 import apoy2k.robby.model.Session
+import kotlinx.coroutines.channels.Channel
 import org.junit.Before
 import org.junit.Test
 import kotlin.test.assertEquals
@@ -13,14 +14,14 @@ import kotlin.test.assertFailsWith
 
 class SessionTest {
     private var storage = MemoryStorage()
-    private var engine = GameEngine(storage)
+    private var engine = GameEngine(storage, Channel(), Channel())
     private val s1 = Session("s1")
     private val s2 = Session("s2")
 
     @Before
     fun setup() {
         storage = MemoryStorage()
-        engine = GameEngine(storage)
+        engine = GameEngine(storage, Channel(), Channel())
     }
 
     @Test

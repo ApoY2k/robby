@@ -4,12 +4,12 @@ import apoy2k.robby.ATTR_BIND
 import apoy2k.robby.model.*
 import kotlinx.html.*
 
-fun HtmlBlockTag.renderOrientation(orientation: Orientation) {
-    +when (orientation) {
-        Orientation.UP -> "(^)"
-        Orientation.RIGHT -> "(>)"
-        Orientation.DOWN -> "(v)"
-        Orientation.LEFT -> "(<)"
+fun HtmlBlockTag.renderOrientation(direction: Direction) {
+    +when (direction) {
+        Direction.UP -> "(^)"
+        Direction.RIGHT -> "(>)"
+        Direction.DOWN -> "(v)"
+        Direction.LEFT -> "(<)"
     }
 }
 
@@ -30,7 +30,7 @@ fun HtmlBlockTag.renderField(game: Game, field: Field, session: Session?) {
         span(classes = classes) {
             +robot.model.name
             entity(Entities.nbsp)
-            renderOrientation(robot.orientation)
+            renderOrientation(robot.facing)
         }
     }
 }

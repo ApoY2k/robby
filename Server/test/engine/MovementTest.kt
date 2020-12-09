@@ -6,7 +6,6 @@ import org.junit.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
-import kotlin.test.asserter
 
 class MovementTest {
     private var board = Board(emptyList())
@@ -56,13 +55,14 @@ class MovementTest {
         assertNull(source.robot)
         assertNotNull(target.robot)
         assertEquals(player1.robot, target.robot)
+        assertEquals(Direction.DOWN, target.robot?.facing)
     }
 
     @Test
     fun testMoveStraightRight3() {
         val card = MovementCard(Movement.STRAIGHT_3, 1)
         card.player = player1
-        player1.robot?.orientation = Orientation.RIGHT
+        player1.robot?.facing = Direction.RIGHT
 
         val source = board.fields[1][1]
         val target = board.fields[1][3]
@@ -73,6 +73,7 @@ class MovementTest {
         assertNull(source.robot)
         assertNotNull(target.robot)
         assertEquals(player1.robot, target.robot)
+        assertEquals(Direction.RIGHT, target.robot?.facing)
     }
 
     @Test
@@ -87,14 +88,14 @@ class MovementTest {
 
         assertNotNull(field.robot)
         assertEquals(player1.robot, field.robot)
-        assertEquals(Orientation.RIGHT, field.robot?.orientation)
+        assertEquals(Direction.RIGHT, field.robot?.facing)
     }
 
     @Test
     fun testTurnRight() {
         val card = MovementCard(Movement.TURN_RIGHT, 1)
         card.player = player1
-        player1.robot?.orientation = Orientation.RIGHT
+        player1.robot?.facing = Direction.RIGHT
 
         val field = board.fields[1][1]
 
@@ -103,6 +104,6 @@ class MovementTest {
 
         assertNotNull(field.robot)
         assertEquals(player1.robot, field.robot)
-        assertEquals(Orientation.DOWN, field.robot?.orientation)
+        assertEquals(Direction.DOWN, field.robot?.facing)
     }
 }

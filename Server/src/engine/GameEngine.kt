@@ -5,15 +5,22 @@ import apoy2k.robby.exceptions.IncompleteAction
 import apoy2k.robby.exceptions.InvalidGameState
 import apoy2k.robby.model.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.channels.ReceiveChannel
 import kotlinx.coroutines.channels.SendChannel
 import kotlinx.coroutines.channels.consumeEach
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import org.slf4j.LoggerFactory
 
 /**
  * Game engine to advance the game state based on commands and game rules
  */
-class GameEngine(private val storage: Storage) {
+class GameEngine(
+    private val storage: Storage,
+    private val actions: ReceiveChannel<Action>,
+    private val updates: SendChannel<ViewUpdate>
+) {
     private val logger = LoggerFactory.getLogger(this.javaClass)
 
     /**
@@ -27,7 +34,7 @@ class GameEngine(private val storage: Storage) {
      * commands to be routed to the players
      */
     @ExperimentalCoroutinesApi
-    suspend fun connect(actions: ReceiveChannel<Action>, updates: SendChannel<ViewUpdate>) {
+    suspend fun connect() {
         actions.consumeEach { action ->
             try {
                 logger.debug("Received [$action]")
@@ -62,13 +69,12 @@ class GameEngine(private val storage: Storage) {
 
         val result: MutableSet<ViewUpdate> = when (action) {
             is LeaveGameAction -> removePlayer(player)
-            is DrawCardsAction -> drawCards(player)
             is SelectCardAction -> {
                 player.selectCard(action.cardId)
                 mutableSetOf(ViewUpdate(View.CARDS, player))
             }
             is ConfirmCardsAction -> {
-                player.confirmCards()
+                player.toggleConfirm()
                 mutableSetOf(
                     ViewUpdate(View.CARDS, player),
                     ViewUpdate(View.PLAYERS)
@@ -88,36 +94,52 @@ class GameEngine(private val storage: Storage) {
             movementsToExecute = storage.game.players
                 .flatMap { it.selectedCards }
                 .filter { it.player?.robot != null }
-                .sortedBy { it.priority }
+                .sortedByDescending { it.priority }
 
             // As their movement cards are now moved, remove them from all players and draw each player a new hand
             // which will also add new refresh commands to the players so they see their new hand
             storage.game.players.forEach {
                 it.selectedCards.clear()
-                result.addAll(drawCards(it))
+                it.takeCards(emptyList())
+                it.toggleConfirm()
+            }
+
+            // Send updates to represent the state during automatic movement execution
+            result.add(ViewUpdate(View.CARDS))
+
+            // Execute the current set of movements in a separate ocroutine and send view updates to
+            // the update channel. Removes the movements one by one after they were executed
+            GlobalScope.launch {
+                while (movementsToExecute.isNotEmpty()) {
+                    delay(1000)
+
+                    try {
+                        val nextMovement = movementsToExecute.first()
+                        storage.game.board.execute(nextMovement)
+                        movementsToExecute = movementsToExecute.drop(1)
+                        updates.send(ViewUpdate(View.BOARD))
+                    } catch (err: Throwable) {
+                        logger.error("Error executing movement: [${err.message}", err)
+                    }
+                }
+
+                // After all movements were executed, set the game state back so players can interact again
+                storage.game.players.forEach {
+                    drawCards(it)
+                }
+
+                // Send final updates after the moves were completed and the game state was reset
+                updates.send(ViewUpdate(View.CARDS))
             }
         }
 
         return result
     }
 
-    /**
-     * Execute the next movement of the current list of movement cards to be executed (if any).
-     */
-    fun executeNextMovement(): Boolean {
-        if (movementsToExecute.isEmpty()) {
-            return false
-        }
-
-        val nextMovement = movementsToExecute.first()
-        storage.game.board.execute(nextMovement)
-        movementsToExecute = movementsToExecute.drop(1)
-        return true
-    }
-
     private fun drawCards(player: Player): MutableSet<ViewUpdate> {
         val drawnCards = storage.game.deck.take(5)
-        storage.game.deck.removeAll(drawnCards)
+        //storage.game.deck.removeAll(drawnCards)
+        storage.game.deck.shuffle()
         player.takeCards(drawnCards)
         return mutableSetOf(ViewUpdate(View.CARDS, player))
     }
@@ -151,6 +173,8 @@ class GameEngine(private val storage: Storage) {
         player.robot = robot
 
         storage.game.players.add(player)
+
+        drawCards(player)
 
         storage.game.board.fields.flatten()
             .first { it.robot == null }

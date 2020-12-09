@@ -5,7 +5,6 @@ import apoy2k.robby.engine.GameEngine
 import apoy2k.robby.engine.WebSocketHandler
 import apoy2k.robby.model.Action
 import apoy2k.robby.model.Session
-import apoy2k.robby.model.View
 import apoy2k.robby.model.ViewUpdate
 import apoy2k.robby.routes.base
 import apoy2k.robby.routes.game
@@ -23,9 +22,7 @@ import io.ktor.sessions.*
 import io.ktor.websocket.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import org.slf4j.LoggerFactory
 import org.slf4j.event.Level
 import java.util.concurrent.ThreadLocalRandom
 
@@ -35,11 +32,9 @@ fun main(args: Array<String>): Unit = EngineMain.main(args)
 @Suppress("unused") // Referenced in application.conf
 @kotlin.jvm.JvmOverloads
 fun Application.module(testing: Boolean = false) {
-    val logger = LoggerFactory.getLogger("root")
 
     install(CallLogging) {
-        level = Level.INFO
-        filter { call -> call.request.path().startsWith("/") }
+        level = Level.DEBUG
     }
 
     install(ContentNegotiation) {
@@ -76,37 +71,14 @@ fun Application.module(testing: Boolean = false) {
     val actionChannel = Channel<Action>()
     val viewUpdateChannel = Channel<ViewUpdate>()
 
-    val engine = GameEngine(storage)
+    val engine = GameEngine(storage, actionChannel, viewUpdateChannel)
     launch {
-        engine.connect(actionChannel, viewUpdateChannel)
+        engine.connect()
     }
 
-    val webSocketHandler = WebSocketHandler()
+    val webSocketHandler = WebSocketHandler(viewUpdateChannel)
     launch {
-        webSocketHandler.connect(viewUpdateChannel)
-    }
-
-    launch {
-        while (true) {
-            try {
-                // Catch the ExecuteMovement action as it's an entirely internal action
-                // and can be executed without any associated session. If a movement was executed,
-                // trigger a ViewUpdate for the board which is broadcast to all players
-                if (engine.movementsToExecute.isNotEmpty()) {
-                    engine.executeNextMovement()
-                    viewUpdateChannel.send(ViewUpdate(View.BOARD))
-
-                    // Before finishing, delay for some amount of time so the clients can render the new state
-                    // and players can see the new state nicely
-                    delay(1000)
-                    continue
-                }
-            } catch (err: Throwable) {
-                logger.error("Error in movement execution: [${err.message}]", err)
-            }
-
-            delay(500)
-        }
+        webSocketHandler.connect()
     }
 
     routing {

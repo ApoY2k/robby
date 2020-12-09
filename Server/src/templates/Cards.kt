@@ -14,34 +14,24 @@ fun HtmlBlockTag.renderCards(game: Game, session: Session?) {
     div(classes = "row mt-3") {
         attributes[ATTR_BIND] = View.CARDS.toString()
 
-        if (player.drawnCards.isEmpty()) {
-            div(classes = "col") {
-                button(classes = "btn btn-primary") {
-                    attributes[ATTR_ACTION] = DrawCardsAction().toString()
-                    +"Draw new cards"
-                }
-            }
-        }
-
         player.drawnCards.forEach { card ->
-            val selectedOrder = player.selectedCards.indexOf(card) + 1
+            val isSelected = player.selectedCards.contains(card)
 
-            div(classes = "col") {
+            div(classes = "col-2") {
                 div(classes = "card") {
                     if (!player.cardsConfirmed) {
                         attributes[ATTR_ACTION] = SelectCardAction(card.id.toString()).toString()
                     }
 
-                    div(classes = "card-body") {
+                    var classes = ""
+                    if (isSelected) {
+                        classes += " text-success"
+                    }
+
+                    div(classes = "card-body $classes") {
                         div(classes = "card-text") {
                             p {
                                 +"${card.movement.name} (${card.priority})"
-                            }
-
-                            if (selectedOrder > 0) {
-                                p {
-                                    +"#$selectedOrder"
-                                }
                             }
                         }
                     }
@@ -49,17 +39,22 @@ fun HtmlBlockTag.renderCards(game: Game, session: Session?) {
             }
         }
 
-        if (player.selectedCards.count() == 3) {
+        if (player.drawnCards.isNotEmpty()) {
             div(classes = "col") {
                 button(classes = "btn") {
-                    attributes[ATTR_ACTION] = ConfirmCardsAction().toString()
-
                     if (player.cardsConfirmed) {
+                        attributes[ATTR_ACTION] = ConfirmCardsAction().toString()
                         attributes["class"] += " btn-danger"
                         +"Revoke confirm"
                     } else {
-                        attributes["class"] += " btn-primary"
-                        +"Confirm cards"
+                        if (player.selectedCards.count() == 3) {
+                            attributes[ATTR_ACTION] = ConfirmCardsAction().toString()
+                            attributes["class"] += " btn-primary"
+                            +"Confirm cards"
+                        } else {
+                            attributes["class"] += " btn-secondary"
+                            +"Select 3 cards"
+                        }
                     }
                 }
             }

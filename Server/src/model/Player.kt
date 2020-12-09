@@ -45,8 +45,8 @@ data class Player(val name: String, val session: Session, val id: UUID = UUID.ra
     /**
      * Confirm the current selection of cards
      */
-    fun confirmCards() {
-        if (selectedCards.count() < 3) {
+    fun toggleConfirm() {
+        if (!cardsConfirmed && selectedCards.count() < 3) {
             throw InvalidGameState("Must choose three cards before confirming")
         }
 
