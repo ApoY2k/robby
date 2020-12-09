@@ -1,9 +1,11 @@
 package apoy2k.robby.templates
 
-import apoy2k.robby.*
-import apoy2k.robby.engine.GameEngine
-import apoy2k.robby.model.*
-import kotlinx.html.*
+import apoy2k.robby.ATTR_BIND
+import apoy2k.robby.model.Game
+import apoy2k.robby.model.Session
+import apoy2k.robby.model.View
+import kotlinx.html.HtmlBlockTag
+import kotlinx.html.div
 
 fun HtmlBlockTag.renderGame(game: Game, session: Session?) {
     div(classes = "row") {

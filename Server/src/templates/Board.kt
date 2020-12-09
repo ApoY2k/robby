@@ -5,7 +5,7 @@ import apoy2k.robby.model.*
 import kotlinx.html.*
 
 fun HtmlBlockTag.renderOrientation(orientation: Orientation) {
-    +when(orientation) {
+    +when (orientation) {
         Orientation.UP -> "(^)"
         Orientation.RIGHT -> "(>)"
         Orientation.DOWN -> "(v)"

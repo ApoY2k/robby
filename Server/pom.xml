@@ -8,11 +8,9 @@
     <name>server</name>
     <description>server</description>
     <properties>
-        <ktor_version>1.4.2</ktor_version>
+        <ktor_version>1.4.1</ktor_version>
         <kotlin.code.style>official</kotlin.code.style>
         <kotlin_version>1.4.10</kotlin_version>
-        <logback_version>1.2.1</logback_version>
-        <kotlinx.html.version>0.7.2</kotlinx.html.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <kotlin.compiler.incremental>true</kotlin.compiler.incremental>
         <main.class>io.ktor.server.netty.EngineMain</main.class>
@@ -46,14 +44,14 @@
             <version>${kotlin_version}</version>
         </dependency>
         <dependency>
+            <groupId>ch.qos.logback</groupId>
+            <artifactId>logback-classic</artifactId>
+            <version>1.2.3</version>
+        </dependency>
+        <dependency>
             <groupId>io.ktor</groupId>
             <artifactId>ktor-server-netty</artifactId>
             <version>${ktor_version}</version>
-        </dependency>
-        <dependency>
-            <groupId>ch.qos.logback</groupId>
-            <artifactId>logback-classic</artifactId>
-            <version>${logback_version}</version>
         </dependency>
         <dependency>
             <groupId>io.ktor</groupId>
@@ -89,7 +87,7 @@
         <dependency>
             <groupId>org.jetbrains.kotlinx</groupId>
             <artifactId>kotlinx-html-jvm</artifactId>
-            <version>${kotlinx.html.version}</version>
+            <version>0.7.2</version>
         </dependency>
         <dependency>
             <groupId>org.apache.httpcomponents</groupId>

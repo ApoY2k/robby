@@ -8,7 +8,6 @@ import kotlinx.html.button
 import kotlinx.html.div
 import kotlinx.html.p
 
-
 fun HtmlBlockTag.renderCards(game: Game, session: Session?) {
     val player = game.playerFor(session) ?: return
 
