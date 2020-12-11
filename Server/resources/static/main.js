@@ -8,6 +8,11 @@ const ATTR_BIND = "data-bind";
 
 // Replace the inner HTML of an element with the inner HTML of the body of an HTML string
 const replaceDom = (element, text) => {
+    // Disregard dismounted elements due to replacing of components higher up in the DOM
+    if (element.parentNode === null) {
+        return;
+    }
+
     const dom = new DOMParser().parseFromString(text, "text/html");
     const newElement = dom.querySelector("body").firstElementChild;
     addActionEventListeners(newElement);

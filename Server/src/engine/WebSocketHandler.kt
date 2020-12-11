@@ -1,25 +1,28 @@
 package apoy2k.robby.engine
 
+import apoy2k.robby.model.Action
+import apoy2k.robby.model.LeaveGameAction
 import apoy2k.robby.model.Session
 import apoy2k.robby.model.ViewUpdate
 import io.ktor.http.cio.websocket.*
 import io.ktor.websocket.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.channels.ReceiveChannel
+import kotlinx.coroutines.channels.SendChannel
 import kotlinx.coroutines.channels.consumeEach
 import org.slf4j.LoggerFactory
 
 /**
  * Manages mapping between HTTP and WebSocket sessions
  */
-class WebSocketHandler(private val actions: Channel<ViewUpdate>) {
+class WebSocketHandler(private val viewUpdates: ReceiveChannel<ViewUpdate>, private val actions: SendChannel<Action>) {
     private val logger = LoggerFactory.getLogger(this.javaClass)
 
     /**
      * Map HTTP Sessions to WebSocketSessions.
      * Each HTTP Session can have multiple WebSocketSessions associated with it
      */
-    val sessions = HashMap<Session, MutableSet<WebSocketServerSession>>()
+    private val sessions = HashMap<Session, MutableSet<WebSocketServerSession>>()
 
     /**
      * Connect this WebSocketHandler to a command channel that can be used to send
@@ -27,7 +30,7 @@ class WebSocketHandler(private val actions: Channel<ViewUpdate>) {
      */
     @ExperimentalCoroutinesApi
     suspend fun connect() {
-        actions.consumeEach { viewUpdate ->
+        viewUpdates.consumeEach { viewUpdate ->
             try {
                 sessions
                     .filter { (k, _) ->
@@ -40,6 +43,25 @@ class WebSocketHandler(private val actions: Channel<ViewUpdate>) {
             } catch (err: Throwable) {
                 logger.error("Error sending VieWUpdate [$viewUpdate]: [${err.message}]", err)
             }
+        }
+    }
+
+    fun addSession(session: Session, websocketSession: WebSocketServerSession) {
+        logger.debug("Adding WebSocketSession to HttpSession [$session]")
+        val newSessionSet = sessions[session] ?: mutableSetOf()
+        newSessionSet.add(websocketSession)
+        sessions[session] = newSessionSet
+    }
+
+    fun removeSession(session: Session, websocketSession: WebSocketServerSession) {
+        logger.debug("Removing WebSocketSession from HttpSession [$session]")
+        val newSessionSet = sessions[session] ?: mutableSetOf()
+        newSessionSet.remove(websocketSession)
+
+        if (newSessionSet.count() == 0) {
+            sessions.remove(session)
+        } else {
+            sessions[session] = newSessionSet
         }
     }
 }

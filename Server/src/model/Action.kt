@@ -108,7 +108,7 @@ abstract class Action {
     }
 }
 
-class JoinGameAction(name: String?) :
+class JoinGameAction(name: String? = "") :
     Action(ActionLabel.JOIN_GAME, mapOf(ActionField.PLAYER_NAME to name)) {
     val name get() = getFirst(ActionField.PLAYER_NAME)
 }

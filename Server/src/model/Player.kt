@@ -18,8 +18,8 @@ data class Player(val name: String, val session: Session, val id: UUID = UUID.ra
     /**
      * Draw a new set of cards
      */
-    fun takeCards(cards: List<MovementCard>) {
-        drawnCards = cards.onEach { it.player = this }
+    fun takeCards(cards: Iterable<MovementCard>) {
+        drawnCards = cards.sortedByDescending { it.priority  }.onEach { it.player = this }
     }
 
     /**

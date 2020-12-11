@@ -7,7 +7,6 @@ import apoy2k.robby.model.Action
 import apoy2k.robby.model.Session
 import apoy2k.robby.model.ViewUpdate
 import apoy2k.robby.routes.base
-import apoy2k.robby.routes.game
 import apoy2k.robby.routes.socket
 import apoy2k.robby.routes.views
 import io.ktor.application.*
@@ -76,14 +75,13 @@ fun Application.module(testing: Boolean = false) {
         engine.connect()
     }
 
-    val webSocketHandler = WebSocketHandler(viewUpdateChannel)
+    val webSocketHandler = WebSocketHandler(viewUpdateChannel, actionChannel)
     launch {
         webSocketHandler.connect()
     }
 
     routing {
         base(storage)
-        game(actionChannel)
         socket(webSocketHandler, actionChannel)
         views(storage)
     }

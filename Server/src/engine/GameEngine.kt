@@ -41,8 +41,7 @@ class GameEngine(
 
                 // For each incoming action, perform the action on the game state
                 // and send back view updates that will be distributed to the clients
-                perform(action)
-                    .forEach { updates.send(it) }
+                perform(action).forEach { updates.send(it) }
             } catch (err: Throwable) {
                 logger.error("Error executing [$action]: [$err]", err)
             }
@@ -96,44 +95,53 @@ class GameEngine(
                 .filter { it.player?.robot != null }
                 .sortedByDescending { it.priority }
 
-            // As their movement cards are now moved, remove them from all players and draw each player a new hand
-            // which will also add new refresh commands to the players so they see their new hand
+            // As their movement cards are now moved, remove them from all players and give each player an empty hand
             storage.game.players.forEach {
                 it.selectedCards.clear()
                 it.takeCards(emptyList())
                 it.toggleConfirm()
             }
 
-            // Send updates to represent the state during automatic movement execution
+            // Send view updates so players see the new state after "preparing" the execution of movements
             result.add(ViewUpdate(View.CARDS))
+
 
             // Execute the current set of movements in a separate ocroutine and send view updates to
             // the update channel. Removes the movements one by one after they were executed
             GlobalScope.launch {
-                while (movementsToExecute.isNotEmpty()) {
-                    delay(1000)
-
-                    try {
-                        val nextMovement = movementsToExecute.first()
-                        storage.game.board.execute(nextMovement)
-                        movementsToExecute = movementsToExecute.drop(1)
-                        updates.send(ViewUpdate(View.BOARD))
-                    } catch (err: Throwable) {
-                        logger.error("Error executing movement: [${err.message}", err)
-                    }
-                }
-
-                // After all movements were executed, set the game state back so players can interact again
-                storage.game.players.forEach {
-                    drawCards(it)
-                }
-
-                // Send final updates after the moves were completed and the game state was reset
-                updates.send(ViewUpdate(View.CARDS))
+                executeMovements()
             }
         }
 
         return result
+    }
+
+    /**
+     * Execute all movements with a delay in between, sending view updates on every step.
+     * Also sends final view updates after the movements were executed.
+     */
+    private suspend fun executeMovements() {
+        while (movementsToExecute.isNotEmpty()) {
+            delay(1000)
+
+            val nextMovement = movementsToExecute.first()
+            try {
+                storage.game.board.execute(nextMovement)
+                updates.send(ViewUpdate(View.BOARD))
+            } catch (err: Throwable) {
+                logger.error("Error executing movement: [${err.message}", err)
+            } finally {
+                movementsToExecute = movementsToExecute.drop(1)
+            }
+        }
+
+        // After all movements were executed, set the game state back so players can interact again
+        storage.game.players.forEach {
+            drawCards(it)
+        }
+
+        // Send final updates after the moves were completed and the game state was reset
+        updates.send(ViewUpdate(View.CARDS))
     }
 
     private fun drawCards(player: Player): MutableSet<ViewUpdate> {

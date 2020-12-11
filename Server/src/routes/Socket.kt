@@ -2,6 +2,7 @@ package apoy2k.robby.routes
 
 import apoy2k.robby.engine.WebSocketHandler
 import apoy2k.robby.model.Action
+import apoy2k.robby.model.LeaveGameAction
 import apoy2k.robby.model.Session
 import io.ktor.http.cio.websocket.*
 import io.ktor.routing.*
@@ -23,12 +24,7 @@ fun Route.socket(webSocketHandler: WebSocketHandler, actions: SendChannel<Action
             return@webSocket
         }
 
-        logger.debug("Adding WebSocketSession to HttpSession [$session]")
-        if (webSocketHandler.sessions.containsKey(session)) {
-            webSocketHandler.sessions[session]?.add(this)
-        } else {
-            webSocketHandler.sessions[session] = mutableSetOf(this)
-        }
+        webSocketHandler.addSession(session, this)
 
         try {
             incoming.consumeEach {
@@ -50,8 +46,7 @@ fun Route.socket(webSocketHandler: WebSocketHandler, actions: SendChannel<Action
                 }
             }
         } finally {
-            logger.debug("Removing WebSocketSession from HttpSession [$session]")
-            webSocketHandler.sessions[session]?.remove(this)
+            webSocketHandler.removeSession(session, this)
         }
     }
 }
