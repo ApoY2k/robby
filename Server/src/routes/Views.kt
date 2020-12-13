@@ -11,14 +11,6 @@ import io.ktor.sessions.*
 import kotlinx.html.body
 
 fun Route.views(storage: Storage) {
-    get(View.GAME.toString()) {
-        call.respondHtml {
-            body {
-                renderGame(storage.game, call.sessions.get<Session>())
-            }
-        }
-    }
-
     get(View.BOARD.toString()) {
         call.respondHtml {
             body {
@@ -43,10 +35,10 @@ fun Route.views(storage: Storage) {
         }
     }
 
-    get(View.CARDS.toString()) {
+    get(View.PROFILE.toString()) {
         call.respondHtml {
             body {
-                renderCards(storage.game, call.sessions.get<Session>())
+                renderProfile(storage.game, call.sessions.get<Session>())
             }
         }
     }

@@ -3,22 +3,14 @@
     background-color: #efefef;
 }
 
-.movement-card {
-    cursor: pointer;
-}
-
-.movement-card.selected {
-    box-shadow: 4px 4px 12px #aaa;
-}
-
-.movement-card.selected .card-body {
-    background-color: #eefdf6;
-    border-color: #1e8e62;
+.register-card {
+    text-align: left;
+    padding-left: 1rem
 }
 
 .card-priority {
     position: absolute;
-    right: 1rem;
+    right: 0.5rem;
     font-weight: bold;
     border: 1px solid black;
     border-radius: 5px;

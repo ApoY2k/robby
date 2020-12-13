@@ -17,8 +17,8 @@ data class Board(val fields: List<List<Field>>) {
         val direction = robot.getMovementDirection(card.movement)
         val steps = when (card.movement) {
             Movement.STRAIGHT, Movement.BACKWARDS -> 1
-            Movement.STRAIGHT_2, Movement.BACKWARDS_2 -> 2
-            Movement.STRAIGHT_3, Movement.BACKWARDS_3 -> 3
+            Movement.STRAIGHT_2 -> 2
+            Movement.STRAIGHT_3 -> 3
             else -> 0
         }
 

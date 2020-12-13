@@ -24,12 +24,6 @@ class GameEngine(
     private val logger = LoggerFactory.getLogger(this.javaClass)
 
     /**
-     * Stores all movement cards that have to be executed once all players confirm their movements
-     */
-    var movementsToExecute = listOf<MovementCard>()
-        private set
-
-    /**
      * Starts listening to message on the command channel and executes them, sending back
      * commands to be routed to the players
      */
@@ -69,13 +63,13 @@ class GameEngine(
         val result: MutableSet<ViewUpdate> = when (action) {
             is LeaveGameAction -> removePlayer(player)
             is SelectCardAction -> {
-                player.selectCard(action.cardId)
-                mutableSetOf(ViewUpdate(View.CARDS, player))
+                player.selectCard(action.register, action.cardId)
+                mutableSetOf(ViewUpdate(View.PROFILE, player))
             }
             is ConfirmCardsAction -> {
                 player.toggleConfirm()
                 mutableSetOf(
-                    ViewUpdate(View.CARDS, player),
+                    ViewUpdate(View.PROFILE, player),
                     ViewUpdate(View.PLAYERS)
                 )
             }
@@ -86,30 +80,38 @@ class GameEngine(
         }
 
         if (storage.game.players.all { it.cardsConfirmed }) {
-
-            // If all players have confirmed their cards, add them to the movements
-            // to execute list in order. The scheduler will later execute each movement
-            // and notify all attached clients of the resulting game state
-            movementsToExecute = storage.game.players
-                .flatMap { it.selectedCards }
-                .filter { it.player?.robot != null }
-                .sortedByDescending { it.priority }
-
-            // As their movement cards are now moved, remove them from all players and give each player an empty hand
-            storage.game.players.forEach {
-                it.selectedCards.clear()
-                it.takeCards(emptyList())
-                it.toggleConfirm()
-            }
+            storage.game.state = GameState.EXECUTING_REGISTER_1
 
             // Send view updates so players see the new state after "preparing" the execution of movements
-            result.add(ViewUpdate(View.CARDS))
+            result.add(ViewUpdate(View.PROFILE))
 
-
-            // Execute the current set of movements in a separate ocroutine and send view updates to
-            // the update channel. Removes the movements one by one after they were executed
+            // Launch the automatic steps in a separate thread
             GlobalScope.launch {
-                executeMovements()
+                executeRegister(1)
+
+                storage.game.state = GameState.EXECUTING_REGISTER_2
+                executeRegister(2)
+
+                storage.game.state = GameState.EXECUTING_REGISTER_3
+                executeRegister(3)
+
+                storage.game.state = GameState.EXECUTING_REGISTER_4
+                executeRegister(4)
+
+                storage.game.state = GameState.EXECUTING_REGISTER_5
+                executeRegister(5)
+
+                // Draw new cards for every player
+                storage.game.players.forEach {
+                    it.robot?.clearRegisters()
+                    drawCards(it)
+                    it.toggleConfirm()
+                }
+
+                storage.game.state = GameState.PROGRAMMING_REGISTERS
+
+                // Send final updates after the moves were completed and the game state was reset
+                updates.send(ViewUpdate(View.PROFILE))
             }
         }
 
@@ -117,39 +119,33 @@ class GameEngine(
     }
 
     /**
-     * Execute all movements with a delay in between, sending view updates on every step.
-     * Also sends final view updates after the movements were executed.
+     * Execute all movement cards of a register in their prioritized order with delay.
+     * Sends view updates after every movement.
      */
-    private suspend fun executeMovements() {
-        while (movementsToExecute.isNotEmpty()) {
-            delay(1000)
+    private suspend fun executeRegister(register: Int) {
+        try {
+            storage.game.players
+                .mapNotNull { it.robot?.getRegister(register) }
+                .sortedByDescending { it.priority }
+                .forEach {
+                    storage.game.board.execute(it)
+                    updates.send(ViewUpdate(View.BOARD))
+                    updates.send(ViewUpdate(View.PROFILE))
 
-            val nextMovement = movementsToExecute.first()
-            try {
-                storage.game.board.execute(nextMovement)
-                updates.send(ViewUpdate(View.BOARD))
-            } catch (err: Throwable) {
-                logger.error("Error executing movement: [${err.message}", err)
-            } finally {
-                movementsToExecute = movementsToExecute.drop(1)
-            }
+                    delay(1000)
+                }
+        } catch (err: Throwable) {
+            logger.error("Error executing register: [${err.message}]", err)
         }
-
-        // After all movements were executed, set the game state back so players can interact again
-        storage.game.players.forEach {
-            drawCards(it)
-        }
-
-        // Send final updates after the moves were completed and the game state was reset
-        updates.send(ViewUpdate(View.CARDS))
     }
 
     private fun drawCards(player: Player): MutableSet<ViewUpdate> {
-        val drawnCards = storage.game.deck.take(5)
-        //storage.game.deck.removeAll(drawnCards)
-        storage.game.deck.shuffle()
+        val robot = player.robot ?: return mutableSetOf()
+
+        val drawnCards = storage.game.deck.take(9 - robot.damage)
+        storage.game.deck.removeAll(drawnCards)
         player.takeCards(drawnCards)
-        return mutableSetOf(ViewUpdate(View.CARDS, player))
+        return mutableSetOf(ViewUpdate(View.PROFILE, player))
     }
 
     private fun removePlayer(player: Player): MutableSet<ViewUpdate> {
@@ -159,7 +155,7 @@ class GameEngine(
             .firstOrNull { it.robot == player.robot }
             .let { it?.robot = null }
 
-        return mutableSetOf(ViewUpdate(View.GAME))
+        return mutableSetOf(ViewUpdate(View.PLAYERS), ViewUpdate(View.BOARD))
     }
 
     private fun addPlayer(name: String?, session: Session): MutableSet<ViewUpdate> {
@@ -188,6 +184,6 @@ class GameEngine(
             .first { it.robot == null }
             .let { it.robot = robot }
 
-        return mutableSetOf(ViewUpdate(View.GAME))
+        return mutableSetOf(ViewUpdate(View.PLAYERS), ViewUpdate(View.BOARD), ViewUpdate(View.PROFILE))
     }
 }

@@ -9,7 +9,7 @@ import java.nio.charset.Charset
 enum class ActionLabel {
     JOIN_GAME,
     LEAVE_GAME,
-    SELECT_CARD,
+    SET_REGISTER,
     CONFIRM_CARDS,
 }
 
@@ -17,6 +17,7 @@ enum class ActionField {
     LABEL,
     PLAYER_NAME,
     CARD_ID,
+    REGISTER,
 }
 
 /**
@@ -62,7 +63,10 @@ abstract class Action {
                 return when (ActionLabel.valueOf(labelField)) {
                     ActionLabel.JOIN_GAME -> JoinGameAction(query.first(ActionField.PLAYER_NAME))
                     ActionLabel.LEAVE_GAME -> LeaveGameAction()
-                    ActionLabel.SELECT_CARD -> SelectCardAction(query.first(ActionField.CARD_ID))
+                    ActionLabel.SET_REGISTER -> SelectCardAction(
+                        query.first(ActionField.REGISTER),
+                        query.first(ActionField.CARD_ID)
+                    )
                     ActionLabel.CONFIRM_CARDS -> ConfirmCardsAction()
                 }
             } catch (err: Throwable) {
@@ -115,8 +119,9 @@ class JoinGameAction(name: String? = "") :
 
 class LeaveGameAction : Action(ActionLabel.LEAVE_GAME)
 
-class SelectCardAction(cardId: String?) :
-    Action(ActionLabel.SELECT_CARD, mapOf(ActionField.CARD_ID to cardId)) {
+class SelectCardAction(register: String?, cardId: String?) :
+    Action(ActionLabel.SET_REGISTER, mapOf(ActionField.CARD_ID to cardId, ActionField.REGISTER to register)) {
+    val register get() = getFirst(ActionField.REGISTER)
     val cardId get() = getFirst(ActionField.CARD_ID)
 }
 

@@ -42,23 +42,6 @@ class MovementTest {
     }
 
     @Test
-    fun testMoveBackwards2() {
-        val card = MovementCard(Movement.BACKWARDS_2, 1)
-        card.player = player1
-
-        val source = board.fields[1][1]
-        val target = board.fields[0][1]
-
-        source.robot = player1.robot
-        board.execute(card)
-
-        assertNull(source.robot)
-        assertNotNull(target.robot)
-        assertEquals(player1.robot, target.robot)
-        assertEquals(Direction.DOWN, target.robot?.facing)
-    }
-
-    @Test
     fun testMoveStraightRight3() {
         val card = MovementCard(Movement.STRAIGHT_3, 1)
         card.player = player1

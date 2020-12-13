@@ -1,11 +1,10 @@
 package apoy2k.robby.model
 
 enum class View(private val route: String) {
-    GAME("/views/game"),
     BOARD("/views/board"),
     PLAYERS("/views/players"),
     JOIN_FORM( "/views/join_form"),
-    CARDS("/views/cards");
+    PROFILE("/views/profile");
 
     override fun toString(): String {
         return route

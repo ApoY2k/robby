@@ -1,6 +1,5 @@
 package apoy2k.robby.model
 
-import kotlinx.html.Dir
 import java.util.*
 
 enum class RobotModel {
@@ -19,6 +18,55 @@ enum class Direction {
 
 data class Robot(val model: RobotModel, val id: UUID = UUID.randomUUID()) {
     var facing = Direction.DOWN
+
+    private var registers = mutableMapOf<Int, MovementCard?>(
+        1 to null,
+        2 to null,
+        3 to null,
+        4 to null,
+        5 to null,
+    )
+
+    val damage = 0
+
+    val poweredDown = false
+
+    val powerUps = emptyList<PowerUpCard>()
+
+    /**
+     * Move a card into a register
+     */
+    fun setRegister(register: Int, card: MovementCard) {
+        // Remove the card from any other register, if it's already registered somewhere else
+        // as each card can only be registered once
+        registers
+            .filter { it.value == card }
+            .forEach { registers[it.key] = null }
+
+        // Then register the card in the given register
+        registers[register] = card
+    }
+
+    /**
+     * Clear all registers
+     */
+    fun clearRegisters() {
+        registers = mutableMapOf()
+    }
+
+    /**
+     * Returns true if the robot has movement cards in all registers
+     */
+    fun hasAllRegistersFilled(): Boolean {
+        return registers.all { it.value != null }
+    }
+
+    /**
+     * Return the movement card in a register (or null if no card is set)
+     */
+    fun getRegister(register: Int): MovementCard? {
+        return registers[register]
+    }
 
     /**
      * Apply a rotational movement on this robot
@@ -58,7 +106,7 @@ data class Robot(val model: RobotModel, val id: UUID = UUID.randomUUID()) {
      * Get the direction in which to move this robot, based on where its facind and a movement to apply
      */
     fun getMovementDirection(movement: Movement): Direction {
-        if (setOf(Movement.BACKWARDS, Movement.BACKWARDS_2, Movement.BACKWARDS_3).contains(movement)) {
+        if (setOf(Movement.BACKWARDS).contains(movement)) {
             return when (facing) {
                 Direction.UP -> Direction.DOWN
                 Direction.DOWN -> Direction.UP

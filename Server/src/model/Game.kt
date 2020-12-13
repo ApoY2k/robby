@@ -2,9 +2,21 @@ package apoy2k.robby.model
 
 import java.util.*
 
+enum class GameState {
+    PROGRAMMING_REGISTERS,
+    POWER_DOWN,
+    EXECUTING_REGISTER_1,
+    EXECUTING_REGISTER_2,
+    EXECUTING_REGISTER_3,
+    EXECUTING_REGISTER_4,
+    EXECUTING_REGISTER_5,
+    MOVE_BARD_ELEMENTS,
+    FIRE_LASERS,
+    CHECKPOINTS,
+    REPAIR_POWERUPS,
+}
+
 data class Game(val id: UUID = UUID.randomUUID()) {
-    // Sequence of all recorded moves for replayability
-    val movements = mutableListOf<MovementCard>()
 
     val players = mutableSetOf<Player>()
 
@@ -21,18 +33,9 @@ data class Game(val id: UUID = UUID.randomUUID()) {
         )
     )
 
-    val deck = mutableListOf(
-        MovementCard(Movement.STRAIGHT, 1),
-        MovementCard(Movement.STRAIGHT_2, 2),
-        MovementCard(Movement.STRAIGHT_3, 3),
-        MovementCard(Movement.BACKWARDS, 4),
-        MovementCard(Movement.BACKWARDS_2, 5),
-        MovementCard(Movement.BACKWARDS_3, 6),
-        MovementCard(Movement.HOLD, 7),
-        MovementCard(Movement.TURN_180, 8),
-        MovementCard(Movement.TURN_LEFT, 9),
-        MovementCard(Movement.TURN_RIGHT, 10),
-    ).apply { shuffle() }
+    val deck = DEFAULT_FULL_DECK.shuffled().toMutableList()
+
+    var state: GameState = GameState.PROGRAMMING_REGISTERS
 
     /**
      * Find the player associated with a session
