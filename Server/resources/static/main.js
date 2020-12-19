@@ -2,41 +2,22 @@
 // Keep in sync with SharedTypes.kt
 
 const ATTR_ACTION = "data-action";
-const ATTR_BIND = "data-bind";
-
-// -------------------------------- DOM manipulation
-
-// Replace the inner HTML of an element with the inner HTML of the body of an HTML string
-const replaceDom = (text) => {
-    const gameView = document.querySelector("div#gameview")
-
-    const dom = new DOMParser().parseFromString(text, "text/html");
-    const newElement = dom.querySelector("body").firstElementChild;
-
-    addActionEventListeners(newElement);
-
-    gameView.parentNode.replaceChild(newElement, gameView);
-
-    reloadStyles();
-};
 
 // -------------------------------- WebSocket management
 
 const socket = new WebSocket("ws://" + window.location.host + "/ws");
-socket.addEventListener("message", () => {
-    fetch('/viewupdate', {
-        credentials: "same-origin",
-    })
-    .then((response) => {
-        if (!response.ok) {
-            return response.text().then((text) => {
-                throw new Error("Could not refresh view:" + text);
-            });
-        } else {
-            return response.text().then((text) => replaceDom(text));
-        }
-    })
-    .catch(console.error);
+socket.addEventListener("message", (event) => {
+
+    // Replace the inner HTML of an element with the inner HTML of the body of an HTML string
+    const dom = new DOMParser().parseFromString(event.data, "text/html");
+    const newElement = dom.querySelector("body").firstElementChild;
+
+    addActionEventListeners(newElement);
+
+    const gameView = document.querySelector("div#gameview")
+    gameView.parentNode.replaceChild(newElement, gameView);
+
+    reloadStyles();
 });
 
 // Event listener for any element that has actions associated with it

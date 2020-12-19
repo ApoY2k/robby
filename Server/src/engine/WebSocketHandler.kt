@@ -1,19 +1,24 @@
 package apoy2k.robby.engine
 
-import apoy2k.robby.model.Action
+import apoy2k.robby.data.Storage
 import apoy2k.robby.model.Session
+import apoy2k.robby.templates.renderGame
 import io.ktor.http.cio.websocket.*
 import io.ktor.websocket.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.ReceiveChannel
-import kotlinx.coroutines.channels.SendChannel
 import kotlinx.coroutines.channels.consumeEach
+import kotlinx.html.HtmlBlockTag
+import kotlinx.html.body
+import kotlinx.html.html
+import kotlinx.html.stream.appendHTML
 import org.slf4j.LoggerFactory
+import java.lang.StringBuilder
 
 /**
  * Manages mapping between HTTP and WebSocket sessions
  */
-class WebSocketHandler(private val viewUpdates: ReceiveChannel<Unit>, private val actions: SendChannel<Action>) {
+class WebSocketHandler(private val storage: Storage, private val viewUpdates: ReceiveChannel<Unit>) {
     private val logger = LoggerFactory.getLogger(this.javaClass)
 
     /**
@@ -28,15 +33,23 @@ class WebSocketHandler(private val viewUpdates: ReceiveChannel<Unit>, private va
      */
     @ExperimentalCoroutinesApi
     suspend fun connect() {
-        viewUpdates.consumeEach { viewUpdate ->
+        viewUpdates.consumeEach {
             try {
                 sessions
                     .forEach { (k, v) ->
-                        logger.debug("Sending ViewUpdate [$viewUpdate] to session [$k] (${v.count()} sockets)")
-                        v.forEach { it.send(Frame.Text(viewUpdate.toString())) }
+                        // Render the view for the target session, so each session receives their individual
+                        // view of the game state
+                        val gameView = StringBuilder().appendHTML(false).html {
+                            body {
+                                renderGame(storage.game, k)
+                            }
+                        }.toString()
+
+                        logger.debug("Sending GameView to session [$k] (${v.count()} sockets)")
+                        v.forEach { it.send(Frame.Text(gameView)) }
                     }
             } catch (err: Throwable) {
-                logger.error("Error sending VieWUpdate [$viewUpdate]: [${err.message}]", err)
+                logger.error("Error sending GameView: [${err.message}]", err)
             }
         }
     }

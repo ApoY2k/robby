@@ -73,7 +73,7 @@ fun Application.module(testing: Boolean = false) {
         engine.connect()
     }
 
-    val webSocketHandler = WebSocketHandler(viewUpdateChannel, actionChannel)
+    val webSocketHandler = WebSocketHandler(storage, viewUpdateChannel)
     launch {
         webSocketHandler.connect()
     }
