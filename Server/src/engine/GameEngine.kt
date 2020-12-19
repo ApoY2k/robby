@@ -232,6 +232,11 @@ class GameEngine(
             .first { it.robot == null }
             .let { it.robot = robot }
 
-        return mutableSetOf(ViewUpdate(View.PLAYERS), ViewUpdate(View.BOARD), ViewUpdate(View.PROFILE))
+        return mutableSetOf(
+            ViewUpdate(View.PLAYERS),
+            ViewUpdate(View.BOARD),
+            ViewUpdate(View.PROFILE),
+            ViewUpdate(View.JOIN_FORM)
+        )
     }
 }

@@ -86,48 +86,16 @@ fun HtmlBlockTag.renderProfile(game: Game, session: Session?) {
                     +"Damage buffer"
                 }
                 div(classes = "progress") {
-                    div(classes = "progress-bar bg-secondary") {
-                        attributes["style"] = "width: 10%;"
-                    }
-                    div(classes = "progress-bar bg-secondary") {
-                        attributes["style"] = "width: 10%;"
-                    }
-                    div(classes = "progress-bar bg-secondary") {
-                        attributes["style"] = "width: 10%;"
-                    }
-                    div(classes = "progress-bar bg-secondary") {
-                        attributes["style"] = "width: 10%;"
-                    }
-                    div(classes = "progress-bar bg-warning") {
-                        attributes["data-toggle"] = "tooltip"
-                        attributes["title"] = "Locks Register 5"
-                        attributes["style"] = "width: 10%;"
-                    }
-                    div(classes = "progress-bar bg-warning") {
-                        attributes["data-toggle"] = "tooltip"
-                        attributes["title"] = "Locks Register 4"
-                        attributes["style"] = "width: 10%;"
-                    }
-                    div(classes = "progress-bar bg-warning") {
-                        attributes["data-toggle"] = "tooltip"
-                        attributes["title"] = "Locks Register 3"
-                        attributes["style"] = "width: 10%;"
-                    }
-                    div(classes = "progress-bar bg-warning") {
-                        attributes["data-toggle"] = "tooltip"
-                        attributes["title"] = "Locks Register 2"
-                        attributes["style"] = "width: 10%;"
-                    }
-                    div(classes = "progress-bar bg-warning") {
-                        attributes["data-toggle"] = "tooltip"
-                        attributes["title"] = "Locks Register 1"
-                        attributes["style"] = "width: 10%;"
-                    }
-                    div(classes = "progress-bar bg-danger") {
-                        attributes["data-toggle"] = "tooltip"
-                        attributes["title"] = "Destroyed"
-                        attributes["style"] = "width: 10%;"
-                    }
+                    renderDamageBuffer(robot, 1, "secondary")
+                    renderDamageBuffer(robot, 2, "secondary")
+                    renderDamageBuffer(robot, 3, "secondary")
+                    renderDamageBuffer(robot, 4, "secondary")
+                    renderDamageBuffer(robot, 5, "warning", "LOCKS Register 5")
+                    renderDamageBuffer(robot, 6, "warning", "LOCKS Register 4")
+                    renderDamageBuffer(robot, 7, "warning", "LOCKS Register 3")
+                    renderDamageBuffer(robot, 8, "warning", "LOCKS Register 2")
+                    renderDamageBuffer(robot, 9, "warning", "LOCKS Register 1")
+                    renderDamageBuffer(robot, 10, "danger", "DESTROYED")
                 }
                 h5(classes = "mt-3") {
                     +"Modifications"
@@ -188,6 +156,21 @@ fun HtmlBlockTag.renderCard(register: Int, card: MovementCard, locked: Boolean, 
 
         span(classes = "card-priority") {
             +card.priority.toString()
+        }
+    }
+}
+
+fun HtmlBlockTag.renderDamageBuffer(robot: Robot, threshold: Int, bg: String, tooltip: String = "") {
+    div(classes = "progress-bar bg-$bg") {
+        attributes["style"] = "width: 10%;"
+
+        if (tooltip.isNotBlank()) {
+            attributes["data-toggle"] = "tooltip"
+            attributes["title"] = tooltip
+        }
+
+        if (robot.damage < threshold) {
+            attributes["style"] += "opacity: 50%;"
         }
     }
 }

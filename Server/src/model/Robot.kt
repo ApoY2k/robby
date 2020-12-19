@@ -1,5 +1,6 @@
 package apoy2k.robby.model
 
+import com.sun.org.apache.xpath.internal.operations.Bool
 import java.util.*
 
 enum class RobotModel {
@@ -27,7 +28,7 @@ data class Robot(val model: RobotModel, val id: UUID = UUID.randomUUID()) {
         5 to null,
     )
 
-    val damage = 0
+    var damage = 0
 
     val poweredDown = false
 
@@ -48,16 +49,39 @@ data class Robot(val model: RobotModel, val id: UUID = UUID.randomUUID()) {
     }
 
     /**
-     * Clear all registers
+     * Clear all registers.
+     * @param respectDamageLock If true, will not clear registers that should be locked based
+     * on the current damage value of this robot
      */
-    fun clearRegisters() {
-        registers = mutableMapOf(
-            1 to null,
-            2 to null,
-            3 to null,
-            4 to null,
-            5 to null
-        )
+    fun clearRegisters(respectDamageLock: Boolean = true) {
+        val newRegisters = mutableMapOf<Int, MovementCard?>()
+        newRegisters.putAll(registers)
+
+        if (respectDamageLock) {
+            if (damage <= 8) {
+                newRegisters[1] = null
+            }
+
+            if (damage <= 7) {
+                newRegisters[2] = null
+            }
+
+            if (damage <= 6) {
+                newRegisters[3] = null
+            }
+
+            if (damage <= 5) {
+                newRegisters[4] = null
+            }
+
+            if (damage <= 4) {
+                newRegisters[5] = null
+            }
+        } else {
+            newRegisters.clear()
+        }
+
+        registers = newRegisters
     }
 
     /**
