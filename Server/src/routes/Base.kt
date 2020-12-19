@@ -42,4 +42,12 @@ fun Route.base(storage: Storage) {
     static("/static") {
         resources("static")
     }
+
+    get("/viewupdate") {
+        call.respondHtml {
+            body {
+                renderGame(storage.game, call.sessions.get<Session>())
+            }
+        }
+    }
 }

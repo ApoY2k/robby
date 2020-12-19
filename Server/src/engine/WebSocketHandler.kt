@@ -1,9 +1,7 @@
 package apoy2k.robby.engine
 
 import apoy2k.robby.model.Action
-import apoy2k.robby.model.LeaveGameAction
 import apoy2k.robby.model.Session
-import apoy2k.robby.model.ViewUpdate
 import io.ktor.http.cio.websocket.*
 import io.ktor.websocket.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -15,7 +13,7 @@ import org.slf4j.LoggerFactory
 /**
  * Manages mapping between HTTP and WebSocket sessions
  */
-class WebSocketHandler(private val viewUpdates: ReceiveChannel<ViewUpdate>, private val actions: SendChannel<Action>) {
+class WebSocketHandler(private val viewUpdates: ReceiveChannel<Unit>, private val actions: SendChannel<Action>) {
     private val logger = LoggerFactory.getLogger(this.javaClass)
 
     /**
@@ -33,9 +31,6 @@ class WebSocketHandler(private val viewUpdates: ReceiveChannel<ViewUpdate>, priv
         viewUpdates.consumeEach { viewUpdate ->
             try {
                 sessions
-                    .filter { (k, _) ->
-                        viewUpdate.recipients.isEmpty() || viewUpdate.recipients.contains(k)
-                    }
                     .forEach { (k, v) ->
                         logger.debug("Sending ViewUpdate [$viewUpdate] to session [$k] (${v.count()} sockets)")
                         v.forEach { it.send(Frame.Text(viewUpdate.toString())) }

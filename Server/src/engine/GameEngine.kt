@@ -17,7 +17,7 @@ import org.slf4j.LoggerFactory
 class GameEngine(
     private val storage: Storage,
     private val actions: ReceiveChannel<Action>,
-    private val updates: SendChannel<ViewUpdate>
+    private val updates: SendChannel<Unit>
 ) {
     private val logger = LoggerFactory.getLogger(this.javaClass)
 
@@ -32,16 +32,16 @@ class GameEngine(
                 logger.debug("Received [$action]")
 
                 // For each incoming action, perform the action on the game state
-                // and send back view updates that will be distributed to the clients
-                perform(action).forEach { updates.send(it) }
+                perform(action)
+                updates.send(Unit)
 
                 // If after the action was performed, all players have their cards confirmed,
                 // execut the registers and send updates accordingly
-                if (storage.game.players.all { it.cardsConfirmed }) {
+                if (storage.game.players.isNotEmpty() && storage.game.players.all { it.cardsConfirmed }) {
 
                     // Send view updates so players see the new state after "preparing" the execution of movements
                     storage.game.state = GameState.EXECUTING_REGISTER_1
-                    updates.send(ViewUpdate(View.PROFILE))
+                    updates.send(Unit)
                     runRegister(1)
                     storage.game.state = GameState.EXECUTING_REGISTER_2
                     runRegister(2)
@@ -74,7 +74,7 @@ class GameEngine(
                         drawCards(it)
                         it.toggleConfirm()
                     }
-                    updates.send(ViewUpdate(View.PROFILE))
+                    updates.send(Unit)
                 }
             } catch (err: Throwable) {
                 logger.error("Error executing [$action]: [$err]", err)
@@ -86,37 +86,32 @@ class GameEngine(
      * Advances the game state by executing a single action.
      * Returns a set of ViewUpdates to send to the clients.
      */
-    fun perform(action: Action): Set<ViewUpdate> {
+    fun perform(action: Action) {
         // All actions require a session, so if an action without a session is noticed, just drop it with
         // an empty result view update set
-        val session = action.session ?: return emptySet()
+        val session = action.session ?: return
 
         if (action is JoinGameAction) {
-            return addPlayer(action.name, session)
+            addPlayer(action.name, session)
+            return
         }
 
         val player = storage.game.players.firstOrNull { it.session == session }
         if (player == null) {
             logger.warn("No player with session [$session] found")
-            return emptySet()
+            return
         }
 
-        return when (action) {
+        when (action) {
             is LeaveGameAction -> removePlayer(player)
             is SelectCardAction -> {
                 player.selectCard(action.register, action.cardId)
-                mutableSetOf(ViewUpdate(View.PROFILE, player))
             }
             is ConfirmCardsAction -> {
                 player.toggleConfirm()
-                mutableSetOf(
-                    ViewUpdate(View.PROFILE, player),
-                    ViewUpdate(View.PLAYERS)
-                )
             }
             else -> {
                 logger.warn("No action mapped for [$action]")
-                mutableSetOf()
             }
         }
     }
@@ -153,8 +148,7 @@ class GameEngine(
             getRegister(register)
                 .forEach {
                     storage.game.board.execute(it)
-                    updates.send(ViewUpdate(View.BOARD))
-                    updates.send(ViewUpdate(View.PROFILE))
+                    updates.send(Unit)
 
                     delay(1000)
                 }
@@ -164,49 +158,42 @@ class GameEngine(
     }
 
     private suspend fun runMoveBoardElements() {
-        updates.send(ViewUpdate(View.BOARD))
-        updates.send(ViewUpdate(View.PROFILE))
+        updates.send(Unit)
         delay(1000)
     }
 
     private suspend fun runFireLasers() {
-        updates.send(ViewUpdate(View.BOARD))
-        updates.send(ViewUpdate(View.PROFILE))
+        updates.send(Unit)
         delay(1000)
     }
 
     private suspend fun runCheckpoints() {
-        updates.send(ViewUpdate(View.BOARD))
-        updates.send(ViewUpdate(View.PROFILE))
+        updates.send(Unit)
         delay(1000)
     }
 
     private suspend fun runRepairPowerups() {
-        updates.send(ViewUpdate(View.BOARD))
-        updates.send(ViewUpdate(View.PROFILE))
+        updates.send(Unit)
         delay(1000)
     }
 
-    private fun drawCards(player: Player): MutableSet<ViewUpdate> {
-        val robot = player.robot ?: return mutableSetOf()
+    private fun drawCards(player: Player) {
+        val robot = player.robot ?: return
 
         val drawnCards = storage.game.deck.take(9 - robot.damage)
         storage.game.deck.removeAll(drawnCards)
         player.takeCards(drawnCards)
-        return mutableSetOf(ViewUpdate(View.PROFILE, player))
     }
 
-    private fun removePlayer(player: Player): MutableSet<ViewUpdate> {
+    private fun removePlayer(player: Player) {
         storage.game.players.remove(player)
 
         storage.game.board.fields.flatten()
             .firstOrNull { it.robot == player.robot }
             .let { it?.robot = null }
-
-        return mutableSetOf(ViewUpdate(View.PLAYERS), ViewUpdate(View.BOARD))
     }
 
-    private fun addPlayer(name: String?, session: Session): MutableSet<ViewUpdate> {
+    private fun addPlayer(name: String?, session: Session) {
         if (name.isNullOrBlank()) {
             throw IncompleteAction("Player name missing")
         }
@@ -231,12 +218,5 @@ class GameEngine(
         storage.game.board.fields.flatten()
             .first { it.robot == null }
             .let { it.robot = robot }
-
-        return mutableSetOf(
-            ViewUpdate(View.PLAYERS),
-            ViewUpdate(View.BOARD),
-            ViewUpdate(View.PROFILE),
-            ViewUpdate(View.JOIN_FORM)
-        )
     }
 }

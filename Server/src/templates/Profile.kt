@@ -1,7 +1,6 @@
 package apoy2k.robby.templates
 
 import apoy2k.robby.ATTR_ACTION
-import apoy2k.robby.ATTR_BIND
 import apoy2k.robby.model.*
 import kotlinx.html.*
 
@@ -10,8 +9,6 @@ fun HtmlBlockTag.renderProfile(game: Game, session: Session?) {
     val robot = player?.robot
 
     div(classes = "my-3") {
-        attributes[ATTR_BIND] = View.PROFILE.toString()
-
         if (player == null) {
             return@div
         }
@@ -170,7 +167,7 @@ fun HtmlBlockTag.renderDamageBuffer(robot: Robot, threshold: Int, bg: String, to
         }
 
         if (robot.damage < threshold) {
-            attributes["style"] += "opacity: 50%;"
+            attributes["style"] += "opacity: 20%;"
         }
     }
 }

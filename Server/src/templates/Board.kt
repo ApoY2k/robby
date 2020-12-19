@@ -1,6 +1,5 @@
 package apoy2k.robby.templates
 
-import apoy2k.robby.ATTR_BIND
 import apoy2k.robby.model.*
 import kotlinx.html.*
 
@@ -37,8 +36,6 @@ fun HtmlBlockTag.renderField(game: Game, field: Field, session: Session?) {
 
 fun HtmlBlockTag.renderBoard(game: Game, session: Session?) {
     div(classes = "row") {
-        attributes[ATTR_BIND] = View.BOARD.toString()
-
         div(classes = "col") {
             game.board.fields.forEach {
                 div(classes = "row") {

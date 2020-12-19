@@ -5,10 +5,8 @@ import apoy2k.robby.engine.GameEngine
 import apoy2k.robby.engine.WebSocketHandler
 import apoy2k.robby.model.Action
 import apoy2k.robby.model.Session
-import apoy2k.robby.model.ViewUpdate
 import apoy2k.robby.routes.base
 import apoy2k.robby.routes.socket
-import apoy2k.robby.routes.views
 import io.ktor.application.*
 import io.ktor.features.*
 import io.ktor.gson.*
@@ -68,7 +66,7 @@ fun Application.module(testing: Boolean = false) {
 
     val storage = MemoryStorage()
     val actionChannel = Channel<Action>()
-    val viewUpdateChannel = Channel<ViewUpdate>()
+    val viewUpdateChannel = Channel<Unit>()
 
     val engine = GameEngine(storage, actionChannel, viewUpdateChannel)
     launch {
@@ -83,6 +81,5 @@ fun Application.module(testing: Boolean = false) {
     routing {
         base(storage)
         socket(webSocketHandler, actionChannel)
-        views(storage)
     }
 }

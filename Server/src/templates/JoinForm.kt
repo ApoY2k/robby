@@ -1,14 +1,11 @@
 package apoy2k.robby.templates
 
 import apoy2k.robby.ATTR_ACTION
-import apoy2k.robby.ATTR_BIND
 import apoy2k.robby.model.*
 import kotlinx.html.*
 
 fun HtmlBlockTag.renderJoinForm(game: Game, session: Session?) {
     div(classes = "row") {
-        attributes[ATTR_BIND] = View.JOIN_FORM.toString();
-
         div(classes = "col") {
             form(classes = "form") {
                 if (game.hasJoined(session)) {
