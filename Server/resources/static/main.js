@@ -17,6 +17,7 @@ const replaceDom = (element, text) => {
     const newElement = dom.querySelector("body").firstElementChild;
     addActionEventListeners(newElement);
     element.parentNode.replaceChild(newElement, element);
+    reloadStyles();
 };
 
 // -------------------------------- WebSocket management
@@ -79,7 +80,13 @@ const addActionEventListeners = (rootElement) => {
     });
 };
 
+// Apply DOM specific options
+const reloadStyles = () => {
+    $('[data-toggle="tooltip"]').tooltip();
+};
+
 // Initialize action event listeners upon document load
-document.addEventListener("DOMContentLoaded", () => {
+$(function () {
     addActionEventListeners(document);
+    reloadStyles();
 });

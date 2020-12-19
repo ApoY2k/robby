@@ -31,7 +31,7 @@ data class Robot(val model: RobotModel, val id: UUID = UUID.randomUUID()) {
 
     val poweredDown = false
 
-    val powerUps = emptyList<PowerUpCard>()
+    val modifications = emptyList<ModificationCard>()
 
     /**
      * Move a card into a register
@@ -51,7 +51,13 @@ data class Robot(val model: RobotModel, val id: UUID = UUID.randomUUID()) {
      * Clear all registers
      */
     fun clearRegisters() {
-        registers = mutableMapOf()
+        registers = mutableMapOf(
+            1 to null,
+            2 to null,
+            3 to null,
+            4 to null,
+            5 to null
+        )
     }
 
     /**

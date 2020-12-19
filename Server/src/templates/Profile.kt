@@ -30,59 +30,124 @@ fun HtmlBlockTag.renderProfile(game: Game, session: Session?) {
 
         div(classes = "row") {
             div(classes = "col") {
-                div(classes = "row row-cols-5") {
-                    renderRegister(1, player, game.state == GameState.EXECUTING_REGISTER_1)
-                    renderRegister(2, player, game.state == GameState.EXECUTING_REGISTER_2)
-                    renderRegister(3, player, game.state == GameState.EXECUTING_REGISTER_3)
-                    renderRegister(4, player, game.state == GameState.EXECUTING_REGISTER_4)
-                    renderRegister(5, player, game.state == GameState.EXECUTING_REGISTER_5)
+                if (game.state == GameState.PROGRAMMING_REGISTERS) {
+                    div(classes = "row row-cols-5") {
+                        renderRegister(1, player)
+                        renderRegister(2, player)
+                        renderRegister(3, player)
+                        renderRegister(4, player)
+                        renderRegister(5, player)
+                    }
+                    if (player.drawnCards.isNotEmpty()) {
+                        div(classes = "row mt-3") {
+                            div(classes = "col") {
+                                if (player.cardsConfirmed) {
+                                    button(classes = "btn btn-danger") {
+                                        attributes[ATTR_ACTION] = ConfirmCardsAction().toString()
+                                        +"Revoke confirmation of cards"
+                                    }
+                                } else {
+                                    if (robot.hasAllRegistersFilled()) {
+                                        button(classes = "btn btn-primary") {
+                                            attributes[ATTR_ACTION] = ConfirmCardsAction().toString()
+                                            +"Confirm selected cards"
+                                        }
+                                    } else {
+                                        p(classes = "alert alert-info") {
+                                            +"Select a card for all registers to confirm"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                } else {
+                    p(classes = "alert alert-info") {
+                        when (game.state) {
+                            GameState.EXECUTING_REGISTER_1 -> +"Executing register 1"
+                            GameState.EXECUTING_REGISTER_2 -> +"Executing register 2"
+                            GameState.EXECUTING_REGISTER_3 -> +"Executing register 3"
+                            GameState.EXECUTING_REGISTER_4 -> +"Executing register 4"
+                            GameState.EXECUTING_REGISTER_5 -> +"Executing register 5"
+                            GameState.MOVE_BARD_ELEMENTS -> +"Moving board elements"
+                            GameState.FIRE_LASERS -> +"Firing lasers"
+                            GameState.CHECKPOINTS -> +"Touching checkpoints"
+                            GameState.REPAIR_POWERUPS -> +"Repair & powerups"
+                            else -> +"Waiting"
+                        }
+                    }
                 }
             }
             div(classes = "col-3") {
                 h4 {
                     +robot.model.name
                 }
-                div(classes = "progress") {
-                    div(classes = "progress-bar w-50 bg-danger")
-                    div(classes = "progress-bar w-50")
+                h5 {
+                    +"Damage buffer"
                 }
-            }
-        }
-
-        div(classes = "row mt-3") {
-            if (player.drawnCards.isNotEmpty()) {
-                div(classes = "col") {
-                    if (player.cardsConfirmed) {
-                        button(classes = "btn btn-danger") {
-                            attributes[ATTR_ACTION] = ConfirmCardsAction().toString()
-                            +"Revoke confirmation of cards"
-                        }
-                    } else {
-                        if (robot.hasAllRegistersFilled()) {
-                            button(classes = "btn btn-primary") {
-                                attributes[ATTR_ACTION] = ConfirmCardsAction().toString()
-                                +"Confirm selected cards"
-                            }
-                        } else {
-                            p(classes = "alert alert-info") {
-                                +"Select a card for all registers to confirm"
-                            }
-                        }
+                div(classes = "progress") {
+                    div(classes = "progress-bar bg-secondary") {
+                        attributes["style"] = "width: 10%;"
                     }
+                    div(classes = "progress-bar bg-secondary") {
+                        attributes["style"] = "width: 10%;"
+                    }
+                    div(classes = "progress-bar bg-secondary") {
+                        attributes["style"] = "width: 10%;"
+                    }
+                    div(classes = "progress-bar bg-secondary") {
+                        attributes["style"] = "width: 10%;"
+                    }
+                    div(classes = "progress-bar bg-warning") {
+                        attributes["data-toggle"] = "tooltip"
+                        attributes["title"] = "Locks Register 5"
+                        attributes["style"] = "width: 10%;"
+                    }
+                    div(classes = "progress-bar bg-warning") {
+                        attributes["data-toggle"] = "tooltip"
+                        attributes["title"] = "Locks Register 4"
+                        attributes["style"] = "width: 10%;"
+                    }
+                    div(classes = "progress-bar bg-warning") {
+                        attributes["data-toggle"] = "tooltip"
+                        attributes["title"] = "Locks Register 3"
+                        attributes["style"] = "width: 10%;"
+                    }
+                    div(classes = "progress-bar bg-warning") {
+                        attributes["data-toggle"] = "tooltip"
+                        attributes["title"] = "Locks Register 2"
+                        attributes["style"] = "width: 10%;"
+                    }
+                    div(classes = "progress-bar bg-warning") {
+                        attributes["data-toggle"] = "tooltip"
+                        attributes["title"] = "Locks Register 1"
+                        attributes["style"] = "width: 10%;"
+                    }
+                    div(classes = "progress-bar bg-danger") {
+                        attributes["data-toggle"] = "tooltip"
+                        attributes["title"] = "Destroyed"
+                        attributes["style"] = "width: 10%;"
+                    }
+                }
+                h5(classes = "mt-3") {
+                    +"Modifications"
+                }
+                hr {}
+                button(classes = "btn btn-warning") {
+                    attributes["data-toggle"] = "tooltip"
+                    attributes["title"] = "Powers down the robot, repairing some damage at the end of the round"
+
+                    +"Power down"
                 }
             }
         }
     }
 }
 
-fun HtmlBlockTag.renderRegister(register: Int, player: Player, isExecuting: Boolean) {
+fun HtmlBlockTag.renderRegister(register: Int, player: Player) {
     val robot = player.robot ?: return
 
     div(classes = "col") {
-        if (isExecuting) {
-            attributes["class"] += " shadow"
-        }
-
         h5 {
             +"Register $register"
         }

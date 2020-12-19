@@ -32,6 +32,8 @@ fun Route.base(storage: Storage) {
                     }
                     renderGame(storage.game, call.sessions.get<Session>())
                 }
+                script(src = "https://code.jquery.com/jquery-3.4.1.slim.min.js") { }
+                script(src = "https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/js/bootstrap.bundle.min.js") { }
                 script(src = "/static/main.js") { }
             }
         }

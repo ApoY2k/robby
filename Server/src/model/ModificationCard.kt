@@ -31,6 +31,6 @@ enum class PowerUp {
     FIRE_CONTROL
 }
 
-data class PowerUpCard(val powerUp: PowerUp, val description: String? = "") {
+data class ModificationCard(val powerUp: PowerUp, val description: String? = "") {
     val id: UUID = UUID.randomUUID()
 }
