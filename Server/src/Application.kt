@@ -6,6 +6,7 @@ import apoy2k.robby.engine.WebSocketHandler
 import apoy2k.robby.model.Action
 import apoy2k.robby.model.Session
 import apoy2k.robby.routes.base
+import apoy2k.robby.routes.console
 import apoy2k.robby.routes.socket
 import io.ktor.application.*
 import io.ktor.features.*
@@ -21,6 +22,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.launch
 import org.slf4j.event.Level
+import java.util.*
 import java.util.concurrent.ThreadLocalRandom
 
 fun main(args: Array<String>): Unit = EngineMain.main(args)
@@ -43,13 +45,15 @@ fun Application.module(testing: Boolean = false) {
     }
 
     install(Sessions) {
-        cookie<Session>("SESSION", SessionStorageMemory())
+        cookie<Session>("SESSION", SessionStorageMemory()) {
+            cookie.extensions["SameSite"] = "lax"
+        }
     }
 
     intercept(ApplicationCallPipeline.Call) {
         val session = call.sessions.get<Session>()
         if (session == null) {
-            call.sessions.set(Session(ThreadLocalRandom.current().nextLong().toString()))
+            call.sessions.set(Session(UUID.randomUUID().toString()))
         }
     }
 
@@ -81,5 +85,6 @@ fun Application.module(testing: Boolean = false) {
     routing {
         base(storage)
         socket(webSocketHandler, actionChannel)
+        console(storage, viewUpdateChannel)
     }
 }

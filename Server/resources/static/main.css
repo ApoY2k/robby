@@ -3,6 +3,17 @@
     background-color: #efefef;
 }
 
+.register-locked {
+    background-color: #ffc107;
+    opacity: 0.5;
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+    left: 0;
+    top: 0;
+}
+
 .register-card {
     text-align: left;
     padding-left: 1rem

@@ -1,6 +1,5 @@
 package apoy2k.robby.templates
 
-import apoy2k.robby.ATTR_ACTION
 import apoy2k.robby.model.*
 import kotlinx.html.*
 
@@ -35,18 +34,19 @@ fun HtmlBlockTag.renderProfile(game: Game, session: Session?) {
                         renderRegister(4, player)
                         renderRegister(5, player)
                     }
+
                     if (player.drawnCards.isNotEmpty()) {
                         div(classes = "row mt-3") {
                             div(classes = "col") {
                                 if (player.cardsConfirmed) {
                                     button(classes = "btn btn-danger") {
-                                        attributes[ATTR_ACTION] = ConfirmCardsAction().toString()
+                                        attributes["data-action"] = ConfirmCardsAction().toString()
                                         +"Revoke confirmation of cards"
                                     }
                                 } else {
                                     if (robot.hasAllRegistersFilled()) {
                                         button(classes = "btn btn-primary") {
-                                            attributes[ATTR_ACTION] = ConfirmCardsAction().toString()
+                                            attributes["data-action"] = ConfirmCardsAction().toString()
                                             +"Confirm selected cards"
                                         }
                                     } else {
@@ -111,23 +111,36 @@ fun HtmlBlockTag.renderProfile(game: Game, session: Session?) {
 
 fun HtmlBlockTag.renderRegister(register: Int, player: Player) {
     val robot = player.robot ?: return
+    val locked = player.cardsConfirmed || robot.isLocked(register)
 
-    div(classes = "col") {
+    div(classes = "col pb-3") {
+        if (locked) {
+            div(classes = "register-locked")
+        }
+
         h5 {
             +"Register $register"
         }
 
         div(classes = "btn-group-vertical w-100") {
-            player.drawnCards.forEach {
-                renderCard(
-                    register, it, player.cardsConfirmed, robot.getRegister(register) == it
-                )
+            if (locked) {
+                renderCard(register, robot.getRegister(register), locked = true, selected = true)
+            } else {
+                player.drawnCards.forEach {
+                    val selected = robot.getRegister(register) == it
+
+                    renderCard(register, it, locked = false, selected)
+                }
             }
         }
     }
 }
 
-fun HtmlBlockTag.renderCard(register: Int, card: MovementCard, locked: Boolean, selected: Boolean) {
+fun HtmlBlockTag.renderCard(register: Int, card: MovementCard?, locked: Boolean, selected: Boolean) {
+    if (card == null) {
+        return
+    }
+
     val title = when (card.movement) {
         Movement.STRAIGHT -> "↑"
         Movement.STRAIGHT_2 -> "↑↑"
@@ -146,7 +159,7 @@ fun HtmlBlockTag.renderCard(register: Int, card: MovementCard, locked: Boolean, 
         }
 
         if (!locked) {
-            attributes[ATTR_ACTION] = SelectCardAction(register.toString(), card.id.toString()).toString()
+            attributes["data-action"] = SelectCardAction(register.toString(), card.id.toString()).toString()
         }
 
         +title

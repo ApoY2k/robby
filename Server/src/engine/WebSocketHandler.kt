@@ -41,7 +41,7 @@ class WebSocketHandler(private val storage: Storage, private val viewUpdates: Re
                         // view of the game state
                         val gameView = StringBuilder().appendHTML(false).html {
                             body {
-                                renderGame(storage.game, k)
+                                renderGame(storage, k)
                             }
                         }.toString()
 

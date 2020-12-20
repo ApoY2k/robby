@@ -1,8 +1,3 @@
-// -------------------------------- Static shared types
-// Keep in sync with SharedTypes.kt
-
-const ATTR_ACTION = "data-action";
-
 // -------------------------------- WebSocket management
 
 const socket = new WebSocket("ws://" + window.location.host + "/ws");
@@ -25,7 +20,7 @@ const actionEventListener = (element) => (event) => {
     event.stopPropagation();
     event.preventDefault();
 
-    const action = new URLSearchParams(element.attributes[ATTR_ACTION].value);
+    const action = new URLSearchParams(element.attributes["data-action"].value);
     const actionForm = new FormData();
 
     action.forEach((value, key) => actionForm.append(key, value));
@@ -41,7 +36,7 @@ const actionEventListener = (element) => (event) => {
 
 // Add the action event listener to all action-elements, starting from a given root element
 const addActionEventListeners = (rootElement) => {
-    rootElement.querySelectorAll("[" + ATTR_ACTION + "]").forEach((element) => {
+    rootElement.querySelectorAll("[data-action]").forEach((element) => {
         if (["A", "DIV", "BUTTON"].includes(element.nodeName)) {
             element.addEventListener("click", actionEventListener(element));
         }
@@ -54,7 +49,11 @@ const addActionEventListeners = (rootElement) => {
 
 // Apply DOM specific options
 const reloadStyles = () => {
-    $('[data-toggle="tooltip"]').tooltip();
+    $("[data-toggle='tooltip']").tooltip();
+    $("ul.tabs").on("click", (e) => {
+        e.preventDefault();
+        $(this).tab("show");
+    });
 };
 
 // Initialize action event listeners upon document load
@@ -62,3 +61,37 @@ $(function () {
     addActionEventListeners(document);
     reloadStyles();
 });
+
+const runAdminCommand = (command, args) => {
+    const params = new URLSearchParams(args);
+
+    fetch("/console/" + command + "?" + params, {
+        credentials: "same-origin",
+    })
+    .then((response) => {
+        if (!response.ok) {
+            return response.text().then((text) => {
+                throw new Error("Could not run admin command: " + text);
+            });
+        } else {
+            return response.text();
+        }
+    })
+    .then((text) => {
+        if (text.startsWith("[") || text.startsWith("(")) {
+            text = JSON.parse(text);
+        }
+        console.log(text);
+    })
+    .catch((err) => console.error(err));
+};
+
+// Initialize admin console functions
+window.robby = {
+    Players: {
+        List: () => runAdminCommand("players/list")
+    },
+    Robots: {
+        SetDamage: (id, value) => runAdminCommand("robots/setdamage", { id, value })
+    }
+};

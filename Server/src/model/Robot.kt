@@ -48,6 +48,14 @@ data class Robot(val model: RobotModel, val id: UUID = UUID.randomUUID()) {
         registers[register] = card
     }
 
+    fun isLocked(register: Int): Boolean {
+        return damage >= 5 && register == 5
+                || damage >= 6 && register == 4
+                || damage >= 7 && register == 3
+                || damage >= 8 && register == 2
+                || damage >= 9
+    }
+
     /**
      * Clear all registers.
      * @param respectDamageLock If true, will not clear registers that should be locked based
