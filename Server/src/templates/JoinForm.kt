@@ -4,9 +4,9 @@ import apoy2k.robby.model.*
 import kotlinx.html.*
 
 fun HtmlBlockTag.renderJoinForm(game: Game, session: Session?) {
-    div(classes = "row") {
-        div(classes = "col") {
-            form(classes = "form") {
+    div("row") {
+        div("col") {
+            form("form") {
                 if (game.hasJoined(session)) {
                     attributes["data-action"] = LeaveGameAction().toString()
 
@@ -16,7 +16,7 @@ fun HtmlBlockTag.renderJoinForm(game: Game, session: Session?) {
                 } else {
                     attributes["data-action"] = JoinGameAction().toString()
 
-                    div(classes = "form-group") {
+                    div("form-group") {
                         input(classes = "form-control", name = ActionField.PLAYER_NAME.name)
                     }
 

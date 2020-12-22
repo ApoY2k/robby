@@ -1,8 +1,4 @@
 
-.field {
-    background-color: #efefef;
-}
-
 .register-locked {
     background-color: #ffc107;
     opacity: 0.5;
@@ -28,4 +24,72 @@
     padding: 0 5px;
     background-color: #444;
     color: #eee;
+}
+
+.board {
+    display: grid;
+    row-gap: 5px;
+    column-gap: 5px;
+}
+
+.field {
+    background-color: #efefef;
+    height: 60px;
+    width: 60px;
+    padding: 5px;
+    position: relative;
+}
+
+.robot {
+    background-size: contain;
+    background-position: center;
+    height: 100%;
+    width: 100%;
+}
+
+.robot::after {
+    content: "";
+    display: block;
+    position: absolute;
+    z-index: 1;
+}
+
+.robot-zippy {
+    background-image: url("/static/icons/zippy.png");
+}
+
+.direction-down::after {
+    left: 10px;
+    bottom: -7px;
+    border-top: 10px solid #b0b0b0;
+    border-right: 20px solid transparent;
+    border-bottom: 0 solid transparent;
+    border-left: 20px solid transparent;
+}
+
+.direction-up::after {
+    left: 10px;
+    top: -7px;
+    border-bottom: 10px solid #b0b0b0;
+    border-right: 20px solid transparent;
+    border-top: 0 solid transparent;
+    border-left: 20px solid transparent;
+}
+
+.direction-right::after {
+    top: 10px;
+    right: -7px;
+    border-left: 10px solid #b0b0b0;
+    border-top: 20px solid transparent;
+    border-right: 0 solid transparent;
+    border-bottom: 20px solid transparent;
+}
+
+.direction-left::after {
+    top: 10px;
+    left: -7px;
+    border-right: 10px solid #b0b0b0;
+    border-top: 20px solid transparent;
+    border-left: 0 solid transparent;
+    border-bottom: 20px solid transparent;
 }

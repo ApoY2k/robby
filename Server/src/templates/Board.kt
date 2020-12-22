@@ -13,7 +13,7 @@ fun HtmlBlockTag.renderOrientation(direction: Direction) {
 }
 
 fun HtmlBlockTag.renderField(game: Game, field: Field, session: Session?) {
-    div(classes = "col m-1 field") {
+    div("field") {
         val playerRobot = game.playerFor(session)?.robot
         val robot = field.robot
         if (robot == null) {
@@ -21,25 +21,25 @@ fun HtmlBlockTag.renderField(game: Game, field: Field, session: Session?) {
             return@div
         }
 
-        var classes = ""
-        if (robot == playerRobot) {
-            classes = "text-success"
-        }
-
-        span(classes = classes) {
-            +robot.model.name
-            entity(Entities.nbsp)
-            renderOrientation(robot.facing)
-        }
+        renderRobot(robot)
     }
 }
 
+fun HtmlBlockTag.renderRobot(robot: Robot) {
+    div(classes = "robot robot-${robot.model.name.toLowerCase()} direction-${robot.facing.name.toLowerCase()}")
+}
+
 fun HtmlBlockTag.renderBoard(game: Game, session: Session?) {
-    div(classes = "row") {
-        div(classes = "col") {
-            game.board.fields.forEach {
-                div(classes = "row") {
-                    it.forEach { renderField(game, it, session) }
+    div("row") {
+        div("col") {
+            div("board") {
+                val rowTemplate = "60px ".repeat(game.board.fields.count())
+                val colTemplate = "60px ".repeat(game.board.fields[0].count())
+
+                attributes["style"] = "grid-template-rows: $rowTemplate; grid-template-columns: $colTemplate;"
+
+                game.board.fields.flatten().forEach {
+                    renderField(game, it, session)
                 }
             }
         }

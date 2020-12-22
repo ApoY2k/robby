@@ -22,9 +22,9 @@ fun Route.base(storage: Storage) {
                 link(rel = "stylesheet", href = "/static/main.css")
             }
             body {
-                div(classes = "container") {
-                    div(classes = "row") {
-                        div(classes = "col") {
+                div("container") {
+                    div("row") {
+                        div("col") {
                             h1 {
                                 +"robby"
                             }
@@ -32,9 +32,31 @@ fun Route.base(storage: Storage) {
                     }
                     renderGame(storage, call.sessions.get<Session>())
                 }
-                script(src = "https://code.jquery.com/jquery-3.4.1.slim.min.js") { }
-                script(src = "https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/js/bootstrap.bundle.min.js") { }
-                script(src = "/static/main.js") { }
+                div("container") {
+                    div("row mt-3") {
+                        div("col") {
+                            hr{}
+                            p("text-center text-muted") {
+                                small {
+                                    +"Icons made by "
+                                    a("https://www.flaticon.com/authors/smashicons") {
+                                        +"Smashicons"
+                                    }
+                                    +" from "
+                                    a("https://www.flaticon.com/") {
+                                        +"www.flaticon.com"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                script("text/javascript", "https://code.jquery.com/jquery-3.4.1.slim.min.js") { }
+                script(
+                    "text/javascript",
+                    src = "https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/js/bootstrap.bundle.min.js"
+                ) { }
+                script("text/javascript", src = "/static/main.js") { }
             }
         }
     }

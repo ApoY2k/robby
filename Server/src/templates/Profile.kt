@@ -7,15 +7,15 @@ fun HtmlBlockTag.renderProfile(game: Game, session: Session?) {
     val player = game.playerFor(session)
     val robot = player?.robot
 
-    div(classes = "my-3") {
+    div("my-3") {
         if (player == null) {
             return@div
         }
 
         if (robot == null) {
-            div(classes = "row") {
-                div(classes = "col") {
-                    p(classes = "alert alert-info") {
+            div("row") {
+                div("col") {
+                    p("alert alert-info") {
                         +"You do not have a robot in the game. Specating only"
                     }
                 }
@@ -24,10 +24,10 @@ fun HtmlBlockTag.renderProfile(game: Game, session: Session?) {
             return@div
         }
 
-        div(classes = "row") {
-            div(classes = "col") {
+        div("row") {
+            div("col") {
                 if (game.state == GameState.PROGRAMMING_REGISTERS) {
-                    div(classes = "row row-cols-5") {
+                    div("row row-cols-5") {
                         renderRegister(1, player)
                         renderRegister(2, player)
                         renderRegister(3, player)
@@ -36,8 +36,8 @@ fun HtmlBlockTag.renderProfile(game: Game, session: Session?) {
                     }
 
                     if (player.drawnCards.isNotEmpty()) {
-                        div(classes = "row mt-3") {
-                            div(classes = "col") {
+                        div("row mt-3") {
+                            div("col") {
                                 if (player.cardsConfirmed) {
                                     button(classes = "btn btn-danger") {
                                         attributes["data-action"] = ConfirmCardsAction().toString()
@@ -50,7 +50,7 @@ fun HtmlBlockTag.renderProfile(game: Game, session: Session?) {
                                             +"Confirm selected cards"
                                         }
                                     } else {
-                                        p(classes = "alert alert-info") {
+                                        p("alert alert-info") {
                                             +"Select a card for all registers to confirm"
                                         }
                                     }
@@ -59,7 +59,7 @@ fun HtmlBlockTag.renderProfile(game: Game, session: Session?) {
                         }
                     }
                 } else {
-                    p(classes = "alert alert-info") {
+                    p("alert alert-info") {
                         when (game.state) {
                             GameState.EXECUTING_REGISTER_1 -> +"Executing register 1"
                             GameState.EXECUTING_REGISTER_2 -> +"Executing register 2"
@@ -75,14 +75,14 @@ fun HtmlBlockTag.renderProfile(game: Game, session: Session?) {
                     }
                 }
             }
-            div(classes = "col-3") {
+            div("col-3") {
                 h4 {
                     +robot.model.name
                 }
                 h5 {
                     +"Damage buffer"
                 }
-                div(classes = "progress") {
+                div("progress") {
                     renderDamageBuffer(robot, 1, "secondary")
                     renderDamageBuffer(robot, 2, "secondary")
                     renderDamageBuffer(robot, 3, "secondary")
@@ -94,7 +94,7 @@ fun HtmlBlockTag.renderProfile(game: Game, session: Session?) {
                     renderDamageBuffer(robot, 9, "warning", "LOCKS Register 1")
                     renderDamageBuffer(robot, 10, "danger", "DESTROYED")
                 }
-                h5(classes = "mt-3") {
+                h5("mt-3") {
                     +"Modifications"
                 }
                 hr {}
@@ -113,16 +113,16 @@ fun HtmlBlockTag.renderRegister(register: Int, player: Player) {
     val robot = player.robot ?: return
     val locked = player.cardsConfirmed || robot.isLocked(register)
 
-    div(classes = "col pb-3") {
+    div("col pb-3") {
         if (locked) {
-            div(classes = "register-locked")
+            div("register-locked")
         }
 
         h5 {
             +"Register $register"
         }
 
-        div(classes = "btn-group-vertical w-100") {
+        div("btn-group-vertical w-100") {
             if (locked) {
                 renderCard(register, robot.getRegister(register), locked = true, selected = true)
             } else {
@@ -164,14 +164,14 @@ fun HtmlBlockTag.renderCard(register: Int, card: MovementCard?, locked: Boolean,
 
         +title
 
-        span(classes = "card-priority") {
+        span("card-priority") {
             +card.priority.toString()
         }
     }
 }
 
 fun HtmlBlockTag.renderDamageBuffer(robot: Robot, threshold: Int, bg: String, tooltip: String = "") {
-    div(classes = "progress-bar bg-$bg") {
+    div("progress-bar bg-$bg") {
         attributes["style"] = "width: 10%;"
 
         if (tooltip.isNotBlank()) {

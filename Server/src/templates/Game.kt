@@ -10,12 +10,12 @@ fun HtmlBlockTag.renderGame(storage: Storage, session: Session?) {
     div {
         attributes["id"] = "gameview"
 
-        div(classes = "row") {
-            div(classes = "col") {
+        div("row") {
+            div("col") {
                 renderBoard(storage.game, session)
             }
 
-            div(classes = "col-2") {
+            div("col-2") {
                 renderPlayers(storage.game, session)
                 renderJoinForm(storage.game, session)
             }
