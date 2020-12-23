@@ -26,7 +26,10 @@ fun HtmlBlockTag.renderField(game: Game, field: Field, session: Session?) {
 }
 
 fun HtmlBlockTag.renderRobot(robot: Robot) {
-    div(classes = "robot robot-${robot.model.name.toLowerCase()} direction-${robot.facing.name.toLowerCase()}")
+    div("robot") {
+        div("model icon-${robot.model.name.toLowerCase()} facing-${robot.facing.name.toLowerCase()}")
+        div("arrow arrow-${robot.facing.name.toLowerCase()}")
+    }
 }
 
 fun HtmlBlockTag.renderBoard(game: Game, session: Session?) {
