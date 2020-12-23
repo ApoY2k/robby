@@ -13,7 +13,11 @@ fun HtmlBlockTag.renderOrientation(direction: Direction) {
 }
 
 fun HtmlBlockTag.renderField(game: Game, field: Field, session: Session?) {
-    div("field") {
+    div("field type-${field.type.name.toLowerCase()}") {
+        field.directions.forEach {
+            attributes["class"] += " direction-${it.name.toLowerCase()}"
+        }
+
         val playerRobot = game.playerFor(session)?.robot
         val robot = field.robot
         if (robot == null) {

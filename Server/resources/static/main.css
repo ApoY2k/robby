@@ -28,8 +28,8 @@
 
 .board {
     display: grid;
-    row-gap: 5px;
-    column-gap: 5px;
+    row-gap: 1px;
+    column-gap: 1px;
 }
 
 .field {
@@ -38,6 +38,98 @@
     width: 60px;
     padding: 5px;
     position: relative;
+}
+
+.type-hole {
+    background-color: #888;
+}
+
+.type-wall, .type-laser, .type-laser_2, .type-pusher {
+    border-width: 5px;
+    border-color: #bbbb04;
+}
+
+.type-rotate_left::after, .type-rotate_right::after, .type-flag::after, .type-repair::after, .type-repair_mod::after,
+.type-belt::after, .type-belt_2::after {
+    content: "";
+    display: block;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0.2;
+    background-size: contain;
+    background-position: center;
+}
+
+.type-wall.direction-down, .type-laser.direction-down, .type-laser_2.direction-down, .type-pusher.direction-down {
+    border-bottom-style: solid;
+}
+
+.type-wall.direction-up, .type-laser.direction-up, .type-laser_2.direction-up, .type-pusher.direction-up {
+    border-top-style: solid;
+}
+
+.type-wall.direction-left, .type-laser.direction-left, .type-laser_2.direction-left, .type-pusher.direction-left {
+    border-left-style: solid;
+}
+
+.type-wall.direction-right, .type-laser.direction-right, .type-laser_2.direction-right, .type-pusher.direction-right {
+    border-right-style: solid;
+}
+
+.type-rotate_left::after {
+    background-image: url("/static/icons/rotate_left.png");
+}
+
+.type-rotate_right::after {
+    background-image: url("/static/icons/rotate_right.png");
+}
+
+.type-belt.direction-up::after, .type-belt.direction-down::after,
+.type-belt.direction-left::after, .type-belt.direction-right::after {
+    background-image: url("/static/icons/straight.png");
+}
+
+.type-belt.direction-up.direction-right::after, .type-belt.direction-down.direction-right::after {
+    background-image: url("/static/icons/turn_right.png");
+}
+
+.type-belt.direction-up.direction-left::after, .type-belt.direction-down.direction-left::after {
+    background-image: url("/static/icons/turn_left.png");
+}
+
+.type-belt.direction-up.direction-right.direction-left::after,
+.type-belt.direction-up.direction-right.direction-down::after,
+.type-belt.direction-up.direction-left.direction-down::after,
+.type-belt.direction-up.direction-left.direction-down::after,
+.type-belt.direction-down.direction-left.direction-right::after {
+    background-image: url("/static/icons/merge.png");
+}
+
+.type-belt.direction-left::after {
+    transform: rotate(-90deg);
+}
+
+.type-belt.direction-right::after {
+    transform: rotate(90deg);
+}
+
+.type-belt.direction-down::after {
+    transform: rotate(180deg);
+}
+
+.type-repair::after {
+    content: "🔧";
+}
+
+.type-repair_mod::after {
+    content: "🛠";
+}
+
+.type-flag::after {
+    content: "🚩";
 }
 
 .robot {

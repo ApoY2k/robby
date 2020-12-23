@@ -1,5 +1,7 @@
 package apoy2k.robby.model
 
+import apoy2k.robby.model.predef.board.DEMO_BOARD
+import apoy2k.robby.model.predef.deck.STANDARD_DECK
 import java.util.*
 
 enum class GameState {
@@ -20,20 +22,9 @@ data class Game(val id: UUID = UUID.randomUUID()) {
 
     val players = mutableSetOf<Player>()
 
-    val board = Board(
-        listOf(
-            listOf(Field(), Field(), Field(), Field(), Field(), Field(), Field(), Field()),
-            listOf(Field(), Field(), Field(), Field(), Field(), Field(), Field(), Field()),
-            listOf(Field(), Field(), Field(), Field(), Field(), Field(), Field(), Field()),
-            listOf(Field(), Field(), Field(), Field(), Field(), Field(), Field(), Field()),
-            listOf(Field(), Field(), Field(), Field(), Field(), Field(), Field(), Field()),
-            listOf(Field(), Field(), Field(), Field(), Field(), Field(), Field(), Field()),
-            listOf(Field(), Field(), Field(), Field(), Field(), Field(), Field(), Field()),
-            listOf(Field(), Field(), Field(), Field(), Field(), Field(), Field(), Field()),
-        )
-    )
+    val board = Board(DEMO_BOARD.toList())
 
-    val deck = DEFAULT_FULL_DECK.shuffled().toMutableList()
+    val deck = STANDARD_DECK.shuffled().toMutableList()
 
     var state: GameState = GameState.PROGRAMMING_REGISTERS
 

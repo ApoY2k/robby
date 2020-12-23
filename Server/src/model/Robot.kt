@@ -1,6 +1,5 @@
 package apoy2k.robby.model
 
-import com.sun.org.apache.xpath.internal.operations.Bool
 import java.util.*
 
 enum class RobotModel {
@@ -48,6 +47,9 @@ data class Robot(val model: RobotModel, val id: UUID = UUID.randomUUID()) {
         registers[register] = card
     }
 
+    /**
+     * Check if a register is locked
+     */
     fun isLocked(register: Int): Boolean {
         return damage >= 5 && register == 5
                 || damage >= 6 && register == 4
