@@ -49,13 +49,20 @@
     border-color: #bbbb04;
 }
 
-.type-rotate_left::after, .type-rotate_right::after, .type-flag::after, .type-repair::after, .type-repair_mod::after,
-.type-belt::after, .type-belt_2::after {
+.field[class*="type-rotate"]::after,
+.field[class*="type-laser"]::after,
+.field[class*="type-belt"]::after,
+.field[class*="type-pusher"]::after,
+.type-repair::after,
+.type-repair_mod::after,
+.type-flag::after {
     content: "";
     display: block;
     position: absolute;
     top: 0;
     left: 0;
+    font-size: 2rem;
+    text-align: center;
     width: 100%;
     height: 100%;
     opacity: 0.2;
@@ -63,19 +70,27 @@
     background-position: center;
 }
 
-.type-wall.direction-down, .type-laser.direction-down, .type-laser_2.direction-down, .type-pusher.direction-down {
+.type-wall_d, .type-wall_ld, .type-wall_ldr, .type-wall_lud, .type-wall_urd, .type-wall_lurd, .type-wall_ud, .type-wall_rd, .type-wall_d,
+.type-laser_d, .type-laser_2_d,
+.type-pusher_d {
     border-bottom-style: solid;
 }
 
-.type-wall.direction-up, .type-laser.direction-up, .type-laser_2.direction-up, .type-pusher.direction-up {
+.type-wall_lu, .type-wall_lur, .type-wall_lud, .type-wall_urd, .type-wall_lurd, .type-wall_u, .type-wall_ur, .type-wall_ud,
+.type-laser_u, .type-laser_2_u,
+.type-pusher_u {
     border-top-style: solid;
 }
 
-.type-wall.direction-left, .type-laser.direction-left, .type-laser_2.direction-left, .type-pusher.direction-left {
+.type-wall_l, .type-wall_lu, .type-wall_lr, .type-wall_lr, .type-wall_ld, .type-wall_lur, .type-wall_ldr, .type-wall_lud, .type-wall_lurd,
+.type-laser_l, .type-laser_2_l,
+.type-pusher_l {
     border-left-style: solid;
 }
 
-.type-wall.direction-right, .type-laser.direction-right, .type-laser_2.direction-right, .type-pusher.direction-right {
+.type-wall_lr, .type-wall_lur, .type-wall_ldr, .type-wall_urd, .type-wall_lurd, .type-wall_ur, .type-wall_r, .type-wall_rd,
+.type-laser_r, .type-laser_2_r,
+.type-pusher_r {
     border-right-style: solid;
 }
 
@@ -87,36 +102,74 @@
     background-image: url("/static/icons/rotate_right.png");
 }
 
-.type-belt.direction-up::after, .type-belt.direction-down::after,
-.type-belt.direction-left::after, .type-belt.direction-right::after {
+.type-belt_l::after, .type-belt_u::after, .type-belt_d::after, .type-belt_r::after {
     background-image: url("/static/icons/straight.png");
 }
 
-.type-belt.direction-up.direction-right::after, .type-belt.direction-down.direction-right::after {
+.type-belt_2_l::after, .type-belt_2_u::after, .type-belt_2_d::after, .type-belt_2_r::after {
+    background-image: url("/static/icons/straight_2.png");
+}
+
+.type-belt_ru::after, .type-belt_dr::after, .type-belt_ld::after, .type-belt_ul::after {
     background-image: url("/static/icons/turn_right.png");
 }
 
-.type-belt.direction-up.direction-left::after, .type-belt.direction-down.direction-left::after {
+.type-belt_2_ru::after, .type-belt_2_dr::after, .type-belt_2_ld::after, .type-belt_2_ul::after {
+    background-image: url("/static/icons/turn_2_right.png");
+}
+
+.type-belt_lu::after, .type-belt_dl::after, .type-belt_rd::after, .type-belt_ur::after {
     background-image: url("/static/icons/turn_left.png");
 }
 
-.type-belt.direction-up.direction-right.direction-left::after,
-.type-belt.direction-up.direction-right.direction-down::after,
-.type-belt.direction-up.direction-left.direction-down::after,
-.type-belt.direction-up.direction-left.direction-down::after,
-.type-belt.direction-down.direction-left.direction-right::after {
-    background-image: url("/static/icons/merge.png");
+.type-belt_2_lu::after, .type-belt_2_dl::after, .type-belt_2_rd::after, .type-belt_2_ur::after {
+    background-image: url("/static/icons/turn_2_left.png");
 }
 
-.type-belt.direction-left::after {
+.type-belt_lur::after, .type-belt_urd::after, .type-belt_dlu::after, .type-belt_rld::after {
+    background-image: url("/static/icons/merge_r.png");
+}
+
+.type-belt_2_lur::after, .type-belt_2_urd::after, .type-belt_2_dlu::after, .type-belt_2_rld::after {
+    background-image: url("/static/icons/merge_2_r.png");
+}
+
+.type-belt_lud::after, .type-belt_ulr::after, .type-belt_rud::after, .type-belt_dlr::after {
+    background-image: url("/static/icons/merge_lr.png");
+}
+
+.type-belt_2_lud::after, .type-belt_2_ulr::after, .type-belt_2_rud::after, .type-belt_2_dlr::after {
+    background-image: url("/static/icons/merge_2_lr.png");
+}
+
+.type-belt_lrd::after, .type-belt_uld::after, .type-belt_rlu::after, .type-belt_dur::after {
+    background-image: url("/static/icons/merge_l.png");
+}
+
+.type-belt_2_lrd::after, .type-belt_2_uld::after, .type-belt_2_rlu::after, .type-belt_2_dur::after {
+    background-image: url("/static/icons/merge_2_l.png");
+}
+
+.type-belt_lurd::after, .type-belt_ulrd::after, .type-belt_dlur::after, .type-belt_rlud::after {
+    background-image: url("/static/icons/merge_lrd.png");
+}
+
+.type-belt_2_lurd::after, .type-belt_2_ulrd::after, .type-belt_2_dlur::after, .type-belt_2_rlud::after {
+    background-image: url("/static/icons/merge_2_lrd.png");
+}
+
+.type-belt_l::after, .type-belt_ul::after, .type-belt_dl::after, .type-belt_lur::after, .type-belt_lud::after, .type-belt_lrd::after, .type-belt_lurd::after,
+.type-belt_2_l::after, .type-belt_2_ul::after, .type-belt_2_dl::after, .type-belt_2_lur::after, .type-belt_2_lud::after, .type-belt_2_lrd::after, .type-belt_2_lurd::after {
     transform: rotate(-90deg);
 }
 
-.type-belt.direction-right::after {
+.type-belt_r::after, .type-belt_dr::after, .type-belt_ur::after, .type-belt_rud::after, .type-belt_rlu::after, .type-belt_rld::after, .type-belt_rlud::after,
+.type-belt_2_r::after, .type-belt_2_dr::after, .type-belt_2_ur::after, .type-belt_2_rud::after, .type-belt_2_rlu::after, .type-belt_2_rld::after, .type-belt_2_rlud::after {
     transform: rotate(90deg);
 }
 
-.type-belt.direction-down::after {
+.type-belt_d::after, .type-belt_ld::after, .type-belt_rd::after, .type-belt_dlu::after, .type-belt_dur::after, .type-belt_dlur::after, .type-belt_dlr::after,
+.type-belt_2_d::after, .type-belt_2_ld::after, .type-belt_2_rd::after, .type-belt_2_dlu::after, .type-belt_2_dur::after, .type-belt_2_dlur::after, .type-belt_2_dlr::after {
     transform: rotate(180deg);
 }
 
@@ -131,7 +184,7 @@
 .type-flag::after {
     content: "🚩";
 }
-
+vil
 .robot {
     height: 100%;
     width: 100%;

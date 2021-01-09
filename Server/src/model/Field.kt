@@ -2,36 +2,104 @@ package apoy2k.robby.model
 
 import java.util.*
 
-enum class FieldType {
-    NONE,
-    HOLE,
-    WALL,
-    BELT,
-    BELT_2,
-    LASER,
-    LASER_2,
-    ROTATE_LEFT,
-    ROTATE_RIGHT,
-    PUSHER,
-    FLAG,
-    REPAIR,
-    REPAIR_MOD,
-}
-
 data class Field(val id: UUID = UUID.randomUUID()) {
     var robot: Robot? = null
     var type = FieldType.NONE
-    var directions = EnumSet.noneOf(Direction::class.java)
 
     constructor(type: FieldType) : this() {
         this.type = type
     }
+}
 
-    constructor(type: FieldType, direction: Direction): this(type) {
-        this.directions = EnumSet.of(direction)
-    }
-
-    constructor(type: FieldType, vararg directions: Direction): this(type) {
-        this.directions = EnumSet.copyOf(directions.asList())
-    }
+enum class FieldType {
+    NONE,
+    HOLE,
+    WALL_L,
+    WALL_LU,
+    WALL_LR,
+    WALL_LD,
+    WALL_LUR,
+    WALL_LRD,
+    WALL_LUD,
+    WALL_URD,
+    WALL_LURD,
+    WALL_U,
+    WALL_UR,
+    WALL_UD,
+    WALL_R,
+    WALL_RD,
+    WALL_D,
+    BELT_L,
+    BELT_LU,
+    BELT_LD,
+    BELT_LUR,
+    BELT_LUD,
+    BELT_LRD,
+    BELT_LURD,
+    BELT_U,
+    BELT_UL,
+    BELT_UR,
+    BELT_ULR,
+    BELT_ULD,
+    BELT_URD,
+    BELT_ULRD,
+    BELT_D,
+    BELT_DL,
+    BELT_DR,
+    BELT_DLR,
+    BELT_DLU,
+    BELT_DUR,
+    BELT_DLUR,
+    BELT_R,
+    BELT_RU,
+    BELT_RD,
+    BELT_RUD,
+    BELT_RLU,
+    BELT_RLD,
+    BELT_RLUD,
+    BELT_2_L,
+    BELT_2_LU,
+    BELT_2_LD,
+    BELT_2_LUR,
+    BELT_2_LUD,
+    BELT_2_LRD,
+    BELT_2_LURD,
+    BELT_2_U,
+    BELT_2_UL,
+    BELT_2_UR,
+    BELT_2_ULR,
+    BELT_2_ULD,
+    BELT_2_URD,
+    BELT_2_ULRD,
+    BELT_2_D,
+    BELT_2_DL,
+    BELT_2_DR,
+    BELT_2_DLR,
+    BELT_2_DLU,
+    BELT_2_DUR,
+    BELT_2_DLUR,
+    BELT_2_R,
+    BELT_2_RU,
+    BELT_2_RD,
+    BELT_2_RUD,
+    BELT_2_RLU,
+    BELT_2_RLD,
+    BELT_2_RLUD,
+    LASER_L,
+    LASER_U,
+    LASER_R,
+    LASER_D,
+    LASER_L_2,
+    LASER_U_2,
+    LASER_R_2,
+    LASER_D_2,
+    ROTATE_LEFT,
+    ROTATE_RIGHT,
+    PUSHER_L,
+    PUSHER_U,
+    PUSHER_R,
+    PUSHER_D,
+    FLAG,
+    REPAIR,
+    REPAIR_MOD,
 }

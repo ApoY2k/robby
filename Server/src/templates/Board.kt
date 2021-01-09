@@ -3,21 +3,8 @@ package apoy2k.robby.templates
 import apoy2k.robby.model.*
 import kotlinx.html.*
 
-fun HtmlBlockTag.renderOrientation(direction: Direction) {
-    +when (direction) {
-        Direction.UP -> "(^)"
-        Direction.RIGHT -> "(>)"
-        Direction.DOWN -> "(v)"
-        Direction.LEFT -> "(<)"
-    }
-}
-
 fun HtmlBlockTag.renderField(game: Game, field: Field, session: Session?) {
     div("field type-${field.type.name.toLowerCase()}") {
-        field.directions.forEach {
-            attributes["class"] += " direction-${it.name.toLowerCase()}"
-        }
-
         val playerRobot = game.playerFor(session)?.robot
         val robot = field.robot
         if (robot == null) {
