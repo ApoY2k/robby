@@ -161,19 +161,19 @@
 
 .type-belt_l::after, .type-belt_ul::after, .type-belt_dl::after, .type-belt_lur::after, .type-belt_lud::after, .type-belt_lrd::after, .type-belt_lurd::after,
 .type-belt_2_l::after, .type-belt_2_ul::after, .type-belt_2_dl::after, .type-belt_2_lur::after, .type-belt_2_lud::after, .type-belt_2_lrd::after, .type-belt_2_lurd::after,
-.type-laser_l::after, .type-laser_2_l::after {
+.type-laser_l::after, .type-laser_2_l::after, .type-pusher_l::after {
     transform: rotate(-90deg);
 }
 
 .type-belt_r::after, .type-belt_dr::after, .type-belt_ur::after, .type-belt_rud::after, .type-belt_rlu::after, .type-belt_rld::after, .type-belt_rlud::after,
 .type-belt_2_r::after, .type-belt_2_dr::after, .type-belt_2_ur::after, .type-belt_2_rud::after, .type-belt_2_rlu::after, .type-belt_2_rld::after, .type-belt_2_rlud::after,
-.type-laser_r::after, .type-laser_2_r::after {
+.type-laser_r::after, .type-laser_2_r::after, .type-pusher_r::after {
     transform: rotate(90deg);
 }
 
 .type-belt_d::after, .type-belt_ld::after, .type-belt_rd::after, .type-belt_dlu::after, .type-belt_dur::after, .type-belt_dlur::after, .type-belt_dlr::after,
 .type-belt_2_d::after, .type-belt_2_ld::after, .type-belt_2_rd::after, .type-belt_2_dlu::after, .type-belt_2_dur::after, .type-belt_2_dlur::after, .type-belt_2_dlr::after,
-.type-laser_d::after, .type-laser_2_d::after {
+.type-laser_d::after, .type-laser_2_d::after, .type-pusher_d::after {
     transform: rotate(180deg);
 }
 
@@ -183,6 +183,11 @@
 
 .field[class*="type-laser_2"]::after {
     background-image: url("/static/icons/laser_2.png");
+}
+
+.field[class*="type-pusher"]::after {
+    background-image: url("/static/icons/pusher.png");
+    background-position: center -10px;
 }
 
 .type-repair::after {
@@ -196,7 +201,7 @@
 .type-flag::after {
     content: "🚩";
 }
-vil
+
 .robot {
     height: 100%;
     width: 100%;
