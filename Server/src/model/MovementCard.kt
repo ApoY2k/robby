@@ -15,4 +15,9 @@ enum class Movement {
 data class MovementCard(val movement: Movement, val priority: Int) {
     val id: UUID = UUID.randomUUID()
     var player: Player? = null
+
+    // true, if the movement on this card contains any amount of steps in a specific direction
+    val hasSteps = setOf(
+        Movement.STRAIGHT, Movement.STRAIGHT_2, Movement.STRAIGHT_3, Movement.BACKWARDS
+    ).contains(movement)
 }

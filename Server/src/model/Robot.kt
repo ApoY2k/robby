@@ -10,6 +10,7 @@ enum class RobotModel {
 }
 
 enum class Direction {
+    NONE,
     UP,
     RIGHT,
     DOWN,
@@ -50,13 +51,12 @@ data class Robot(val model: RobotModel, val id: UUID = UUID.randomUUID()) {
     /**
      * Check if a register is locked
      */
-    fun isLocked(register: Int): Boolean {
-        return damage >= 5 && register == 5
+    fun isLocked(register: Int): Boolean =
+        damage >= 5 && register == 5
                 || damage >= 6 && register == 4
                 || damage >= 7 && register == 3
                 || damage >= 8 && register == 2
                 || damage >= 9
-    }
 
     /**
      * Clear all registers.
@@ -97,45 +97,45 @@ data class Robot(val model: RobotModel, val id: UUID = UUID.randomUUID()) {
     /**
      * Returns true if the robot has movement cards in all registers
      */
-    fun hasAllRegistersFilled(): Boolean {
-        return registers.all { it.value != null }
-    }
+    fun hasAllRegistersFilled(): Boolean = registers.all { it.value != null }
 
     /**
      * Return the movement card in a register (or null if no card is set)
      */
-    fun getRegister(register: Int): MovementCard? {
-        return registers[register]
-    }
+    fun getRegister(register: Int) = registers[register]
 
     /**
-     * Apply a rotational movement on this robot
+     * Apply a rotational movement on this robot, if the given movement requires it.
+     * Non-rotating movements are ignored
      */
     fun rotate(movement: Movement) {
         if (movement == Movement.TURN_RIGHT) {
-            facing = when(facing) {
+            facing = when (facing) {
                 Direction.UP -> Direction.RIGHT
                 Direction.DOWN -> Direction.LEFT
                 Direction.LEFT -> Direction.UP
                 Direction.RIGHT -> Direction.DOWN
+                else -> Direction.NONE
             }
         }
 
         if (movement == Movement.TURN_LEFT) {
-            facing = when(facing) {
+            facing = when (facing) {
                 Direction.UP -> Direction.LEFT
                 Direction.DOWN -> Direction.RIGHT
                 Direction.LEFT -> Direction.DOWN
                 Direction.RIGHT -> Direction.UP
+                else -> Direction.NONE
             }
         }
 
         if (movement == Movement.TURN_180) {
-            facing = when(facing) {
+            facing = when (facing) {
                 Direction.UP -> Direction.DOWN
                 Direction.DOWN -> Direction.UP
                 Direction.LEFT -> Direction.RIGHT
                 Direction.RIGHT -> Direction.LEFT
+                else -> Direction.NONE
             }
         }
 
@@ -143,15 +143,17 @@ data class Robot(val model: RobotModel, val id: UUID = UUID.randomUUID()) {
     }
 
     /**
-     * Get the direction in which to move this robot, based on where its facind and a movement to apply
+     * Get the direction in which to move this robot, based on where it's facing and a movement to apply
      */
     fun getMovementDirection(movement: Movement): Direction {
+        // If the movement should be backwards, simply invert the current orientation the robot is facing
         if (setOf(Movement.BACKWARDS).contains(movement)) {
             return when (facing) {
                 Direction.UP -> Direction.DOWN
                 Direction.DOWN -> Direction.UP
                 Direction.LEFT -> Direction.RIGHT
                 Direction.RIGHT -> Direction.LEFT
+                else -> Direction.NONE
             }
         }
 

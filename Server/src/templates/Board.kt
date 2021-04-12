@@ -3,8 +3,17 @@ package apoy2k.robby.templates
 import apoy2k.robby.model.*
 import kotlinx.html.*
 
+fun Field.directionsToCssClass(): String =
+    listOf(this.outgoingDirection)
+        .plus(this.incomingDirections)
+        .joinToString("") { it.name.take(1).toLowerCase() }
+
 fun HtmlBlockTag.renderField(game: Game, field: Field, session: Session?) {
     div("field type-${field.type.name.toLowerCase()}") {
+        if (field.hasDirections()) {
+            attributes["class"] += "_${field.directionsToCssClass()}}"
+        }
+
         val playerRobot = game.playerFor(session)?.robot
         val robot = field.robot
         if (robot == null) {

@@ -12,6 +12,10 @@ class MovementTest {
 
     private val sess1 = Session("s1")
     private val player1 = Player("p1", sess1)
+    private val sess2 = Session("s2")
+    private val player2 = Player("p2", sess2)
+    private val sess3 = Session("s3")
+    private val player3 = Player("p3", sess3)
 
     @Before
     fun setup() {
@@ -23,6 +27,8 @@ class MovementTest {
         ))
 
         player1.robot = Robot(RobotModel.ZIPPY)
+        player2.robot = Robot(RobotModel.HUZZA)
+        player3.robot = Robot(RobotModel.KLAUS)
     }
 
     @Test
@@ -51,6 +57,8 @@ class MovementTest {
         val target = board.fields[1][3]
 
         source.robot = player1.robot
+        board.execute(card)
+        board.execute(card)
         board.execute(card)
 
         assertNull(source.robot)
@@ -88,5 +96,65 @@ class MovementTest {
         assertNotNull(field.robot)
         assertEquals(player1.robot, field.robot)
         assertEquals(Direction.DOWN, field.robot?.facing)
+    }
+
+    @Test
+    fun testPush() {
+        val card = MovementCard(Movement.STRAIGHT, 1)
+        card.player = player1
+
+        val top = board.fields[1][1]
+        val middle = board.fields[2][1]
+        val down = board.fields[3][1]
+
+        top.robot = player1.robot
+        middle.robot = player2.robot
+        board.execute(card)
+
+        assertNull(top.robot)
+        assertNotNull(middle.robot)
+        assertNotNull(down.robot)
+        assertEquals(player1.robot, middle.robot)
+        assertEquals(player2.robot, down.robot)
+    }
+
+    @Test
+    fun testPushBlocked() {
+        val card = MovementCard(Movement.STRAIGHT, 1)
+        card.player = player1
+
+        val top = board.fields[1][1]
+        val middle = board.fields[2][1]
+        val down = board.fields[3][1]
+
+        top.robot = player1.robot
+        middle.robot = player2.robot
+        down.robot = player3.robot
+        board.execute(card)
+
+        assertNotNull(top.robot)
+        assertNotNull(middle.robot)
+        assertNotNull(down.robot)
+        assertEquals(player1.robot, top.robot)
+        assertEquals(player2.robot, middle.robot)
+        assertEquals(player3.robot, down.robot)
+    }
+
+    @Test
+    fun testPushEdge() {
+        val card = MovementCard(Movement.STRAIGHT, 1)
+        card.player = player1
+
+        val top = board.fields[2][1]
+        val down = board.fields[3][1]
+
+        top.robot = player1.robot
+        down.robot = player2.robot
+        board.execute(card)
+
+        assertNotNull(top.robot)
+        assertNotNull(down.robot)
+        assertEquals(player1.robot, top.robot)
+        assertEquals(player2.robot, down.robot)
     }
 }

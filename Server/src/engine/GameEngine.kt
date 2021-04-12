@@ -142,15 +142,23 @@ class GameEngine(
     /**
      * Run through all movement cards of a register in their prioritized order with delay.
      * Sends view updates after every movement.
+     * Movements of more than 1 step are executed individually, with updates sent between every step
      */
     private suspend fun runRegister(register: Int) {
         try {
             getRegister(register)
                 .forEach {
-                    storage.game.board.execute(it)
-                    updates.send(Unit)
+                    val steps = when(it.movement) {
+                        Movement.STRAIGHT_2 -> 2
+                        Movement.STRAIGHT_3 -> 3
+                        else -> 1
+                    }
 
-                    delay(1000)
+                    for (step in 1..steps) {
+                        storage.game.board.execute(it)
+                        updates.send(Unit)
+                        delay(1000)
+                    }
                 }
         } catch (err: Throwable) {
             logger.error("Error executing register: [${err.message}]", err)
