@@ -41,15 +41,52 @@ data class Field(val id: UUID = UUID.randomUUID()) {
         val str = when (type) {
             FieldType.NONE -> " "
             FieldType.HOLE -> "O"
-            FieldType.WALL -> when {
-                directions.count() == 4 -> ""
-                directions.contains(Direction.UP) -> "╵"
-                directions.contains(Direction.LEFT) -> "╴"
-                directions.contains(Direction.RIGHT) -> "╶"
-                directions.contains(Direction.DOWN) -> "╷"
-                else -> " "
+            FieldType.WALL -> {
+                var result = ""
+
+                if (directions.contains(Direction.LEFT)) {
+                    result += "|"
+                }
+
+                if (directions.contains(Direction.UP) && directions.contains(Direction.DOWN)) {
+                    result += "="
+                } else {
+                    if (directions.contains(Direction.UP)) {
+                        result += "¯"
+                    }
+
+                    if (directions.contains(Direction.DOWN)) {
+                        result += "_"
+                    }
+                }
+
+                if (directions.contains(Direction.RIGHT)) {
+                    result += "|"
+                }
+
+                result
             }
-            FieldType.BELT -> " "
+            FieldType.BELT -> {
+                val inc = incomingDirections.joinToString {
+                    when (it) {
+                        Direction.DOWN -> "v"
+                        Direction.LEFT -> "<"
+                        Direction.RIGHT -> ">"
+                        Direction.UP -> "^"
+                        else -> ""
+                    }
+                }
+
+                val out = "" + when (outgoingDirection) {
+                    Direction.DOWN -> "v"
+                    Direction.LEFT -> "<"
+                    Direction.RIGHT -> ">"
+                    Direction.UP -> "^"
+                    else -> ""
+                }
+
+                "$inc($out)"
+            }
             FieldType.BELT_2 -> " "
             FieldType.LASER -> " "
             FieldType.LASER_2 -> " "
@@ -64,7 +101,7 @@ data class Field(val id: UUID = UUID.randomUUID()) {
             else -> " "
         }
 
-        return "[$str]"
+        return "[$str](${robot ?: " "})"
     }
 }
 

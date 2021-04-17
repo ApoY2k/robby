@@ -47,4 +47,6 @@ data class Player(val name: String, val session: Session, val id: UUID = UUID.ra
 
         cardsConfirmed = !cardsConfirmed
     }
+
+    override fun toString() = "$name:$robot"
 }

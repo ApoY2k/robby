@@ -20,4 +20,6 @@ data class MovementCard(val movement: Movement, val priority: Int) {
     val hasSteps = setOf(
         Movement.STRAIGHT, Movement.STRAIGHT_2, Movement.STRAIGHT_3, Movement.BACKWARDS
     ).contains(movement)
+
+    override fun toString() = "${movement.name}($priority)"
 }

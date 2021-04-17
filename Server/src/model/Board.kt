@@ -9,9 +9,9 @@ data class Board(val fields: List<List<Field>>) {
     /**
      * Get the indices (row/col) of the provided field
      */
-    fun getFieldIndices(field: Field): Pair<Int, Int> {
+    fun positionOf(field: Field): Position {
         val row = fields.indexOfFirst { it.contains(field) }
-        return Pair(row, fields[row].indexOf(field))
+        return Position(row, fields[row].indexOf(field))
     }
 
     /**
@@ -27,18 +27,20 @@ data class Board(val fields: List<List<Field>>) {
 
         if (card.hasSteps) {
             val direction = robot.getMovementDirection(card.movement)
-            moveRobot(robot, direction)
+            val positions = calculateRobotMove(robot, direction)
+            applyPositions(positions)
         }
     }
 
     /**
-     * Move a robot one step in the provided direction, regardless of its orientiation on the field
+     * Calculates the new position of a robot (and others, if applicable via pushing) that result when a robot moves
+     * one step in the provided direction **without taking the robots own orientation into account!**
      */
-    private fun moveRobot(robot: Robot, direction: Direction) {
+    private fun calculateRobotMove(robot: Robot, direction: Direction): Map<Position, Robot> {
         val sourceField = fields.flatten().firstOrNull { it.robot == robot }
             ?: throw InvalidGameState("Robot [$robot] could not be found on board cells")
-
         val targetField = getNeighbour(sourceField, direction)
+        val result = mutableMapOf<Position, Robot>()
 
         // Check for robot in the way (on the target field) and push them away, if possible
         targetField.robot?.let {
@@ -50,19 +52,37 @@ data class Board(val fields: List<List<Field>>) {
             // away by the original robot. Instead, the whole movement is halted and the original
             // robot should not move at all, as only one robot an be pushed away
             if (pushToField.robot != null) {
-                return
+                return emptyMap()
             }
 
-            pushToField.robot = targetField.robot
-
-            // Free the targetField for the original robot that is actually moving currently
-            targetField.robot = null
+            // Add the position of the pushed robot to the result of calculated movements
+            result[positionOf(pushToField)] = it
         }
 
-        targetField.robot = sourceField.robot
+        sourceField.robot?.let {
+            result[positionOf(targetField)] = it
+        }
 
-        // Make sure to remove the robot from the old field!
-        sourceField.robot = null
+        return result
+    }
+
+    /**
+     * Apply a map of position->robot entries to the board
+     */
+    private fun applyPositions(positions: Map<Position, Robot>) {
+        fields.flatten().forEach { field ->
+            // If a robot on a field is referenced in the position map, it must be removed from its "old" field
+            // before it can be placed on the new one, defined in the positions map
+            if (positions.containsValue(field.robot)) {
+                field.robot = null
+            }
+
+            // If the field position is referenced in the provided position map, place the robot on it
+            val position = positionOf(field)
+            positions[position]?.let {
+                field.robot = it
+            }
+        }
     }
 
     /**
@@ -70,21 +90,21 @@ data class Board(val fields: List<List<Field>>) {
      * and the direction would take make the neighbour outside of it, the original field is returned
      */
     private fun getNeighbour(field: Field, direction: Direction): Field {
-        val idx = getFieldIndices(field)
+        val idx = positionOf(field)
 
         val newRow = when (direction) {
-            Direction.UP -> idx.first - 1
-            Direction.DOWN -> idx.first + 1
-            else -> idx.first
+            Direction.UP -> idx.row - 1
+            Direction.DOWN -> idx.row + 1
+            else -> idx.row
         }
 
         val newCol = when (direction) {
-            Direction.LEFT -> idx.second - 1
-            Direction.RIGHT -> idx.second + 1
-            else -> idx.second
+            Direction.LEFT -> idx.col - 1
+            Direction.RIGHT -> idx.col + 1
+            else -> idx.col
         }
 
-        return fieldAt(newRow, newCol)
+        return fieldAt(Position(newRow, newCol))
     }
 
     /**
@@ -92,15 +112,19 @@ data class Board(val fields: List<List<Field>>) {
      * the value is coerced into the constraints of the board and the field closes to the
      * given indices is returned
      */
-    fun fieldAt(row: Int, col: Int): Field {
-        val rowIdx = row.coerceIn(0..fields.lastIndex)
-        return fields[rowIdx][col.coerceIn(0..fields[rowIdx].lastIndex)]
+    fun fieldAt(position: Position): Field {
+        val rowIdx = position.row.coerceIn(0..fields.lastIndex)
+        return fields[rowIdx][position.col.coerceIn(0..fields[rowIdx].lastIndex)]
     }
 
     /**
      * Move all belts of the given type *one* tick
      */
     fun moveBelts(beltType: FieldType) {
+        // Collect new positions that result of the belt moves as a list of "to execute" movements
+        // Each movement contains the robot that moves and the row/col index of the new field after the movement
+        val newPositions = mutableMapOf<Position, Robot>()
+
         fields.flatten()
             .filter { it.type == beltType }
             .forEach { field ->
@@ -116,17 +140,16 @@ data class Board(val fields: List<List<Field>>) {
                         Direction.DOWN
                     ).contains(field.outgoingDirection)
                 ) {
-                    /**
-                     * TODO This modifies the underlying fields
-                     * which means the next iteration of the forEach alread operates on a mutated
-                     * field-collection which might result in multiple moves being made
-                     */
-                    moveRobot(robot, field.outgoingDirection)
+                    newPositions.putAll(calculateRobotMove(robot, field.outgoingDirection))
                 }
             }
+
+        applyPositions(newPositions)
     }
 
     override fun toString(): String {
-        return "Board [${fields.count()}x${fields[0].count()}]\r\n"
+        return "Board[${fields.count()}x${fields[0].count()}]"
     }
 }
+
+data class Position(val row: Int, val col: Int)

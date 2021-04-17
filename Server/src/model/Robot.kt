@@ -161,4 +161,12 @@ data class Robot(val model: RobotModel, val id: UUID = UUID.randomUUID()) {
         // is facing so it will move (or stay) in that direction
         return facing
     }
+
+    override fun toString() = "${model.name[0]}" + when(facing) {
+        Direction.UP -> "^"
+        Direction.DOWN -> "v"
+        Direction.RIGHT -> ">"
+        Direction.LEFT -> "<"
+        else -> " "
+    }
 }
