@@ -2,9 +2,18 @@ package apoy2k.robby.model
 
 import apoy2k.robby.exceptions.InvalidGameState
 import org.slf4j.LoggerFactory
+import kotlin.math.atan2
 
 data class Board(val fields: List<List<Field>>) {
     private val logger = LoggerFactory.getLogger(this.javaClass)
+
+    /**
+     * Get the position of a robot on the field
+     */
+    fun positionOf(robot: Robot): Position {
+        val field = fields.flatten().first { it.robot == robot }
+        return positionOf(field)
+    }
 
     /**
      * Get the indices (row/col) of the provided field
@@ -125,26 +134,94 @@ data class Board(val fields: List<List<Field>>) {
         // Each movement contains the robot that moves and the row/col index of the new field after the movement
         val newPositions = mutableMapOf<Position, Robot>()
 
+        // Collect new orientations for robots, if they get turned by a belt when moved to their new position
+        val orientations = mutableMapOf<Robot, Direction>()
+
         fields.flatten()
             .filter { it.type == beltType }
             .forEach { field ->
                 val robot = field.robot ?: return@forEach
 
-                // TODO First, turn robot depending on the relative direction the belt is running
+                val movements = calculateRobotMove(robot, field.outgoingDirection)
 
-                // Afterwards, move robot in the outgoing direction
-                if (setOf(
-                        Direction.LEFT,
-                        Direction.UP,
-                        Direction.RIGHT,
-                        Direction.DOWN
-                    ).contains(field.outgoingDirection)
-                ) {
-                    newPositions.putAll(calculateRobotMove(robot, field.outgoingDirection))
-                }
+                    // Check if two robots would be moved into the same space and if so, don't move either one
+                    .filter { movement ->
+                        // If the current result set alredy contains a new position, it means and the
+                        // two movements are *not* for the same robot, they must both be removed
+                        // as no two robots can be pushed into the same position
+                        newPositions[movement.key]?.let {
+
+                            // Movement is in the newPositions list and both movements apply to different
+                            // robots -> must not be added (-> false for the filter return value)
+                            if (it != movement.value) {
+                                newPositions.remove(movement.key)
+
+                                // Also make sure to remove the robot from the orientations map
+                                // if it doesn't actually move after all
+                                orientations.remove(it)
+
+                                return@filter false
+                            }
+                        }
+
+                        // Movement is not already in the newPositions map
+                        true
+                    }
+
+                newPositions.putAll(movements)
             }
 
+        // Rotate robots that have been moved by the belt movements
+        // (as the newPositions map only contains positions that were the result from valid robot movements
+        // from belts, all of these robots might require a rotation)
+        newPositions.forEach { (position, robot) ->
+            val previousPos = positionOf(robot)
+            val incomingDirectionError = InvalidGameState(
+                "Cannot determine incoming direction of [$robot] moving from" +
+                        " [$previousPos] to [$position]"
+            )
+
+            // Determine the direction from which the robot moves onto the field
+            val incomingDirection = when {
+                previousPos.row == position.row -> when {
+                    previousPos.col < position.col -> Direction.LEFT
+                    previousPos.col > position.col -> Direction.RIGHT
+                    else -> throw incomingDirectionError
+                }
+                previousPos.col == position.col -> when {
+                    previousPos.row < position.row -> Direction.UP
+                    previousPos.row > position.row -> Direction.DOWN
+                    else -> throw incomingDirectionError
+                }
+                else -> throw incomingDirectionError
+            }
+
+            val nextField = fieldAt(position)
+            val rotationMovement = calcturnDirection(incomingDirection, nextField.outgoingDirection)
+
+            robot.rotate(rotationMovement)
+        }
+
         applyPositions(newPositions)
+    }
+
+    /**
+     * Determine the movement (turn) that translates one direction into another
+     */
+    private fun calcturnDirection(incomingDirection: Direction, outgoingDirection: Direction): Movement {
+        val incVec = incomingDirection.toVec2()
+        val outVec = outgoingDirection.toVec2()
+
+        val angle = atan2(
+            incVec.x * outVec.x - incVec.y * outVec.y,
+            incVec.x * outVec.x + incVec.y * outVec.y
+        )
+
+        return when {
+            angle < 0 -> Movement.TURN_RIGHT
+            angle > 0 -> Movement.TURN_LEFT
+            else -> Movement.STAY
+        }
     }
 
     override fun toString(): String {

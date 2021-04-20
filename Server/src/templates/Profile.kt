@@ -149,6 +149,7 @@ fun HtmlBlockTag.renderCard(register: Int, card: MovementCard?, locked: Boolean,
         Movement.TURN_RIGHT -> "↱"
         Movement.TURN_180 -> "⇅"
         Movement.BACKWARDS -> "↓"
+        Movement.STAY -> " "
     }
 
     button(classes = "btn register-card", type = ButtonType.button) {

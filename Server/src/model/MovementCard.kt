@@ -3,6 +3,7 @@ package apoy2k.robby.model
 import java.util.*
 
 enum class Movement {
+    STAY,
     STRAIGHT,
     STRAIGHT_2,
     STRAIGHT_3,
