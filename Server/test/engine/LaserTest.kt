@@ -12,6 +12,9 @@ class LaserTest {
     @MethodSource("testDataSource")
     fun testFirstFieldByDirection(testData: TestData) {
         val endField = board.firstFieldByDirection(testData.startField, testData.direction, FieldType.WALL)
+
+        println(endField)
+
         assertEquals(testData.excpectedEndField, endField)
     }
 
@@ -33,6 +36,10 @@ class LaserTest {
             TestData(board.fields[3][2], Direction.LEFT, board.fields[3][1]),
             TestData(board.fields[3][0], Direction.RIGHT, board.fields[3][1]),
             TestData(board.fields[3][1], Direction.UP, board.fields[0][1]),
+            TestData(board.fields[0][0], Direction.LEFT, board.fields[0][0]),
+            TestData(board.fields[0][0], Direction.UP, board.fields[0][0]),
+            TestData(board.fields[2][2], Direction.RIGHT, board.fields[2][2]),
+            TestData(board.fields[3][1], Direction.DOWN, board.fields[3][1]),
         )
     }
 }

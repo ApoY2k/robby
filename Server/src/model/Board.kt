@@ -237,9 +237,61 @@ data class Board(val fields: List<List<Field>>) {
         fields.flatten()
             .filter { it.type == laserType }
             .forEach { field ->
+                val startPos = positionOf(field)
                 val direction = field.outgoingDirection
+                val nextWall = firstFieldByDirection(field, direction, FieldType.WALL)
+                val wallPosition = positionOf(nextWall)
 
-                // Cycle through all fields in the lasers direction until
+                // Depending on *where* the wall is on the field, the laser might still hit a target on the field
+                // or it is stopped on the edge to the field (that is, it will stop one
+                // field *ahead* of the found field instead of the field itself)
+                val lastHitField = when (direction) {
+                    Direction.LEFT -> when (nextWall.hasDirection(Direction.RIGHT)) {
+                        true -> fieldAt(Position(wallPosition.row, wallPosition.col + 1))
+                        false -> nextWall
+                    }
+                    Direction.UP -> when (nextWall.hasDirection(Direction.DOWN)) {
+                        true -> fieldAt(Position(wallPosition.row + 1, wallPosition.col))
+                        false -> nextWall
+                    }
+                    Direction.DOWN -> when (nextWall.hasDirection(Direction.UP)) {
+                        true -> fieldAt(Position(wallPosition.row - 1, wallPosition.col))
+                        false -> nextWall
+                    }
+                    Direction.RIGHT -> when (nextWall.hasDirection(Direction.LEFT)) {
+                        true -> fieldAt(Position(wallPosition.row, wallPosition.col - 1))
+                        false -> nextWall
+                    }
+                    Direction.NONE -> nextWall
+                }
+
+                val endPos = positionOf(lastHitField)
+
+                // With the start and endField finalized, simply iterate over all fields between
+                // them in the direction of the laser and damage all robots on the way
+                when (direction) {
+                    Direction.LEFT -> {
+                        for (col in endPos.col..startPos.col) {
+                            fieldAt(Position(startPos.row, col)).robot?.let { it.damage += 1 }
+                        }
+                    }
+                    Direction.RIGHT -> {
+                        for (col in startPos.col..endPos.col) {
+                            fieldAt(Position(startPos.row, col)).robot?.let { it.damage += 1 }
+                        }
+                    }
+                    Direction.UP -> {
+                        for (row in endPos.row..startPos.row) {
+                            fieldAt(Position(row, startPos.col)).robot?.let { it.damage += 1 }
+                        }
+                    }
+                    Direction.DOWN -> {
+                        for (row in startPos.row..endPos.row) {
+                            fieldAt(Position(row, startPos.col)).robot?.let { it.damage += 1 }
+                        }
+                    }
+                    else -> Unit
+                }
             }
     }
 

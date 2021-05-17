@@ -29,6 +29,9 @@ data class Field(val id: UUID = UUID.randomUUID()) {
         }
     }
 
+    // Check if this field has a specific direction
+    fun hasDirection(direction: Direction) = getDirections().contains(direction)
+
     // Get list of all directions, not matter in or outgoing
     fun getDirections() = listOf(outgoingDirection).plus(incomingDirections)
 
@@ -42,7 +45,7 @@ data class Field(val id: UUID = UUID.randomUUID()) {
             FieldType.NONE -> " "
             FieldType.HOLE -> "O"
             FieldType.WALL -> {
-                var result = ""
+                var result = " "
 
                 if (directions.contains(Direction.LEFT)) {
                     result += "|"
@@ -73,7 +76,7 @@ data class Field(val id: UUID = UUID.randomUUID()) {
                         Direction.LEFT -> "<"
                         Direction.RIGHT -> ">"
                         Direction.UP -> "^"
-                        else -> ""
+                        else -> " "
                     }
                 }
 
@@ -82,7 +85,7 @@ data class Field(val id: UUID = UUID.randomUUID()) {
                     Direction.LEFT -> "<"
                     Direction.RIGHT -> ">"
                     Direction.UP -> "^"
-                    else -> ""
+                    else -> " "
                 }
 
                 "$inc($out)"
