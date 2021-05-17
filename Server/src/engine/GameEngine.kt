@@ -10,6 +10,7 @@ import kotlinx.coroutines.channels.SendChannel
 import kotlinx.coroutines.channels.consumeEach
 import kotlinx.coroutines.delay
 import org.slf4j.LoggerFactory
+import java.lang.Integer.max
 
 /**
  * Game engine to advance the game state based on commands and game rules
@@ -53,6 +54,7 @@ class GameEngine(
                     runRegister(5)
 
                     // After movements, execute all other game states automatically in order
+                    // TODO All of this should happen between each register??
 
                     storage.game.state = GameState.MOVE_BARD_ELEMENTS
                     runMoveBoardElements()
@@ -166,21 +168,46 @@ class GameEngine(
     }
 
     private suspend fun runMoveBoardElements() {
+        storage.game.board.moveBelts(FieldType.BELT_2)
+        updates.send(Unit)
+        delay(1000)
+
+        // TODO Move BELT_2 two times?
+
+        storage.game.board.moveBelts(FieldType.BELT)
         updates.send(Unit)
         delay(1000)
     }
 
     private suspend fun runFireLasers() {
+        storage.game.board.fireLasers(FieldType.LASER_2)
+        updates.send(Unit)
+        delay(1000)
+
+        // TODO Fire LASER_2 two times?
+
+        storage.game.board.fireLasers(FieldType.LASER)
         updates.send(Unit)
         delay(1000)
     }
 
     private suspend fun runCheckpoints() {
+        // TODO Implement checkpoints
+        /**
+         * For each robot, check the field type and if it is a checkpoint
+         * If yes, mark the players checkpoints accordingly
+         */
         updates.send(Unit)
         delay(1000)
     }
 
     private suspend fun runRepairPowerups() {
+        storage.game.board.fields.flatten()
+            .filter { it.robot != null }
+            .filter { it.type == FieldType.REPAIR }
+            .forEach { it.robot?.let { robot ->
+                robot.damage = max(0, robot.damage - 1)
+            } }
         updates.send(Unit)
         delay(1000)
     }

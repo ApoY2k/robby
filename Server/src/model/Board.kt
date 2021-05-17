@@ -197,7 +197,7 @@ data class Board(val fields: List<List<Field>>) {
             }
 
             val nextField = fieldAt(position)
-            val rotationMovement = calcturnDirection(incomingDirection, nextField.outgoingDirection)
+            val rotationMovement = getTurnDirection(incomingDirection, nextField.outgoingDirection)
 
             robot.rotate(rotationMovement)
         }
@@ -208,7 +208,7 @@ data class Board(val fields: List<List<Field>>) {
     /**
      * Determine the movement (turn) that translates one direction into another
      */
-    private fun calcturnDirection(incomingDirection: Direction, outgoingDirection: Direction): Movement {
+    private fun getTurnDirection(incomingDirection: Direction, outgoingDirection: Direction): Movement {
         val incVec = incomingDirection.toVec2()
         val outVec = outgoingDirection.toVec2()
 
@@ -221,6 +221,77 @@ data class Board(val fields: List<List<Field>>) {
             angle < 0 -> Movement.TURN_RIGHT
             angle > 0 -> Movement.TURN_LEFT
             else -> Movement.STAY
+        }
+    }
+
+    fun fireLasers(laserType: FieldType) {
+        // TODO Implement lasers firing and damaging robots
+        /**
+         * For each laser:
+         *  - determine orientation and find next wall (or end of board)
+         *  - find way to determine if wall is blocking before or after the field its attached to
+         *      (near / far side of laser)
+         *  - determine robots between laser and wall
+         *  - damage each robot for 1 point
+         */
+        fields.flatten()
+            .filter { it.type == laserType }
+            .forEach { field ->
+                val direction = field.outgoingDirection
+
+                // Cycle through all fields in the lasers direction until
+            }
+    }
+
+    /**
+     * Finds the first field, starting from a field and going in a direciton until a field of the
+     * searched typeis found. Returns the found field.
+     */
+    fun firstFieldByDirection(startField: Field, direction: Direction, fieldType: FieldType): Field {
+        val startPos = positionOf(startField)
+
+        return when (direction) {
+            Direction.RIGHT -> {
+                for (col in startPos.col + 1 until fields[startPos.row].size) {
+                    val field = fieldAt(Position(startPos.row, col))
+                    if (field.type == fieldType) {
+                        return field
+                    }
+                }
+
+                return fieldAt(Position(startPos.row, fields[startPos.row].size - 1))
+            }
+            Direction.LEFT -> {
+                for (col in startPos.col - 1 downTo 0) {
+                    val field = fieldAt(Position(startPos.row, col))
+                    if (field.type == fieldType) {
+                        return field
+                    }
+                }
+
+                return fieldAt(Position(startPos.row, 0))
+            }
+            Direction.DOWN -> {
+                for (row in startPos.row + 1 until fields.size) {
+                    val field = fieldAt(Position(row, startPos.col))
+                    if (field.type == fieldType) {
+                        return field
+                    }
+                }
+
+                return fieldAt(Position(fields.size - 1, startPos.col))
+            }
+            Direction.UP -> {
+                for (row in startPos.row - 1 downTo 0) {
+                    val field = fieldAt(Position(row, startPos.col))
+                    if (field.type == fieldType) {
+                        return field
+                    }
+                }
+
+                return fieldAt(Position(0, startPos.col))
+            }
+            else -> startField
         }
     }
 
