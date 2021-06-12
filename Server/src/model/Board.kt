@@ -277,7 +277,7 @@ data class Board(val fields: List<List<Field>>) {
                     else -> emptyList()
                 }
 
-                applyLaserCondition(fields)
+                applyLaserCondition(fields, laserType)
             }
     }
 
@@ -286,9 +286,14 @@ data class Board(val fields: List<List<Field>>) {
      * - A robot is encountered. It is then damaged for 1 and the iteration stops
      * - The end of the list is reached
      */
-    private fun applyLaserCondition(fields: Iterable<Field>) {
+    private fun applyLaserCondition(fields: Iterable<Field>, laserType: FieldType) {
         fields.forEach { field ->
-            field.conditions.add(FieldCondition.LASER)
+            when (laserType) {
+                FieldType.LASER -> field.conditions.add(FieldCondition.LASER)
+                FieldType.LASER_2 -> field.conditions.add(FieldCondition.LASER_2)
+                else -> Unit
+            }
+
             field.robot?.let {
                 it.damage += 1
                 return

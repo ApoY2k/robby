@@ -11,7 +11,7 @@ fun Field.directionsToCssClass(): String =
 fun HtmlBlockTag.renderField(game: Game, field: Field, session: Session?) {
     div("field type-${field.type.name.toLowerCase()}") {
         if (field.hasDirections()) {
-            attributes["class"] += "_${field.directionsToCssClass()}}"
+            attributes["class"] += "_${field.directionsToCssClass()}"
         }
 
         val playerRobot = game.playerFor(session)?.robot

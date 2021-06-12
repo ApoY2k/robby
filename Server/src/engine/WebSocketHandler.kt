@@ -36,17 +36,17 @@ class WebSocketHandler(private val storage: Storage, private val viewUpdates: Re
         viewUpdates.consumeEach {
             try {
                 sessions
-                    .forEach { (k, v) ->
+                    .forEach { (session, socket) ->
                         // Render the view for the target session, so each session receives their individual
                         // view of the game state
                         val gameView = StringBuilder().appendHTML(false).html {
                             body {
-                                renderGame(storage, k)
+                                renderGame(storage, session)
                             }
                         }.toString()
 
-                        logger.debug("Sending GameView to session [$k] (${v.count()} sockets)")
-                        v.forEach { it.send(Frame.Text(gameView)) }
+                        logger.debug("Sending GameView to session [$session] (${socket.count()} sockets)")
+                        socket.forEach { it.send(Frame.Text(gameView)) }
                     }
             } catch (err: Throwable) {
                 logger.error("Error sending GameView: [${err.message}]", err)

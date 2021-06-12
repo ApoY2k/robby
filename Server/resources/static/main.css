@@ -95,11 +95,11 @@
     border-right-style: solid;
 }
 
-.type-rotate_left::after {
+.type-rotate_l::after {
     background-image: url("/static/icons/rotate_left.png");
 }
 
-.type-rotate_right::after {
+.type-rotate_r::after {
     background-image: url("/static/icons/rotate_right.png");
 }
 
@@ -223,6 +223,18 @@
 
 .icon-zippy {
     background-image: url("/static/icons/zippy.png");
+}
+
+.icon-gerog {
+    background-image: url("/static/icons/gerog.png");
+}
+
+.icon-huzza {
+    background-image: url("/static/icons/huzza.png");
+}
+
+.icon-klaus {
+    background-image: url("/static/icons/klaus.png");
 }
 
 .facing-up {

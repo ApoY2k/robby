@@ -16,6 +16,7 @@ enum class ActionLabel {
 enum class ActionField {
     LABEL,
     PLAYER_NAME,
+    ROBOT_MODEL,
     CARD_ID,
     REGISTER,
 }
@@ -61,7 +62,10 @@ abstract class Action {
                 val labelField = query.firstOrNull { it.name == ActionField.LABEL.name }?.value ?: "no_label"
 
                 return when (ActionLabel.valueOf(labelField)) {
-                    ActionLabel.JOIN_GAME -> JoinGameAction(query.first(ActionField.PLAYER_NAME))
+                    ActionLabel.JOIN_GAME -> JoinGameAction(
+                        query.first(ActionField.PLAYER_NAME),
+                        query.first(ActionField.ROBOT_MODEL)
+                    )
                     ActionLabel.LEAVE_GAME -> LeaveGameAction()
                     ActionLabel.SET_REGISTER -> SelectCardAction(
                         query.first(ActionField.REGISTER),
@@ -112,9 +116,10 @@ abstract class Action {
     }
 }
 
-class JoinGameAction(name: String? = "") :
-    Action(ActionLabel.JOIN_GAME, mapOf(ActionField.PLAYER_NAME to name)) {
+class JoinGameAction(name: String? = "", model: String? = "") :
+    Action(ActionLabel.JOIN_GAME, mapOf(ActionField.PLAYER_NAME to name, ActionField.ROBOT_MODEL to model)) {
     val name get() = getFirst(ActionField.PLAYER_NAME)
+    val model get() = getFirst(ActionField.ROBOT_MODEL)
 }
 
 class LeaveGameAction : Action(ActionLabel.LEAVE_GAME)

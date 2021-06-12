@@ -113,7 +113,7 @@ class GameEngine(
         val session = action.session ?: return
 
         if (action is JoinGameAction) {
-            addPlayer(action.name, session)
+            addPlayer(action.name, RobotModel.valueOf(action.model ?: "ZIPPY"), session)
             return
         }
 
@@ -187,7 +187,17 @@ class GameEngine(
         updates.send(Unit)
         delay(1000)
 
+        // Remove the laser conditions on fields after they fired
+        storage.game.board.fields.flatten().forEach { it.conditions.remove(FieldCondition.LASER) }
+        updates.send(Unit)
+        delay(1000)
+
         storage.game.board.fireLasers(FieldType.LASER)
+        updates.send(Unit)
+        delay(1000)
+
+        // Remove the laser conditions on fields after they fired
+        storage.game.board.fields.flatten().forEach { it.conditions.remove(FieldCondition.LASER_2) }
         updates.send(Unit)
         delay(1000)
     }
@@ -219,7 +229,7 @@ class GameEngine(
     private fun drawCards(player: Player) {
         val robot = player.robot ?: return
 
-        val drawnCards = storage.game.deck.take(9 - robot.damage)
+        val drawnCards = storage.game.deck.take(max(0, 9 - robot.damage))
         storage.game.deck.removeAll(drawnCards)
         player.takeCards(drawnCards)
     }
@@ -232,7 +242,7 @@ class GameEngine(
             .let { it?.robot = null }
     }
 
-    private fun addPlayer(name: String?, session: Session) {
+    private fun addPlayer(name: String?, model: RobotModel, session: Session) {
         if (name.isNullOrBlank()) {
             throw IncompleteAction("Player name missing")
         }
@@ -247,7 +257,7 @@ class GameEngine(
 
         val player = Player(name, session)
 
-        val robot = Robot(RobotModel.ZIPPY)
+        val robot = Robot(model)
         player.robot = robot
 
         storage.game.players.add(player)

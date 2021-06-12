@@ -32,6 +32,7 @@ fun Route.socket(webSocketHandler: WebSocketHandler, actions: SendChannel<Action
                     is Frame.Text -> {
                         try {
                             val data = it.readText()
+                            logger.debug("Received [$data]")
                             val action = Action.fromString(data)
                             action.session = session
                             actions.send(action)
