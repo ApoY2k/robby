@@ -29,6 +29,11 @@ class GameEngine(
     @ExperimentalCoroutinesApi
     suspend fun connect() {
         actions.consumeEach { action ->
+            if (storage.game.state == GameState.FINISHED) {
+                logger.warn("Game is already finished! Ignorning action [$action]");
+                return
+            }
+
             try {
                 logger.debug("Received [$action]")
 
@@ -44,44 +49,58 @@ class GameEngine(
                     storage.game.state = GameState.EXECUTING_REGISTER_1
                     updates.send(Unit)
                     runRegister(1)
+                    runAutomaticSteps()
+
                     storage.game.state = GameState.EXECUTING_REGISTER_2
                     runRegister(2)
+                    runAutomaticSteps()
+
                     storage.game.state = GameState.EXECUTING_REGISTER_3
                     runRegister(3)
+                    runAutomaticSteps()
+
                     storage.game.state = GameState.EXECUTING_REGISTER_4
                     runRegister(4)
+                    runAutomaticSteps()
+
                     storage.game.state = GameState.EXECUTING_REGISTER_5
                     runRegister(5)
+                    runAutomaticSteps()
 
-                    // After movements, execute all other game states automatically in order
-                    // TODO All of this should happen between each register??
-
-                    storage.game.state = GameState.MOVE_BARD_ELEMENTS
-                    runMoveBoardElements()
-
-                    storage.game.state = GameState.FIRE_LASERS
-                    runFireLasers()
-
-                    storage.game.state = GameState.CHECKPOINTS
-                    runCheckpoints()
-
-                    storage.game.state = GameState.REPAIR_POWERUPS
-                    runRepairPowerups()
-
-                    // After all automatic turns are done, deal new cards so players can plan their next move
-
-                    storage.game.state = GameState.PROGRAMMING_REGISTERS
-                    storage.game.players.forEach {
-                        it.robot?.clearRegisters()
-                        drawCards(it)
-                        it.toggleConfirm()
+                    // Check for end condition. If it is met, end the game
+                    if (storage.game.players.any { it.robot?.passedCheckpoints == 3 }) {
+                        storage.game.state = GameState.FINISHED
+                    } else {
+                        // After all automatic turns are done, deal new cards so players can plan their next move
+                        storage.game.state = GameState.PROGRAMMING_REGISTERS
+                        storage.game.players.forEach {
+                            it.robot?.clearRegisters()
+                            drawCards(it)
+                            it.toggleConfirm()
+                        }
                     }
+
                     updates.send(Unit)
                 }
             } catch (err: Throwable) {
                 logger.error("Error executing [$action]: [$err]", err)
             }
         }
+    }
+
+    // Run all automatic steps in the game state (executed between each register)
+    private suspend fun runAutomaticSteps() {
+        storage.game.state = GameState.MOVE_BARD_ELEMENTS
+        runMoveBoardElements()
+
+        storage.game.state = GameState.FIRE_LASERS
+        runFireLasers()
+
+        storage.game.state = GameState.CHECKPOINTS
+        runCheckpoints()
+
+        storage.game.state = GameState.REPAIR_POWERUPS
+        runRepairPowerups()
     }
 
     /**
@@ -121,24 +140,10 @@ class GameEngine(
     /**
      * Get all movement cards of a specific register, sorted, for all players robots
      */
-    fun getRegister(register: Int): List<MovementCard> {
+    private fun getRegister(register: Int): List<MovementCard> {
         return storage.game.players
             .mapNotNull { it.robot?.getRegister(register) }
             .sortedByDescending { it.priority }
-    }
-
-    /**
-     * Execute all movement cards of a register in their prioritized order.
-     */
-    fun executeRegister(register: Int) {
-        try {
-            getRegister(register)
-                .forEach {
-                    storage.game.board.execute(it)
-                }
-        } catch (err: Throwable) {
-            logger.error("Error executing register: [${err.message}]", err)
-        }
     }
 
     /**
@@ -172,8 +177,6 @@ class GameEngine(
         updates.send(Unit)
         delay(1000)
 
-        // TODO Move BELT_2 two times?
-
         storage.game.board.moveBelts(FieldType.BELT)
         updates.send(Unit)
         delay(1000)
@@ -184,19 +187,17 @@ class GameEngine(
         updates.send(Unit)
         delay(1000)
 
-        // TODO Fire LASER_2 two times?
-
         storage.game.board.fireLasers(FieldType.LASER)
         updates.send(Unit)
         delay(1000)
     }
 
     private suspend fun runCheckpoints() {
-        // TODO Implement checkpoints
-        /**
-         * For each robot, check the field type and if it is a checkpoint
-         * If yes, mark the players checkpoints accordingly
-         */
+        storage.game.board.fields.flatten()
+            .filter { it.robot != null }
+            .forEach { it.robot?.let { robot ->
+                robot.passedCheckpoints += 1
+            } }
         updates.send(Unit)
         delay(1000)
     }
@@ -208,6 +209,9 @@ class GameEngine(
             .forEach { it.robot?.let { robot ->
                 robot.damage = max(0, robot.damage - 1)
             } }
+
+        // TODO Implement powerups
+
         updates.send(Unit)
         delay(1000)
     }

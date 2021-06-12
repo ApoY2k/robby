@@ -44,6 +44,8 @@ data class Robot(val model: RobotModel, val id: UUID = UUID.randomUUID()) {
 
     val modifications = emptyList<ModificationCard>()
 
+    var passedCheckpoints = 0
+
     /**
      * Move a card into a register
      */

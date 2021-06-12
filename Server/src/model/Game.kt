@@ -16,6 +16,7 @@ enum class GameState {
     FIRE_LASERS,
     CHECKPOINTS,
     REPAIR_POWERUPS,
+    FINISHED
 }
 
 data class Game(val id: UUID = UUID.randomUUID()) {

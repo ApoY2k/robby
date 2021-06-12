@@ -225,7 +225,6 @@ data class Board(val fields: List<List<Field>>) {
     }
 
     fun fireLasers(laserType: FieldType) {
-        // TODO Implement lasers firing and damaging robots
         /**
          * For each laser:
          *  - determine orientation and find next wall (or end of board)
@@ -267,37 +266,39 @@ data class Board(val fields: List<List<Field>>) {
 
                 val endPos = positionOf(lastHitField)
 
-                // With the start and endField finalized, simply iterate over all fields between
-                // them in the direction of the laser and damage all robots on the way
-                when (direction) {
-                    Direction.LEFT -> {
-                        for (col in endPos.col..startPos.col) {
-                            fieldAt(Position(startPos.row, col)).robot?.let { it.damage += 1 }
-                        }
-                    }
-                    Direction.RIGHT -> {
-                        for (col in startPos.col..endPos.col) {
-                            fieldAt(Position(startPos.row, col)).robot?.let { it.damage += 1 }
-                        }
-                    }
-                    Direction.UP -> {
-                        for (row in endPos.row..startPos.row) {
-                            fieldAt(Position(row, startPos.col)).robot?.let { it.damage += 1 }
-                        }
-                    }
-                    Direction.DOWN -> {
-                        for (row in startPos.row..endPos.row) {
-                            fieldAt(Position(row, startPos.col)).robot?.let { it.damage += 1 }
-                        }
-                    }
-                    else -> Unit
+                // With the start and endField finalized, iterate over all fields between
+                // them in the direction of the laser, depending on the direciton of the laser and collect
+                // all fields on the way to the map edge
+                val fields = when (direction) {
+                    Direction.LEFT -> (endPos.col..startPos.col).map { fieldAt(Position(startPos.row, it)) }
+                    Direction.RIGHT -> (startPos.col..endPos.col).map { fieldAt(Position(startPos.row, it)) }
+                    Direction.UP -> (endPos.row..startPos.row).map { fieldAt(Position(it, startPos.col)) }
+                    Direction.DOWN -> (startPos.row..endPos.row).map { fieldAt(Position(it, startPos.col)) }
+                    else -> emptyList()
                 }
+
+                applyLaserCondition(fields)
             }
     }
 
     /**
+     * Aplys the `LASER` condition to all provided fields, until either:
+     * - A robot is encountered. It is then damaged for 1 and the iteration stops
+     * - The end of the list is reached
+     */
+    private fun applyLaserCondition(fields: Iterable<Field>) {
+        fields.forEach { field ->
+            field.conditions.add(FieldCondition.LASER)
+            field.robot?.let {
+                it.damage += 1
+                return
+            }
+        }
+    }
+
+    /**
      * Finds the first field, starting from a field and going in a direciton until a field of the
-     * searched typeis found. Returns the found field.
+     * searched type is found. Returns the found field.
      */
     fun firstFieldByDirection(startField: Field, direction: Direction, fieldType: FieldType): Field {
         val startPos = positionOf(startField)

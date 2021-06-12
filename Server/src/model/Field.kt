@@ -6,6 +6,9 @@ data class Field(val id: UUID = UUID.randomUUID()) {
     var robot: Robot? = null
     var type = FieldType.NONE
 
+    // Conditions that apply to the field, "on top" of its inherent type
+    val conditions = mutableListOf<FieldCondition>()
+
     // For belt fields: The direction this belt is moving towards
     // For laser/pusher fields: The position of the wall that the appliance is attached to
     // For wall fields: Position of a wall
