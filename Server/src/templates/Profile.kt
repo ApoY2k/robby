@@ -40,13 +40,13 @@ fun HtmlBlockTag.renderProfile(game: Game, session: Session?) {
                             div("col") {
                                 if (player.cardsConfirmed) {
                                     button(classes = "btn btn-danger") {
-                                        attributes["data-action"] = ConfirmCardsAction().toString()
+                                        attributes["data-action"] = ConfirmCardsAction().serializeForSocket()
                                         +"Revoke confirmation of cards"
                                     }
                                 } else {
                                     if (robot.hasAllRegistersFilled()) {
                                         button(classes = "btn btn-primary") {
-                                            attributes["data-action"] = ConfirmCardsAction().toString()
+                                            attributes["data-action"] = ConfirmCardsAction().serializeForSocket()
                                             +"Confirm selected cards"
                                         }
                                     } else {
@@ -160,7 +160,7 @@ fun HtmlBlockTag.renderCard(register: Int, card: MovementCard?, locked: Boolean,
         }
 
         if (!locked) {
-            attributes["data-action"] = SelectCardAction(register.toString(), card.id.toString()).toString()
+            attributes["data-action"] = SelectCardAction(register.toString(), card.id.toString()).serializeForSocket()
         }
 
         +title

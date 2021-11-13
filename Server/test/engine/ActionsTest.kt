@@ -1,38 +1,42 @@
 package apoy2k.robby.engine
 
 import apoy2k.robby.exceptions.UnknownAction
-import apoy2k.robby.model.Action
-import apoy2k.robby.model.ActionField
-import apoy2k.robby.model.ActionLabel
-import apoy2k.robby.model.JoinGameAction
-import org.junit.Test
+import apoy2k.robby.model.*
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 
 class ActionsTest {
-    @Test
-    fun testToCommandJoinGame() {
-        assertEquals(JoinGameAction("player1"), Action.fromString(
-            "${ActionField.LABEL}=${ActionLabel.JOIN_GAME}&${ActionField.PLAYER_NAME}=player1"))
+    var game = Game()
+
+    @BeforeEach
+    fun setUp() {
+        game = Game()
     }
 
     @Test
-    fun testToCommandMissingParam() {
-        assertEquals(JoinGameAction(""), Action.fromString(
-            "${ActionField.LABEL}=${ActionLabel.JOIN_GAME}"))
+    fun testToCommandJoinGame() {
+        val game = Game()
+        assertEquals(
+            JoinGameAction().also { it.game = game },
+            Action.deserializeFromSocket(game, "${ActionField.LABEL}=${ActionLabel.JOIN_GAME}")
+        )
     }
 
     @Test
     fun testToCommandWrongSyntaxParam() {
+        val game = Game()
         assertFailsWith(UnknownAction::class) {
-            Action.fromString("${ActionField.LABEL}=${ActionLabel.JOIN_GAME}_player1")
+            Action.deserializeFromSocket(game, "${ActionField.LABEL}=${ActionLabel.JOIN_GAME}_player1")
         }
     }
 
     @Test
     fun testToCommandFailsUnknown() {
+        val game = Game()
         assertFailsWith(UnknownAction::class) {
-            Action.fromString("test")
+            Action.deserializeFromSocket(game, "test")
         }
     }
 }

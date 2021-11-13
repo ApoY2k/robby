@@ -15,14 +15,13 @@ enum class ActionLabel {
 
 enum class ActionField {
     LABEL,
-    PLAYER_NAME,
     ROBOT_MODEL,
     CARD_ID,
     REGISTER,
 }
 
 /**
- * Find the first value in a list of NameValuePairs
+ * Find the first value in a list of NameValuePairs for an action
  */
 fun List<NameValuePair>.first(field: ActionField): String? {
     return this.firstOrNull { it.name == field.name }?.value
@@ -37,6 +36,11 @@ abstract class Action {
      * Session that issued the action (null if server action)
      */
     var session: Session? = null
+
+    /**
+     * Game that this action was created for
+     */
+    var game: Game? = null
 
     private var parameters: MutableCollection<NameValuePair> = mutableListOf()
 
@@ -53,17 +57,18 @@ abstract class Action {
     companion object {
 
         /**
-         * Convert a url encoded query string to a typed action instance
+         * Convert a serialized, url encoded query string to a typed action instance.
+         * Counterpart for the `serializeForSocket` method.
+         * @param game Game instance to attach to the deserialized action
          * @throws UnknownAction if the string cannot be converted
          */
-        fun fromString(input: String): Action {
+        fun deserializeFromSocket(game: Game, input: String): Action {
             try {
                 val query = URLEncodedUtils.parse(input, Charset.defaultCharset())
-                val labelField = query.firstOrNull { it.name == ActionField.LABEL.name }?.value ?: "no_label"
+                val labelField = query.first(ActionField.LABEL) ?: "no_label"
 
-                return when (ActionLabel.valueOf(labelField)) {
+                val action = when (ActionLabel.valueOf(labelField)) {
                     ActionLabel.JOIN_GAME -> JoinGameAction(
-                        query.first(ActionField.PLAYER_NAME),
                         query.first(ActionField.ROBOT_MODEL)
                     )
                     ActionLabel.LEAVE_GAME -> LeaveGameAction()
@@ -73,6 +78,10 @@ abstract class Action {
                     )
                     ActionLabel.CONFIRM_CARDS -> ConfirmCardsAction()
                 }
+
+                action.game = game
+
+                return action
             } catch (err: Throwable) {
                 throw UnknownAction(input, err)
             }
@@ -94,9 +103,9 @@ abstract class Action {
     }
 
     /**
-     * Format this action as a URL Encoded string of name/value pairs
+     * Format this action as a URL Encoded string of name/value pairs, so it can be sent over the websocket
      */
-    override fun toString(): String {
+    fun serializeForSocket(): String {
         return URLEncodedUtils.format(parameters.filter { !it.value.isNullOrBlank() }, Charset.defaultCharset())
     }
 
@@ -114,11 +123,14 @@ abstract class Action {
     override fun hashCode(): Int {
         return parameters.hashCode()
     }
+
+    override fun toString(): String {
+        return "Action(gameId='$game', session=$session, parameters=$parameters)"
+    }
 }
 
-class JoinGameAction(name: String? = "", model: String? = "") :
-    Action(ActionLabel.JOIN_GAME, mapOf(ActionField.PLAYER_NAME to name, ActionField.ROBOT_MODEL to model)) {
-    val name get() = getFirst(ActionField.PLAYER_NAME)
+class JoinGameAction(model: String? = "") :
+    Action(ActionLabel.JOIN_GAME, mapOf(ActionField.ROBOT_MODEL to model)) {
     val model get() = getFirst(ActionField.ROBOT_MODEL)
 }
 

@@ -1,7 +1,7 @@
 package apoy2k.robby.engine
 
 import apoy2k.robby.model.*
-import org.junit.Test
+import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
 import kotlin.test.assertEquals
@@ -12,9 +12,6 @@ class LaserTest {
     @MethodSource("testDataSource")
     fun testFirstFieldByDirection(testData: TestData) {
         val endField = board.firstFieldByDirection(testData.startField, testData.direction, FieldType.WALL)
-
-        println(endField)
-
         assertEquals(testData.excpectedEndField, endField)
     }
 

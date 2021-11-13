@@ -93,17 +93,37 @@ data class Field(val id: UUID = UUID.randomUUID()) {
 
                 "$inc($out)"
             }
-            FieldType.BELT_2 -> " "
-            FieldType.LASER -> " "
-            FieldType.LASER_2 -> " "
+            FieldType.BELT_2 -> {
+                val inc = incomingDirections.joinToString {
+                    when (it) {
+                        Direction.DOWN -> "vv"
+                        Direction.LEFT -> "<<"
+                        Direction.RIGHT -> ">>"
+                        Direction.UP -> "^^"
+                        else -> " "
+                    }
+                }
+
+                val out = "" + when (outgoingDirection) {
+                    Direction.DOWN -> "vv"
+                    Direction.LEFT -> "<<"
+                    Direction.RIGHT -> ">>"
+                    Direction.UP -> "^^"
+                    else -> " "
+                }
+
+                "$inc($out)"
+            }
+            FieldType.LASER -> "L"
+            FieldType.LASER_2 -> "L2"
             FieldType.ROTATE -> when (outgoingDirection) {
                 Direction.RIGHT -> "↻"
                 Direction.LEFT -> "↺"
                 else -> " "
             }
             FieldType.FLAG -> "\uD83D\uDEA9"
-            FieldType.REPAIR -> " "
-            FieldType.REPAIR_MOD -> " "
+            FieldType.REPAIR -> "R"
+            FieldType.REPAIR_MOD -> "M"
             else -> " "
         }
 

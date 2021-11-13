@@ -1,5 +1,6 @@
 package apoy2k.robby.model
 
+import apoy2k.robby.model.predef.board.CHOP_SHOP_BOARD
 import apoy2k.robby.model.predef.board.DEMO_BOARD
 import apoy2k.robby.model.predef.deck.STANDARD_DECK
 import java.util.*
@@ -23,7 +24,7 @@ data class Game(val id: UUID = UUID.randomUUID()) {
 
     val players = mutableSetOf<Player>()
 
-    val board = Board(DEMO_BOARD.toList())
+    val board = Board(CHOP_SHOP_BOARD.toList())
 
     val deck = STANDARD_DECK.shuffled().toMutableList()
 
@@ -41,5 +42,9 @@ data class Game(val id: UUID = UUID.randomUUID()) {
      */
     fun hasJoined(session: Session?): Boolean {
         return playerFor(session) != null
+    }
+
+    override fun toString(): String {
+        return "Game(id=$id)"
     }
 }

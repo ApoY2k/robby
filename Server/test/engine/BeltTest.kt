@@ -1,8 +1,8 @@
 package apoy2k.robby.engine
 
 import apoy2k.robby.model.*
-import org.junit.Before
-import org.junit.Test
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
@@ -16,19 +16,26 @@ class BeltTest {
     private val sess2 = Session("s2")
     private val player2 = Player("p2", sess2)
 
-    @Before
+    @BeforeEach
     fun setup() {
         //   0 1 2 3
         // 0
         // 1
         // 2 R L U D
         // 3
-        board = Board(listOf(
-            listOf(Field(), Field(), Field(), Field()),
-            listOf(Field(), Field(), Field(), Field()),
-            listOf(Field(FieldType.BELT, Direction.RIGHT), Field(FieldType.BELT, Direction.LEFT), Field(FieldType.BELT, Direction.UP), Field(FieldType.BELT, Direction.DOWN)),
-            listOf(Field(), Field(), Field(), Field())
-        ))
+        board = Board(
+            listOf(
+                listOf(Field(), Field(), Field(), Field()),
+                listOf(Field(), Field(), Field(), Field()),
+                listOf(
+                    Field(FieldType.BELT, Direction.RIGHT),
+                    Field(FieldType.BELT, Direction.LEFT),
+                    Field(FieldType.BELT, Direction.UP),
+                    Field(FieldType.BELT, Direction.DOWN)
+                ),
+                listOf(Field(), Field(), Field(), Field())
+            )
+        )
 
         player1.robot = Robot(RobotModel.ZIPPY)
         player2.robot = Robot(RobotModel.HUZZA)
@@ -102,11 +109,13 @@ class BeltTest {
 
     @Test
     fun testBlockMoveTwoRobots() {
-        val board = Board(listOf(
-            listOf(Field(FieldType.BELT, Direction.DOWN)),
-            listOf(Field()),
-            listOf(Field(FieldType.BELT, Direction.UP)),
-        ))
+        val board = Board(
+            listOf(
+                listOf(Field(FieldType.BELT, Direction.DOWN)),
+                listOf(Field()),
+                listOf(Field(FieldType.BELT, Direction.UP)),
+            )
+        )
 
         val up = board.fields[0][0]
         val middle = board.fields[1][0]
@@ -125,10 +134,12 @@ class BeltTest {
 
     @Test
     fun testRotateRobotOnBelt() {
-        val board = Board(listOf(
-            listOf(Field(FieldType.BELT, Direction.DOWN)),
-            listOf(Field(FieldType.BELT, Direction.DOWN, Direction.RIGHT)),
-        ))
+        val board = Board(
+            listOf(
+                listOf(Field(FieldType.BELT, Direction.DOWN)),
+                listOf(Field(FieldType.BELT, Direction.DOWN, Direction.RIGHT)),
+            )
+        )
 
         val start = board.fields[0][0]
         val end = board.fields[1][0]

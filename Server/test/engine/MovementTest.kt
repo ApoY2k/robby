@@ -1,8 +1,8 @@
 package apoy2k.robby.engine
 
 import apoy2k.robby.model.*
-import org.junit.Before
-import org.junit.Test
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
@@ -17,14 +17,16 @@ class MovementTest {
     private val sess3 = Session("s3")
     private val player3 = Player("p3", sess3)
 
-    @Before
+    @BeforeEach
     fun setup() {
-        board = Board(listOf(
-            listOf(Field(), Field(), Field(), Field()),
-            listOf(Field(), Field(), Field(), Field()),
-            listOf(Field(), Field(), Field(), Field()),
-            listOf(Field(), Field(), Field(), Field())
-        ))
+        board = Board(
+            listOf(
+                listOf(Field(), Field(), Field(), Field()),
+                listOf(Field(), Field(), Field(), Field()),
+                listOf(Field(), Field(), Field(), Field()),
+                listOf(Field(), Field(), Field(), Field())
+            )
+        )
 
         player1.robot = Robot(RobotModel.ZIPPY)
         player2.robot = Robot(RobotModel.HUZZA)
