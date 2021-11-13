@@ -32,5 +32,5 @@ enum class PowerUp {
 }
 
 data class ModificationCard(val powerUp: PowerUp, val description: String? = "") {
-    val id: UUID = UUID.randomUUID()
+    val id = UUID.randomUUID().toString()
 }

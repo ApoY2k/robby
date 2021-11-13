@@ -30,8 +30,8 @@ data class Board(val fields: List<List<Field>>) {
      * Repeating movements must be done by the calling operation
      */
     fun execute(card: MovementCard) {
-        val robot = card.player?.robot ?: throw InvalidGameState("Movement $card has no player or robot")
-        logger.debug("Executing [$card] on [$robot]")
+        val robot = card.player?.robot ?: throw InvalidGameState("$card has no player or robot")
+        logger.debug("Executing $card on $robot")
         robot.rotate(card.movement)
 
         if (card.hasSteps) {
@@ -59,7 +59,7 @@ data class Board(val fields: List<List<Field>>) {
 
             // If the field that the robot would be pushed to also has a robot, it cannot be pushed
             // away by the original robot. Instead, the whole movement is halted and the original
-            // robot should not move at all, as only one robot an be pushed away
+            // robot should not move at all, as only one robot and be pushed away
             if (pushToField.robot != null) {
                 return emptyMap()
             }
@@ -96,7 +96,7 @@ data class Board(val fields: List<List<Field>>) {
 
     /**
      * Find the neighbouring field in a specific diection. If the source field is on the bounds of the board,
-     * and the direction would take make the neighbour outside of it, the original field is returned
+     * and the direction would make the neighbour out of bounds, the original field is returned
      */
     private fun getNeighbour(field: Field, direction: Direction): Field {
         val idx = positionOf(field)
@@ -228,7 +228,7 @@ data class Board(val fields: List<List<Field>>) {
         /**
          * For each laser:
          *  - determine orientation and find next wall (or end of board)
-         *  - find way to determine if wall is blocking before or after the field its attached to
+         *  - find way to determine if wall is blocking before or after the field it's attached to
          *      (near / far side of laser)
          *  - determine robots between laser and wall
          *  - damage each robot for 1 point
@@ -241,7 +241,7 @@ data class Board(val fields: List<List<Field>>) {
                 val nextWall = firstFieldByDirection(field, direction, FieldType.WALL)
                 val wallPosition = positionOf(nextWall)
 
-                // Depending on *where* the wall is on the field, the laser might still hit a target on the field
+                // Depending on *where* the wall is on the field, the laser might still hit a target on the field,
                 // or it is stopped on the edge to the field (that is, it will stop one
                 // field *ahead* of the found field instead of the field itself)
                 val lastHitField = when (direction) {

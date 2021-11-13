@@ -27,7 +27,7 @@ fun Direction.toVec2() = when (this) {
     Direction.LEFT -> Vec2(-1f, 0f)
 }
 
-data class Robot(val model: RobotModel, val id: UUID = UUID.randomUUID()) {
+data class Robot(val model: RobotModel, val id: String = UUID.randomUUID().toString()) {
     var facing = Direction.DOWN
 
     private var registers = mutableMapOf<Int, MovementCard?>(
@@ -174,11 +174,5 @@ data class Robot(val model: RobotModel, val id: UUID = UUID.randomUUID()) {
         return facing
     }
 
-    override fun toString() = "${model.name[0]}" + when(facing) {
-        Direction.UP -> "^"
-        Direction.DOWN -> "v"
-        Direction.RIGHT -> ">"
-        Direction.LEFT -> "<"
-        else -> " "
-    }
+    override fun toString() = "Robot(model=$model)"
 }

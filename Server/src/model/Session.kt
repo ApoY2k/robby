@@ -1,7 +1,3 @@
 package apoy2k.robby.model
 
-data class Session(val id: String, val name: String = "") {
-    override fun toString(): String {
-        return "Session(id='$id')"
-    }
-}
+data class Session(val id: String, val name: String = "")

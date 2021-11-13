@@ -46,7 +46,7 @@ fun Route.game(actions: SendChannel<Action>, viewUpdateRouter: ViewUpdateRouter,
         webSocket("/ws") {
             val session = call.sessions.get<Session>()
             if (session == null) {
-                logger.error("No session associated with websocket connection")
+                logger.error("No session associated with WebSocket connection")
                 call.respond(HttpStatusCode.Forbidden)
                 return@webSocket
             }

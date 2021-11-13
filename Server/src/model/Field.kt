@@ -2,7 +2,7 @@ package apoy2k.robby.model
 
 import java.util.*
 
-data class Field(val id: UUID = UUID.randomUUID()) {
+data class Field(val id: String = UUID.randomUUID().toString()) {
     var robot: Robot? = null
     var type = FieldType.NONE
 
@@ -43,91 +43,7 @@ data class Field(val id: UUID = UUID.randomUUID()) {
 
     override fun toString(): String {
         val directions = getDirections()
-
-        val str = when (type) {
-            FieldType.NONE -> " "
-            FieldType.HOLE -> "O"
-            FieldType.WALL -> {
-                var result = " "
-
-                if (directions.contains(Direction.LEFT)) {
-                    result += "|"
-                }
-
-                if (directions.contains(Direction.UP) && directions.contains(Direction.DOWN)) {
-                    result += "="
-                } else {
-                    if (directions.contains(Direction.UP)) {
-                        result += "¯"
-                    }
-
-                    if (directions.contains(Direction.DOWN)) {
-                        result += "_"
-                    }
-                }
-
-                if (directions.contains(Direction.RIGHT)) {
-                    result += "|"
-                }
-
-                result
-            }
-            FieldType.BELT -> {
-                val inc = incomingDirections.joinToString {
-                    when (it) {
-                        Direction.DOWN -> "v"
-                        Direction.LEFT -> "<"
-                        Direction.RIGHT -> ">"
-                        Direction.UP -> "^"
-                        else -> " "
-                    }
-                }
-
-                val out = "" + when (outgoingDirection) {
-                    Direction.DOWN -> "v"
-                    Direction.LEFT -> "<"
-                    Direction.RIGHT -> ">"
-                    Direction.UP -> "^"
-                    else -> " "
-                }
-
-                "$inc($out)"
-            }
-            FieldType.BELT_2 -> {
-                val inc = incomingDirections.joinToString {
-                    when (it) {
-                        Direction.DOWN -> "vv"
-                        Direction.LEFT -> "<<"
-                        Direction.RIGHT -> ">>"
-                        Direction.UP -> "^^"
-                        else -> " "
-                    }
-                }
-
-                val out = "" + when (outgoingDirection) {
-                    Direction.DOWN -> "vv"
-                    Direction.LEFT -> "<<"
-                    Direction.RIGHT -> ">>"
-                    Direction.UP -> "^^"
-                    else -> " "
-                }
-
-                "$inc($out)"
-            }
-            FieldType.LASER -> "L"
-            FieldType.LASER_2 -> "L2"
-            FieldType.ROTATE -> when (outgoingDirection) {
-                Direction.RIGHT -> "↻"
-                Direction.LEFT -> "↺"
-                else -> " "
-            }
-            FieldType.FLAG -> "\uD83D\uDEA9"
-            FieldType.REPAIR -> "R"
-            FieldType.REPAIR_MOD -> "M"
-            else -> " "
-        }
-
-        return "[$str](${robot ?: " "})"
+        return "Field(directions=$directions, robot=$robot)"
     }
 }
 

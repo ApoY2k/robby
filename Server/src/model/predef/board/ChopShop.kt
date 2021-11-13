@@ -4,7 +4,7 @@ import apoy2k.robby.model.Direction
 import apoy2k.robby.model.Field
 import apoy2k.robby.model.FieldType
 
-val CHOP_SHOP_BOARD = listOf(
+fun generateChopShopBoard() = listOf(
     listOf(
         Field(),
         Field(FieldType.WALL, Direction.DOWN),

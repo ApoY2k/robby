@@ -29,7 +29,7 @@ fun Route.base(storage: Storage) {
         val form = call.receiveParameters()
         val name = form["username"] ?: ""
         val session = call.sessions.get<Session>()
-        logger.debug("Saving username [$name] for session[${session?.id}]")
+        logger.debug("Saving username [$name] for $session")
         call.sessions.set(session?.copy(name = name))
         call.respondRedirect("/")
     }

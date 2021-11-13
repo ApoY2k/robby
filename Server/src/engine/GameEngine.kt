@@ -23,7 +23,6 @@ class GameEngine(private val updates: SendChannel<ViewUpdate>) {
      * sending back viewupdates for the game along the way
      */
     // TODO: When two games are running in parallel, the engine ony works on one game at a time
-    // TODO: Also, creating two games in parallel somehow overlaps the joined players?
     suspend fun connect(actions: ReceiveChannel<Action>) {
         actions.consumeEach { action ->
             val game = action.game
@@ -86,7 +85,7 @@ class GameEngine(private val updates: SendChannel<ViewUpdate>) {
                     updates.send(ViewUpdate(game))
                 }
             } catch (err: Throwable) {
-                logger.error("Error executing [$action]: [$err]", err)
+                logger.error("Error executing $action: $err", err)
             }
         }
     }
@@ -123,7 +122,7 @@ class GameEngine(private val updates: SendChannel<ViewUpdate>) {
 
         val player = game.players.firstOrNull { it.session == session }
         if (player == null) {
-            logger.warn("No player with session [$session] found")
+            logger.warn("No player found for $session")
             return
         }
 
@@ -136,7 +135,7 @@ class GameEngine(private val updates: SendChannel<ViewUpdate>) {
                 player.toggleConfirm()
             }
             else -> {
-                logger.warn("No action mapped for [$action]")
+                logger.warn("No executor for $action")
             }
         }
     }
@@ -172,7 +171,7 @@ class GameEngine(private val updates: SendChannel<ViewUpdate>) {
                     }
                 }
         } catch (err: Throwable) {
-            logger.error("Error executing register: [${err.message}]", err)
+            logger.error("Error executing register: ${err.message}", err)
         }
     }
 

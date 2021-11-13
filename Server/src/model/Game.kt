@@ -1,7 +1,6 @@
 package apoy2k.robby.model
 
-import apoy2k.robby.model.predef.board.CHOP_SHOP_BOARD
-import apoy2k.robby.model.predef.board.DEMO_BOARD
+import apoy2k.robby.model.predef.board.generateChopShopBoard
 import apoy2k.robby.model.predef.deck.STANDARD_DECK
 import java.util.*
 
@@ -20,11 +19,11 @@ enum class GameState {
     FINISHED
 }
 
-data class Game(val id: UUID = UUID.randomUUID()) {
+data class Game(val id: String = UUID.randomUUID().toString()) {
 
     val players = mutableSetOf<Player>()
 
-    val board = Board(CHOP_SHOP_BOARD.toList())
+    val board = Board(generateChopShopBoard())
 
     val deck = STANDARD_DECK.shuffled().toMutableList()
 

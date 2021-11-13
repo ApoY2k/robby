@@ -4,7 +4,7 @@ import apoy2k.robby.exceptions.IncompleteAction
 import apoy2k.robby.exceptions.InvalidGameState
 import java.util.*
 
-data class Player(val name: String, val session: Session, val id: UUID = UUID.randomUUID()) {
+data class Player(val name: String, val session: Session, val id: String = UUID.randomUUID().toString()) {
     var robot: Robot? = null
 
     var drawnCards = emptyList<MovementCard>()
@@ -23,14 +23,13 @@ data class Player(val name: String, val session: Session, val id: UUID = UUID.ra
     /**
      * Select the card with the given id. Card is expected to be "drawn"
      */
-    fun selectCard(register: String?, cardId: String?) {
-        val id = UUID.fromString(cardId)
-
-        val card = drawnCards.firstOrNull { it.id == id }
+    fun selectCard(register: Int?, cardId: String?) {
+        val card = drawnCards.firstOrNull { it.id == cardId }
             ?: throw InvalidGameState("Card with id [$id] not found")
 
-        val register = register?.toInt()
-            ?: throw IncompleteAction("Register [$register] is not a valid register number")
+        if (register == null) {
+            throw IncompleteAction("Register [$register] is not a valid register number")
+        }
 
         val robot = robot ?: throw InvalidGameState("Player has no robot assigned")
 
@@ -48,5 +47,5 @@ data class Player(val name: String, val session: Session, val id: UUID = UUID.ra
         cardsConfirmed = !cardsConfirmed
     }
 
-    override fun toString() = "$name:$robot"
+    override fun toString() = "Player(name=$name, robot=$robot)"
 }

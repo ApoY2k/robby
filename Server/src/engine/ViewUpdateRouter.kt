@@ -41,18 +41,18 @@ class ViewUpdateRouter {
                                 }
                             }.toString()
 
-                            logger.debug("Sending ViewUpdate to $httpSession for ${update.game} on $wsSession")
+                            logger.debug("Sending ViewUpdate to $httpSession for ${update.game}")
                             wsSession.send(Frame.Text(gameView))
                         }
                     }
             } catch (err: Throwable) {
-                logger.error("Error sending GameView: [${err.message}]", err)
+                logger.error("Error sending ViewUpdate: ${err.message}", err)
             }
         }
     }
 
     fun addSession(game: Game, httpSession: Session, wsSession: WebSocketSession) {
-        logger.debug("Adding $wsSession of $httpSession to $game listeners")
+        logger.debug("Adding new WebSocketSession of $httpSession to $game listeners")
         val gameSessions = sessions[game] ?: mutableMapOf()
         val wsSessions = gameSessions[httpSession] ?: mutableSetOf()
         wsSessions.add(wsSession)
@@ -61,7 +61,7 @@ class ViewUpdateRouter {
     }
 
     fun removeSession(game: Game, httpSession: Session, wsSession: WebSocketSession) {
-        logger.debug("Removing $wsSession of $httpSession from $game listeners")
+        logger.debug("Removing WebSocketSession of $httpSession from $game listeners")
         val gameSessions = sessions[game] ?: mutableMapOf()
         val wsSessions = gameSessions[httpSession] ?: mutableSetOf()
         wsSessions.remove(wsSession)

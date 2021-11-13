@@ -25,8 +25,10 @@ class HomeTpl(val storage: Storage, val session: Session?) : Template<FlowConten
                         +"Choose a username to use while playing and then join a game or create a new one"
                     }
                 }
-                val action = Location.SET_USERNAME.build()
-                form(action, method = FormMethod.post) {
+            }
+            val action = Location.SET_USERNAME.build()
+            form(action, method = FormMethod.post) {
+                div("row") {
                     div("col") {
                         div("input-group") {
                             span("input-group-text") {

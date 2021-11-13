@@ -125,21 +125,21 @@ abstract class Action {
     }
 
     override fun toString(): String {
-        return "Action(gameId='$game', session=$session, parameters=$parameters)"
+        return "Action(game=$game, parameters=$parameters), session=$session)"
     }
 }
 
 class JoinGameAction(model: String? = "") :
     Action(ActionLabel.JOIN_GAME, mapOf(ActionField.ROBOT_MODEL to model)) {
-    val model get() = getFirst(ActionField.ROBOT_MODEL)
+    val model = getFirst(ActionField.ROBOT_MODEL)
 }
 
 class LeaveGameAction : Action(ActionLabel.LEAVE_GAME)
 
 class SelectCardAction(register: String?, cardId: String?) :
     Action(ActionLabel.SET_REGISTER, mapOf(ActionField.CARD_ID to cardId, ActionField.REGISTER to register)) {
-    val register get() = getFirst(ActionField.REGISTER)
-    val cardId get() = getFirst(ActionField.CARD_ID)
+    val register = getFirst(ActionField.REGISTER)?.toInt()
+    val cardId = getFirst(ActionField.CARD_ID)
 }
 
 class ConfirmCardsAction : Action(ActionLabel.CONFIRM_CARDS)
