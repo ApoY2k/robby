@@ -3,12 +3,12 @@ package apoy2k.robby.engine
 import apoy2k.robby.exceptions.IncompleteAction
 import apoy2k.robby.exceptions.InvalidGameState
 import apoy2k.robby.model.*
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.channels.ReceiveChannel
-import kotlinx.coroutines.channels.SendChannel
-import kotlinx.coroutines.channels.consumeEach
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import org.slf4j.LoggerFactory
 import java.lang.Integer.max
@@ -16,25 +16,24 @@ import java.lang.Integer.max
 /**
  * Game engine to advance games based on incoming actions
  */
-class GameEngine(private val updates: SendChannel<ViewUpdate>) {
+class GameEngine(private val updates: MutableSharedFlow<ViewUpdate>) {
     private val logger = LoggerFactory.getLogger(this.javaClass)
 
     /**
      * Starts listening to message on the command channel and executes them on the corresponding game,
      * sending back viewupdates for the game along the way
      */
-    @ExperimentalCoroutinesApi
-    suspend fun connect(actions: ReceiveChannel<Action>) {
-        actions.consumeEach { action ->
+    suspend fun connect(actions: SharedFlow<Action>) = coroutineScope {
+        actions.onEach { action ->
             val game = action.game
             if (game == null) {
                 logger.warn("Could not find game corresponding to $action")
-                return@consumeEach
+                return@onEach
             }
 
             if (game.state == GameState.FINISHED) {
                 logger.warn("$game is already finished! Ignorning $action")
-                return@consumeEach
+                return@onEach
             }
 
             try {
@@ -42,18 +41,16 @@ class GameEngine(private val updates: SendChannel<ViewUpdate>) {
 
                 // Perform the action abd run automatic registers and actions
                 // with ViewUpdates in a separate coroutine so the channel isn't blocked
-                coroutineScope {
-                    launch {
-                        perform(action)
-                        updates.send(ViewUpdate(game))
-                        runRegisters(game)
-                        updates.send(ViewUpdate(game))
-                    }
+                launch {
+                    perform(action)
+                    updates.emit(ViewUpdate(game))
+                    runRegisters(game)
+                    updates.emit(ViewUpdate(game))
                 }
             } catch (err: Throwable) {
                 logger.error("Error executing $action: $err", err)
             }
-        }
+        }.launchIn(this)
     }
 
     /**
@@ -118,7 +115,7 @@ class GameEngine(private val updates: SendChannel<ViewUpdate>) {
 
         // Send view updates between registers so players see the new state after "preparing" the execution of movements
         game.state = GameState.EXECUTING_REGISTER_1
-        updates.send(ViewUpdate(game))
+        updates.emit(ViewUpdate(game))
         runRegister(game, 1)
         runAutomaticSteps(game)
 
@@ -178,7 +175,7 @@ class GameEngine(private val updates: SendChannel<ViewUpdate>) {
 
                     for (step in 1..steps) {
                         game.board.execute(it)
-                        updates.send(ViewUpdate(game))
+                        updates.emit(ViewUpdate(game))
                         delay(1000)
                     }
                 }
@@ -189,31 +186,31 @@ class GameEngine(private val updates: SendChannel<ViewUpdate>) {
 
     private suspend fun runMoveBoardElements(game: Game) {
         game.board.moveBelts(FieldType.BELT_2)
-        updates.send(ViewUpdate(game))
+        updates.emit(ViewUpdate(game))
         delay(1000)
 
         game.board.moveBelts(FieldType.BELT)
-        updates.send(ViewUpdate(game))
+        updates.emit(ViewUpdate(game))
         delay(1000)
     }
 
     private suspend fun runFireLasers(game: Game) {
         game.board.fireLasers(FieldType.LASER_2)
-        updates.send(ViewUpdate(game))
+        updates.emit(ViewUpdate(game))
         delay(1000)
 
         // Remove the laser conditions on fields after they fired
         game.board.fields.flatten().forEach { it.conditions.remove(FieldCondition.LASER) }
-        updates.send(ViewUpdate(game))
+        updates.emit(ViewUpdate(game))
         delay(1000)
 
         game.board.fireLasers(FieldType.LASER)
-        updates.send(ViewUpdate(game))
+        updates.emit(ViewUpdate(game))
         delay(1000)
 
         // Remove the laser conditions on fields after they fired
         game.board.fields.flatten().forEach { it.conditions.remove(FieldCondition.LASER_2) }
-        updates.send(ViewUpdate(game))
+        updates.emit(ViewUpdate(game))
         delay(1000)
     }
 
@@ -225,7 +222,7 @@ class GameEngine(private val updates: SendChannel<ViewUpdate>) {
                     robot.passedCheckpoints += 1
                 }
             }
-        updates.send(ViewUpdate(game))
+        updates.emit(ViewUpdate(game))
         delay(1000)
     }
 
@@ -241,7 +238,7 @@ class GameEngine(private val updates: SendChannel<ViewUpdate>) {
 
         // TODO Implement powerups
 
-        updates.send(ViewUpdate(game))
+        updates.emit(ViewUpdate(game))
         delay(1000)
     }
 

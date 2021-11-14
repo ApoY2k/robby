@@ -14,13 +14,11 @@ import io.ktor.response.*
 import io.ktor.routing.*
 import io.ktor.sessions.*
 import io.ktor.websocket.*
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.channels.SendChannel
 import kotlinx.coroutines.channels.consumeEach
+import kotlinx.coroutines.flow.MutableSharedFlow
 import org.slf4j.LoggerFactory
 
-@ExperimentalCoroutinesApi
-fun Route.game(actions: SendChannel<Action>, viewUpdateRouter: ViewUpdateRouter, storage: Storage) {
+fun Route.game(actions: MutableSharedFlow<Action>, viewUpdateRouter: ViewUpdateRouter, storage: Storage) {
     val logger = LoggerFactory.getLogger("${this.javaClass.name}.game")
 
     post(Location.GAME_ROOT.path) {
@@ -67,7 +65,7 @@ fun Route.game(actions: SendChannel<Action>, viewUpdateRouter: ViewUpdateRouter,
                             logger.debug("Received [$data] from $session on $game")
                             val action = Action.deserializeFromSocket(game, data)
                             action.session = session
-                            actions.send(action)
+                            actions.emit(action)
                         } catch (err: Throwable) {
                             logger.error(err.message, err)
                         }

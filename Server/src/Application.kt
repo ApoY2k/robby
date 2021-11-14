@@ -4,8 +4,8 @@ import apoy2k.robby.data.MemoryStorage
 import apoy2k.robby.engine.GameEngine
 import apoy2k.robby.engine.ViewUpdateRouter
 import apoy2k.robby.model.Action
-import apoy2k.robby.model.ViewUpdate
 import apoy2k.robby.model.Session
+import apoy2k.robby.model.ViewUpdate
 import apoy2k.robby.routes.base
 import apoy2k.robby.routes.game
 import io.ktor.application.*
@@ -13,14 +13,12 @@ import io.ktor.features.*
 import io.ktor.gson.*
 import io.ktor.http.*
 import io.ktor.locations.*
-import io.ktor.request.*
 import io.ktor.response.*
 import io.ktor.routing.*
 import io.ktor.server.netty.*
 import io.ktor.sessions.*
 import io.ktor.websocket.*
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.launch
 import org.slf4j.LoggerFactory
 import org.slf4j.event.Level
@@ -28,7 +26,6 @@ import java.util.*
 
 fun main(args: Array<String>): Unit = EngineMain.main(args)
 
-@ExperimentalCoroutinesApi
 @Suppress("unused") // Referenced in application.conf
 @kotlin.jvm.JvmOverloads
 fun Application.module(testing: Boolean = false) {
@@ -70,8 +67,8 @@ fun Application.module(testing: Boolean = false) {
     }
 
     val storage = MemoryStorage()
-    val actionChannel = Channel<Action>()
-    val viewUpdateChannel = Channel<ViewUpdate>(Channel.CONFLATED)
+    val actionChannel = MutableSharedFlow<Action>()
+    val viewUpdateChannel = MutableSharedFlow<ViewUpdate>()
 
     val engine = GameEngine(viewUpdateChannel)
     launch {

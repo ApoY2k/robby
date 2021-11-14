@@ -4,8 +4,7 @@ import apoy2k.robby.data.MemoryStorage
 import apoy2k.robby.exceptions.IncompleteAction
 import apoy2k.robby.exceptions.InvalidGameState
 import apoy2k.robby.model.*
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.MutableSharedFlow
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
@@ -13,7 +12,7 @@ import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 
 class GameEngineTest {
-    private val engine = GameEngine(Channel())
+    private val engine = GameEngine(MutableSharedFlow())
 
     @Test
     fun `select card for register`() {
@@ -27,7 +26,7 @@ class GameEngineTest {
         val player = game.playerFor(s1)
         assertNotNull(player)
 
-        val card = player.drawnCards[0]
+        val card = player!!.drawnCards[0]
         engine.perform(SelectCardAction("1", card.id).also {
             it.session = s1
             it.game = game
@@ -50,7 +49,7 @@ class GameEngineTest {
         val player = game.playerFor(s1)
         assertNotNull(player)
 
-        val card = player.drawnCards[0]
+        val card = player!!.drawnCards[0]
         engine.perform(SelectCardAction("1", card.id).also {
             it.session = s1
             it.game = game
@@ -83,7 +82,7 @@ class GameEngineTest {
             it.session = session
         }
 
-        val engine = GameEngine(Channel())
+        val engine = GameEngine(MutableSharedFlow())
         engine.perform(join1)
         engine.perform(join2)
 
@@ -190,16 +189,5 @@ class GameEngineTest {
             it.game = game
         })
         assertEquals(1, game.players.count())
-    }
-
-    @ExperimentalCoroutinesApi
-    @Test
-    fun `run two game engine actions in parallel`() {
-        val game1 = Game()
-        val game2 = Game()
-
-        val actionChannel = Channel<Action>()
-        // TODO: How to test this correctly?
-        // engine.connect(actionChannel)
     }
 }

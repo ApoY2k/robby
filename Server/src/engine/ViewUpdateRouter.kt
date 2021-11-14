@@ -6,16 +6,15 @@ import apoy2k.robby.model.ViewUpdate
 import apoy2k.robby.templates.GameTpl
 import io.ktor.html.*
 import io.ktor.http.cio.websocket.*
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.channels.ReceiveChannel
-import kotlinx.coroutines.channels.consumeEach
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import kotlinx.html.body
 import kotlinx.html.html
 import kotlinx.html.stream.appendHTML
 import org.slf4j.LoggerFactory
-import java.lang.StringBuilder
 
-@ExperimentalCoroutinesApi
 class ViewUpdateRouter {
     private val logger = LoggerFactory.getLogger(this.javaClass)
 
@@ -28,8 +27,8 @@ class ViewUpdateRouter {
     /**
      * Start listening for view updates to send out tp the registered websocket sessions
      */
-    suspend fun connect(updates: ReceiveChannel<ViewUpdate>) {
-        updates.consumeEach { update ->
+    suspend fun connect(updates: SharedFlow<ViewUpdate>) = coroutineScope {
+        updates.onEach { update ->
             try {
                 val gameSessions = sessions[update.game] ?: emptyMap()
                 gameSessions
@@ -48,7 +47,7 @@ class ViewUpdateRouter {
             } catch (err: Throwable) {
                 logger.error("Error sending ViewUpdate: ${err.message}", err)
             }
-        }
+        }.launchIn(this)
     }
 
     fun addSession(game: Game, httpSession: Session, wsSession: WebSocketSession) {
@@ -69,7 +68,7 @@ class ViewUpdateRouter {
             gameSessions.remove(httpSession)
         }
         if (gameSessions.isEmpty()) {
-            sessions.remove(game);
+            sessions.remove(game)
         }
     }
 }
