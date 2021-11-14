@@ -2,9 +2,9 @@ package apoy2k.robby.model
 
 import apoy2k.robby.exceptions.IncompleteAction
 import apoy2k.robby.exceptions.InvalidGameState
-import java.util.*
+import org.apache.commons.lang3.RandomStringUtils
 
-data class Player(val name: String, val session: Session, val id: String = UUID.randomUUID().toString()) {
+data class Player(val name: String, val session: Session, val id: String = RandomStringUtils.randomAlphanumeric(5)) {
     var robot: Robot? = null
 
     var drawnCards = emptyList<MovementCard>()
@@ -47,5 +47,5 @@ data class Player(val name: String, val session: Session, val id: String = UUID.
         cardsConfirmed = !cardsConfirmed
     }
 
-    override fun toString() = "Player(name=$name, robot=$robot)"
+    override fun toString() = "Player($name, $robot)"
 }

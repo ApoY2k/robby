@@ -359,9 +359,7 @@ data class Board(val fields: List<List<Field>>) {
         }
     }
 
-    override fun toString(): String {
-        return "Board[${fields.count()}x${fields[0].count()}]"
-    }
+    override fun toString() = "Board(${fields.count()}x${fields[0].count()})"
 }
 
 data class Position(val row: Int, val col: Int)

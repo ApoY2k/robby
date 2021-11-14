@@ -1,6 +1,6 @@
 package apoy2k.robby.model
 
-import java.util.*
+import org.apache.commons.lang3.RandomStringUtils
 
 enum class RobotModel {
     ZIPPY,
@@ -27,7 +27,7 @@ fun Direction.toVec2() = when (this) {
     Direction.LEFT -> Vec2(-1f, 0f)
 }
 
-data class Robot(val model: RobotModel, val id: String = UUID.randomUUID().toString()) {
+data class Robot(val model: RobotModel, val id: String = RandomStringUtils.randomAlphanumeric(5)) {
     var facing = Direction.DOWN
 
     private var registers = mutableMapOf<Int, MovementCard?>(
@@ -174,5 +174,5 @@ data class Robot(val model: RobotModel, val id: String = UUID.randomUUID().toStr
         return facing
     }
 
-    override fun toString() = "Robot(model=$model)"
+    override fun toString() = "Robot($model)"
 }

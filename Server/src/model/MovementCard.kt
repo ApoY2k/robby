@@ -1,6 +1,6 @@
 package apoy2k.robby.model
 
-import java.util.*
+import org.apache.commons.lang3.RandomStringUtils
 
 enum class Movement {
     STAY,
@@ -14,7 +14,7 @@ enum class Movement {
 }
 
 data class MovementCard(val movement: Movement, val priority: Int) {
-    val id = UUID.randomUUID().toString()
+    val id: String = RandomStringUtils.randomAlphanumeric(5)
     var player: Player? = null
 
     // true, if the movement on this card contains any amount of steps in a specific direction
@@ -22,5 +22,5 @@ data class MovementCard(val movement: Movement, val priority: Int) {
         Movement.STRAIGHT, Movement.STRAIGHT_2, Movement.STRAIGHT_3, Movement.BACKWARDS
     ).contains(movement)
 
-    override fun toString() = "MovementCard($movement, priority=$priority)"
+    override fun toString() = "MovementCard($movement, $priority)"
 }

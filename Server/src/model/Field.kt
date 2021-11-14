@@ -1,8 +1,8 @@
 package apoy2k.robby.model
 
-import java.util.*
+import org.apache.commons.lang3.RandomStringUtils
 
-data class Field(val id: String = UUID.randomUUID().toString()) {
+data class Field(val id: String = RandomStringUtils.randomAlphanumeric(5)) {
     var robot: Robot? = null
     var type = FieldType.NONE
 
@@ -43,7 +43,7 @@ data class Field(val id: String = UUID.randomUUID().toString()) {
 
     override fun toString(): String {
         val directions = getDirections()
-        return "Field(directions=$directions, robot=$robot)"
+        return "Field($id, $directions, $robot)"
     }
 }
 

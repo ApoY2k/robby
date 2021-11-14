@@ -2,7 +2,7 @@ package apoy2k.robby.model
 
 import apoy2k.robby.model.predef.board.generateChopShopBoard
 import apoy2k.robby.model.predef.deck.generateStandardDeck
-import java.util.*
+import org.apache.commons.lang3.RandomStringUtils
 
 enum class GameState {
     PROGRAMMING_REGISTERS,
@@ -19,7 +19,7 @@ enum class GameState {
     FINISHED
 }
 
-data class Game(val id: String = UUID.randomUUID().toString()) {
+data class Game(val id: String = RandomStringUtils.randomAlphanumeric(5)) {
 
     val players = mutableSetOf<Player>()
 
@@ -43,7 +43,5 @@ data class Game(val id: String = UUID.randomUUID().toString()) {
         return playerFor(session) != null
     }
 
-    override fun toString(): String {
-        return "Game(id=$id)"
-    }
+    override fun toString() = "Game($id)"
 }

@@ -20,9 +20,9 @@ import io.ktor.sessions.*
 import io.ktor.websocket.*
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.launch
+import org.apache.commons.lang3.RandomStringUtils
 import org.slf4j.LoggerFactory
 import org.slf4j.event.Level
-import java.util.*
 
 fun main(args: Array<String>): Unit = EngineMain.main(args)
 
@@ -55,7 +55,7 @@ fun Application.module(testing: Boolean = false) {
     intercept(ApplicationCallPipeline.Call) {
         val session = call.sessions.get<Session>()
         if (session == null) {
-            call.sessions.set(Session(UUID.randomUUID().toString()))
+            call.sessions.set(Session(RandomStringUtils.randomAlphanumeric(5)))
         }
     }
 

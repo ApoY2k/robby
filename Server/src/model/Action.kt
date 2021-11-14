@@ -124,9 +124,7 @@ abstract class Action {
         return parameters.hashCode()
     }
 
-    override fun toString(): String {
-        return "Action(game=$game, parameters=$parameters), session=$session)"
-    }
+    override fun toString() = "Action($game, $parameters, $session)"
 }
 
 class JoinGameAction(model: String? = "") :
