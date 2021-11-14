@@ -4,6 +4,7 @@ import apoy2k.robby.data.MemoryStorage
 import apoy2k.robby.exceptions.IncompleteAction
 import apoy2k.robby.exceptions.InvalidGameState
 import apoy2k.robby.model.*
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.Channel
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
@@ -189,5 +190,16 @@ class GameEngineTest {
             it.game = game
         })
         assertEquals(1, game.players.count())
+    }
+
+    @ExperimentalCoroutinesApi
+    @Test
+    fun `run two game engine actions in parallel`() {
+        val game1 = Game()
+        val game2 = Game()
+
+        val actionChannel = Channel<Action>()
+        // TODO: How to test this correctly?
+        // engine.connect(actionChannel)
     }
 }
