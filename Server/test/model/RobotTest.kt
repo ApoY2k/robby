@@ -1,4 +1,4 @@
-package apoy2k.robby.engine
+package apoy2k.robby.model
 
 import apoy2k.robby.model.Movement
 import apoy2k.robby.model.MovementCard
@@ -23,7 +23,7 @@ class RobotTest {
     }
 
     @Test
-    fun testRegisterResetDamage4() {
+    fun `all registers are cleared with 4 damage`() {
         robot.damage = 4
         robot.clearRegisters()
         assertNull(robot.getRegister(1))
@@ -34,7 +34,7 @@ class RobotTest {
     }
 
     @Test
-    fun testRegisterResetDamage5() {
+    fun `register 5 is locked with 5 damage`() {
         robot.damage = 5
         robot.clearRegisters()
         assertNull(robot.getRegister(1))
@@ -45,7 +45,7 @@ class RobotTest {
     }
 
     @Test
-    fun testRegisterResetDamage6() {
+    fun `registers over 4 are locked with 6 damage`() {
         robot.damage = 6
         robot.clearRegisters()
         assertNull(robot.getRegister(1))
@@ -56,7 +56,7 @@ class RobotTest {
     }
 
     @Test
-    fun testRegisterResetDamage7() {
+    fun `registers over 3 are locked with 7 damage`() {
         robot.damage = 7
         robot.clearRegisters()
         assertNull(robot.getRegister(1))
@@ -67,7 +67,7 @@ class RobotTest {
     }
 
     @Test
-    fun testRegisterResetDamage8() {
+    fun `registers over 2 are locked with 8 damage`() {
         robot.damage = 8
         robot.clearRegisters()
         assertNull(robot.getRegister(1))
@@ -78,7 +78,7 @@ class RobotTest {
     }
 
     @Test
-    fun testRegisterResetDamage9() {
+    fun `all registers are locked with 9 damage`() {
         robot.damage = 9
         robot.clearRegisters()
         assertEquals(MovementCard(Movement.STRAIGHT, 1), robot.getRegister(1))

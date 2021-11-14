@@ -11,7 +11,7 @@ class LocationTest {
 
     @ParameterizedTest
     @MethodSource("provideTestReplaceParams")
-    fun testReplaceParams(location: Location, params: Map<String, String>, expected: String) {
+    fun `location build with parameters`(location: Location, params: Map<String, String>, expected: String) {
         assertEquals(expected, location.build(params))
     }
 
@@ -19,7 +19,7 @@ class LocationTest {
         @JvmStatic
         fun provideTestReplaceParams(): Stream<Arguments> = Stream.of(
             Arguments.of(
-                Location.VIEW_GAME,
+                Location.GAME_VIEW,
                 mapOf("id" to "123"),
                 "/game/123"
             )

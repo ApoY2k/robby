@@ -71,7 +71,7 @@ fun Application.module(testing: Boolean = false) {
 
     val storage = MemoryStorage()
     val actionChannel = Channel<Action>()
-    val viewUpdateChannel = Channel<ViewUpdate>()
+    val viewUpdateChannel = Channel<ViewUpdate>(Channel.CONFLATED)
 
     val engine = GameEngine(viewUpdateChannel)
     launch {

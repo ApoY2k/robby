@@ -3,7 +3,7 @@ package apoy2k.robby.model.predef.deck
 import apoy2k.robby.model.Movement
 import apoy2k.robby.model.MovementCard
 
-val STANDARD_DECK = listOf(
+fun generateStandardDeck() = mutableListOf(
     MovementCard(Movement.STRAIGHT, 490),
     MovementCard(Movement.STRAIGHT, 500),
     MovementCard(Movement.STRAIGHT, 510),
@@ -94,4 +94,4 @@ val STANDARD_DECK = listOf(
     MovementCard(Movement.TURN_180, 40),
     MovementCard(Movement.TURN_180, 50),
     MovementCard(Movement.TURN_180, 60),
-)
+).shuffled().toMutableList()

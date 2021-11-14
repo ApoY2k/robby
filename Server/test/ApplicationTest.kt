@@ -9,7 +9,7 @@ import kotlin.test.assertEquals
 @ExperimentalCoroutinesApi
 class ApplicationTest {
     @Test
-    fun testRoot() {
+    fun `request to root`() {
         withTestApplication({ module(testing = true) }) {
             handleRequest(HttpMethod.Get, "/").apply {
                 assertEquals(HttpStatusCode.OK, response.status())

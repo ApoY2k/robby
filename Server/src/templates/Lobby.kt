@@ -12,7 +12,7 @@ class Lobby(private val storage: Storage) : Template<FlowContent> {
                 ul {
                     storage.listGames().forEach {
                         li {
-                            a(Location.VIEW_GAME.build(mapOf("id" to it.id.toString()))) {
+                            a(Location.GAME_VIEW.build(mapOf("id" to it.id.toString()))) {
                                 +it.id.toString()
                             }
                         }
@@ -22,7 +22,7 @@ class Lobby(private val storage: Storage) : Template<FlowContent> {
         }
         div("row") {
             div("col") {
-                form(Location.GAME.path, method = FormMethod.post) {
+                form(Location.GAME_ROOT.path, method = FormMethod.post) {
                     button(classes = "btn btn-primary") {
                         +"Start new game"
                     }

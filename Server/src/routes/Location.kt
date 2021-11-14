@@ -1,14 +1,10 @@
 package apoy2k.robby.routes
 
-import io.ktor.locations.*
-import java.lang.reflect.Type
-import java.util.*
-
 enum class Location(val path: String) {
-    HOME("/"),
+    ROOT("/"),
     SET_USERNAME("/set-username"),
-    GAME("/game"),
-    VIEW_GAME("/game/{id}");
+    GAME_ROOT("/game"),
+    GAME_VIEW("${GAME_ROOT.path}/{id}");
 
     fun build(params: Map<String, String> = mapOf()) = params.entries
         .fold(this.path) { acc, param ->

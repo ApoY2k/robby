@@ -1,7 +1,7 @@
 package apoy2k.robby.model
 
 import apoy2k.robby.model.predef.board.generateChopShopBoard
-import apoy2k.robby.model.predef.deck.STANDARD_DECK
+import apoy2k.robby.model.predef.deck.generateStandardDeck
 import java.util.*
 
 enum class GameState {
@@ -25,7 +25,7 @@ data class Game(val id: String = UUID.randomUUID().toString()) {
 
     val board = Board(generateChopShopBoard())
 
-    val deck = STANDARD_DECK.shuffled().toMutableList()
+    val deck = generateStandardDeck()
 
     var state: GameState = GameState.PROGRAMMING_REGISTERS
 

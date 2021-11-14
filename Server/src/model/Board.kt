@@ -117,7 +117,7 @@ data class Board(val fields: List<List<Field>>) {
     }
 
     /**
-     * Returns a field at the given row/col index. If either row or col is out of bounds,
+     * Returns a field at the given position. If either row or col is out of bounds,
      * the value is coerced into the constraints of the board and the field closes to the
      * given indices is returned
      */
@@ -125,6 +125,12 @@ data class Board(val fields: List<List<Field>>) {
         val rowIdx = position.row.coerceIn(0..fields.lastIndex)
         return fields[rowIdx][position.col.coerceIn(0..fields[rowIdx].lastIndex)]
     }
+
+    /**
+     * Returns a field at the given row/col index.
+     * @see fieldAt
+     */
+    fun fieldAt(row: Int, col: Int) = fieldAt(Position(row, col))
 
     /**
      * Move all belts of the given type *one* tick

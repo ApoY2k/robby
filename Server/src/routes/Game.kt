@@ -23,12 +23,12 @@ import org.slf4j.LoggerFactory
 fun Route.game(actions: SendChannel<Action>, viewUpdateRouter: ViewUpdateRouter, storage: Storage) {
     val logger = LoggerFactory.getLogger("${this.javaClass.name}.game")
 
-    post(Location.GAME.path) {
+    post(Location.GAME_ROOT.path) {
         val game = storage.createGame()
-        call.respondRedirect(Location.HOME.path)
+        call.respondRedirect(Location.ROOT.path)
     }
 
-    route(Location.VIEW_GAME.path) {
+    route(Location.GAME_VIEW.path) {
         get {
             val game = storage.findGame(call.parameters["id"])
             if (game == null) {

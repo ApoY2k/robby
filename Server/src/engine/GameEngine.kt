@@ -7,14 +7,15 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.ReceiveChannel
 import kotlinx.coroutines.channels.SendChannel
 import kotlinx.coroutines.channels.consumeEach
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import org.slf4j.LoggerFactory
 import java.lang.Integer.max
 
 /**
  * Game engine to advance games based on incoming actions
  */
-@ExperimentalCoroutinesApi
 class GameEngine(private val updates: SendChannel<ViewUpdate>) {
     private val logger = LoggerFactory.getLogger(this.javaClass)
 
@@ -22,7 +23,7 @@ class GameEngine(private val updates: SendChannel<ViewUpdate>) {
      * Starts listening to message on the command channel and executes them on the corresponding game,
      * sending back viewupdates for the game along the way
      */
-    // TODO: When two games are running in parallel, the engine ony works on one game at a time
+    @ExperimentalCoroutinesApi
     suspend fun connect(actions: ReceiveChannel<Action>) {
         actions.consumeEach { action ->
             val game = action.game
@@ -39,50 +40,15 @@ class GameEngine(private val updates: SendChannel<ViewUpdate>) {
             try {
                 logger.debug("Received $action")
 
-                // For each incoming action, perform the action on the game state
-                perform(action)
-                updates.send(ViewUpdate(game))
-
-                // If after the action was performed, all players have their cards confirmed,
-                // execut the registers and send updates accordingly
-                if (game.players.isNotEmpty() && game.players.all { it.cardsConfirmed }) {
-
-                    // Send view updates so players see the new state after "preparing" the execution of movements
-                    game.state = GameState.EXECUTING_REGISTER_1
-                    updates.send(ViewUpdate(game))
-                    runRegister(game, 1)
-                    runAutomaticSteps(game)
-
-                    game.state = GameState.EXECUTING_REGISTER_2
-                    runRegister(game, 2)
-                    runAutomaticSteps(game)
-
-                    game.state = GameState.EXECUTING_REGISTER_3
-                    runRegister(game, 3)
-                    runAutomaticSteps(game)
-
-                    game.state = GameState.EXECUTING_REGISTER_4
-                    runRegister(game, 4)
-                    runAutomaticSteps(game)
-
-                    game.state = GameState.EXECUTING_REGISTER_5
-                    runRegister(game, 5)
-                    runAutomaticSteps(game)
-
-                    // Check for end condition. If it is met, end the game
-                    if (game.players.any { it.robot?.passedCheckpoints == 3 }) {
-                        game.state = GameState.FINISHED
-                    } else {
-                        // After all automatic turns are done, deal new cards so players can plan their next move
-                        game.state = GameState.PROGRAMMING_REGISTERS
-                        game.players.forEach {
-                            it.robot?.clearRegisters()
-                            drawCards(game, it)
-                            it.toggleConfirm()
-                        }
+                // Perform the action abd run automatic registers and actions
+                // with ViewUpdates in a separate coroutine so the channel isn't blocked
+                coroutineScope {
+                    launch {
+                        perform(action)
+                        updates.send(ViewUpdate(game))
+                        runRegisters(game)
+                        updates.send(ViewUpdate(game))
                     }
-
-                    updates.send(ViewUpdate(game))
                 }
             } catch (err: Throwable) {
                 logger.error("Error executing $action: $err", err)
@@ -90,24 +56,8 @@ class GameEngine(private val updates: SendChannel<ViewUpdate>) {
         }
     }
 
-    // Run all automatic steps in the game state (executed between each register)
-    private suspend fun runAutomaticSteps(game: Game) {
-        game.state = GameState.MOVE_BARD_ELEMENTS
-        runMoveBoardElements(game)
-
-        game.state = GameState.FIRE_LASERS
-        runFireLasers(game)
-
-        game.state = GameState.CHECKPOINTS
-        runCheckpoints(game)
-
-        game.state = GameState.REPAIR_POWERUPS
-        runRepairPowerups(game)
-    }
-
     /**
-     * Advances the game state by executing a single action.
-     * Returns a set of ViewUpdates to send to the clients.
+     * Advances the game state by executing a single action, without sending ViewUpdates
      */
     fun perform(action: Action) {
         // All actions require a session, so if an action without a session is noticed, just drop it with
@@ -136,6 +86,68 @@ class GameEngine(private val updates: SendChannel<ViewUpdate>) {
             }
             else -> {
                 logger.warn("No executor for $action")
+            }
+        }
+    }
+
+    // Run all automatic steps in the game state (executed between each register)
+    private suspend fun runAutomaticSteps(game: Game) {
+        game.state = GameState.MOVE_BARD_ELEMENTS
+        runMoveBoardElements(game)
+
+        game.state = GameState.FIRE_LASERS
+        runFireLasers(game)
+
+        game.state = GameState.CHECKPOINTS
+        runCheckpoints(game)
+
+        game.state = GameState.REPAIR_POWERUPS
+        runRepairPowerups(game)
+    }
+
+    /**
+     * Run through registers of all player's automaticall, if all of them confirmed.
+     * Sends view updates accordingly.
+     */
+    private suspend fun runRegisters(game: Game) {
+
+        // Check conditions for running automatic registers are fulfilled
+        if (game.players.isEmpty() || game.players.any { !it.cardsConfirmed }) {
+            return
+        }
+
+        // Send view updates between registers so players see the new state after "preparing" the execution of movements
+        game.state = GameState.EXECUTING_REGISTER_1
+        updates.send(ViewUpdate(game))
+        runRegister(game, 1)
+        runAutomaticSteps(game)
+
+        game.state = GameState.EXECUTING_REGISTER_2
+        runRegister(game, 2)
+        runAutomaticSteps(game)
+
+        game.state = GameState.EXECUTING_REGISTER_3
+        runRegister(game, 3)
+        runAutomaticSteps(game)
+
+        game.state = GameState.EXECUTING_REGISTER_4
+        runRegister(game, 4)
+        runAutomaticSteps(game)
+
+        game.state = GameState.EXECUTING_REGISTER_5
+        runRegister(game, 5)
+        runAutomaticSteps(game)
+
+        // Check for game end condition. If it is met, end the game
+        if (game.players.any { it.robot?.passedCheckpoints == 3 }) {
+            game.state = GameState.FINISHED
+        } else {
+            // After all automatic turns are done, deal new cards so players can plan their next move
+            game.state = GameState.PROGRAMMING_REGISTERS
+            game.players.forEach {
+                it.robot?.clearRegisters()
+                drawCards(game, it)
+                it.toggleConfirm()
             }
         }
     }
