@@ -1,15 +1,20 @@
 package apoy2k.robby.templates
 
-import apoy2k.robby.model.*
-import kotlinx.html.*
+import apoy2k.robby.model.Field
+import apoy2k.robby.model.Game
+import apoy2k.robby.model.Robot
+import apoy2k.robby.model.Session
+import kotlinx.html.Entities
+import kotlinx.html.HtmlBlockTag
+import kotlinx.html.div
 
 fun Field.directionsToCssClass(): String =
     listOf(this.outgoingDirection)
         .plus(this.incomingDirections)
-        .joinToString("") { it.name.take(1).toLowerCase() }
+        .joinToString("") { it.name.take(1).lowercase() }
 
 fun HtmlBlockTag.renderField(game: Game, field: Field, session: Session?) {
-    div("field type-${field.type.name.toLowerCase()}") {
+    div("field type-${field.type.name.lowercase()}") {
         if (field.hasDirections()) {
             attributes["class"] += "_${field.directionsToCssClass()}"
         }
@@ -27,8 +32,8 @@ fun HtmlBlockTag.renderField(game: Game, field: Field, session: Session?) {
 
 fun HtmlBlockTag.renderRobot(robot: Robot) {
     div("robot") {
-        div("model icon-${robot.model.name.toLowerCase()} facing-${robot.facing.name.toLowerCase()}")
-        div("arrow arrow-${robot.facing.name.toLowerCase()}")
+        div("model icon-${robot.model.name.lowercase()} facing-${robot.facing.name.lowercase()}")
+        div("arrow arrow-${robot.facing.name.lowercase()}")
     }
 }
 

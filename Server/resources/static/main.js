@@ -49,10 +49,9 @@ const connect = () => {
 
     // Apply DOM specific options
     const reloadStyles = () => {
-        const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
-        const tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
-          return new bootstrap.Tooltip(tooltipTriggerEl)
-        });
+        [].slice
+            .call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+            .forEach((tooltip) => new bootstrap.Tooltip(tooltip));
     };
 
     // Initialize action event listeners upon document load
@@ -62,6 +61,7 @@ const connect = () => {
     });
 }
 
-if (gameId) {
+// Connect websocket if the current page was marked as ws-enabled
+if (connectWs) {
     connect();
 }

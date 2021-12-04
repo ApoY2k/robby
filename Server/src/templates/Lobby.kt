@@ -12,8 +12,8 @@ class Lobby(private val storage: Storage) : Template<FlowContent> {
                 ul {
                     storage.listGames().forEach {
                         li {
-                            a(Location.GAME_VIEW.build(mapOf("id" to it.id.toString()))) {
-                                +it.id.toString()
+                            a(Location.GAME_VIEW.build(mapOf("id" to it.id))) {
+                                +it.id
                             }
                         }
                     }

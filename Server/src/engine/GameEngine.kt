@@ -31,7 +31,7 @@ class GameEngine(private val updates: MutableSharedFlow<ViewUpdate>) {
                 return@onEach
             }
 
-            if (game.state == GameState.FINISHED) {
+            if (game.isFinished) {
                 logger.warn("$game is already finished! Ignorning $action")
                 return@onEach
             }
@@ -39,7 +39,7 @@ class GameEngine(private val updates: MutableSharedFlow<ViewUpdate>) {
             try {
                 logger.debug("Received $action")
 
-                // Perform the action abd run automatic registers and actions
+                // Perform the action and run automatic registers and actions
                 // with ViewUpdates in a separate coroutine so the channel isn't blocked
                 launch {
                     perform(action)
@@ -59,7 +59,7 @@ class GameEngine(private val updates: MutableSharedFlow<ViewUpdate>) {
     fun perform(action: Action) {
         // All actions require a session, so if an action without a session is noticed, just drop it with
         // an empty result view update set
-        val session = action.session ?: return
+        val session = action.session ?: throw IncompleteAction("No session attached to $action")
         val game = action.game ?: throw IncompleteAction("No game attached to $action")
 
         if (action is JoinGameAction) {
@@ -113,6 +113,8 @@ class GameEngine(private val updates: MutableSharedFlow<ViewUpdate>) {
             return
         }
 
+        game.hasStarted = true
+
         // Send view updates between registers so players see the new state after "preparing" the execution of movements
         game.state = GameState.EXECUTING_REGISTER_1
         updates.emit(ViewUpdate(game))
@@ -137,7 +139,7 @@ class GameEngine(private val updates: MutableSharedFlow<ViewUpdate>) {
 
         // Check for game end condition. If it is met, end the game
         if (game.players.any { it.robot?.passedCheckpoints == 3 }) {
-            game.state = GameState.FINISHED
+            game.isFinished = true
         } else {
             // After all automatic turns are done, deal new cards so players can plan their next move
             game.state = GameState.PROGRAMMING_REGISTERS
@@ -216,25 +218,18 @@ class GameEngine(private val updates: MutableSharedFlow<ViewUpdate>) {
 
     private suspend fun runCheckpoints(game: Game) {
         game.board.fields.flatten()
-            .filter { it.robot != null }
-            .forEach {
-                it.robot?.let { robot ->
-                    robot.passedCheckpoints += 1
-                }
-            }
+            .filter { it.type == FieldType.FLAG }
+            .mapNotNull { it.robot }
+            .forEach { it.passedCheckpoints += 1 }
         updates.emit(ViewUpdate(game))
         delay(1000)
     }
 
     private suspend fun runRepairPowerups(game: Game) {
         game.board.fields.flatten()
-            .filter { it.robot != null }
             .filter { it.type == FieldType.REPAIR }
-            .forEach {
-                it.robot?.let { robot ->
-                    robot.damage = max(0, robot.damage - 1)
-                }
-            }
+            .mapNotNull { it.robot }
+            .forEach { it.damage = max(0, it.damage - 1) }
 
         // TODO Implement powerups
 
@@ -258,13 +253,9 @@ class GameEngine(private val updates: MutableSharedFlow<ViewUpdate>) {
             .let { it?.robot = null }
     }
 
-    private fun addPlayer(game: Game, name: String?, model: RobotModel, session: Session) {
-        if (name.isNullOrBlank()) {
-            throw IncompleteAction("Player name missing")
-        }
-
+    private fun addPlayer(game: Game, name: String, model: RobotModel, session: Session) {
         if (game.players.any { it.session == session }) {
-            throw InvalidGameState("Session [$session] already joined")
+            throw InvalidGameState("$session already joined")
         }
 
         val player = Player(name, session)

@@ -24,6 +24,8 @@ fun HtmlBlockTag.renderPlayers(game: Game, session: Session?) {
                     } else {
                         +it.name
                     }
+
+                    +" (${it.robot?.passedCheckpoints})"
                 }
             }
         }

@@ -13,27 +13,43 @@ fun HtmlBlockTag.renderJoinForm(game: Game, session: Session?) {
                     button(classes = "btn btn-primary", type = ButtonType.submit) {
                         +"Leave"
                     }
-                } else {
-                    attributes["data-action"] = JoinGameAction().serializeForSocket()
 
-                    div("form-group") {
-                        select("form-control") {
-                            attributes["name"] = ActionField.ROBOT_MODEL.name
+                    return@form
+                }
 
-                            RobotModel.values()
-                                .filter { !game.players.mapNotNull { it.robot?.model }.contains(it) }
-                                .forEach {
-                                    option {
-                                        +it.name
-                                    }
-                                }
+                if (game.hasStarted) {
+                    p("alert alert-info") {
+                        +"You have not joined in the game. Specating only"
+                    }
+                    return@form
+                }
+
+                joinForm(game)
+            }
+        }
+    }
+}
+
+fun HtmlBlockTag.joinForm(game: Game) {
+    attributes["data-action"] = JoinGameAction().serializeForSocket()
+
+    div("row") {
+        div("col") {
+            select("form-control") {
+                attributes["name"] = ActionField.ROBOT_MODEL.name
+
+                RobotModel.values()
+                    .filter { model -> !game.players.mapNotNull { player -> player.robot?.model }.contains(model) }
+                    .forEach {
+                        option {
+                            +it.name
                         }
                     }
-
-                    button(classes = "btn btn-primary", type = ButtonType.submit) {
-                        +"Join"
-                    }
-                }
+            }
+        }
+        div("col") {
+            button(classes = "btn btn-primary", type = ButtonType.submit) {
+                +"Join"
             }
         }
     }

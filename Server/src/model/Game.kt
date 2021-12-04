@@ -15,33 +15,26 @@ enum class GameState {
     MOVE_BARD_ELEMENTS,
     FIRE_LASERS,
     CHECKPOINTS,
-    REPAIR_POWERUPS,
-    FINISHED
+    REPAIR_POWERUPS
 }
 
 data class Game(val id: String = RandomStringUtils.randomAlphanumeric(5)) {
-
     val players = mutableSetOf<Player>()
-
     val board = Board(generateChopShopBoard())
-
     val deck = generateStandardDeck()
-
-    var state: GameState = GameState.PROGRAMMING_REGISTERS
+    var state = GameState.PROGRAMMING_REGISTERS
+    var isFinished = false
+    var hasStarted = false
 
     /**
      * Find the player associated with a session
      */
-    fun playerFor(session: Session?): Player? {
-        return players.firstOrNull { it.session == session }
-    }
+    fun playerFor(session: Session?) = players.firstOrNull { it.session == session }
 
     /**
      * Check if a specific session has joined this game ( = is associated with a player)
      */
-    fun hasJoined(session: Session?): Boolean {
-        return playerFor(session) != null
-    }
+    fun hasJoined(session: Session?) = playerFor(session) != null
 
     override fun toString() = "Game($id)"
 }

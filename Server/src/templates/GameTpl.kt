@@ -26,9 +26,9 @@ class GameTpl(val game: Game, val session: Session?) : Template<FlowContent> {
 
             renderProfile(game, session)
 
-            // Save the game id to javscript so the websocket connection can be established
+            // Add a javscript marker so the websocket connection can be established
             script("text/javascript") {
-                +"const gameId = '${game.id}';"
+                +"const connectWs = true;"
             }
         }
     }

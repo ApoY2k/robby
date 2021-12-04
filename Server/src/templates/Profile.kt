@@ -24,6 +24,18 @@ fun HtmlBlockTag.renderProfile(game: Game, session: Session?) {
             return@div
         }
 
+        if (game.isFinished) {
+            div("row") {
+                div("col") {
+                    p("alert alert-info") {
+                        +"Game is finished. Nothing else to do here"
+                    }
+                }
+            }
+
+            return@div
+        }
+
         div("row") {
             div("col") {
                 if (game.state == GameState.PROGRAMMING_REGISTERS) {
@@ -160,7 +172,7 @@ fun HtmlBlockTag.renderCard(register: Int, card: MovementCard?, locked: Boolean,
         }
 
         if (!locked) {
-            attributes["data-action"] = SelectCardAction(register.toString(), card.id.toString()).serializeForSocket()
+            attributes["data-action"] = SelectCardAction(register.toString(), card.id).serializeForSocket()
         }
 
         +title
@@ -176,7 +188,7 @@ fun HtmlBlockTag.renderDamageBuffer(robot: Robot, threshold: Int, bg: String, to
         attributes["style"] = "width: 10%;"
 
         if (tooltip.isNotBlank()) {
-            attributes["data-toggle"] = "tooltip"
+            attributes["data-bs-toggle"] = "tooltip"
             attributes["title"] = tooltip
         }
 

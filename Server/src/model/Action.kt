@@ -60,11 +60,12 @@ abstract class Action {
          * Convert a serialized, url encoded query string to a typed action instance.
          * Counterpart for the `serializeForSocket` method.
          * @param game Game instance to attach to the deserialized action
+         * @param serializedAction Serialized action object
          * @throws UnknownAction if the string cannot be converted
          */
-        fun deserializeFromSocket(game: Game, input: String): Action {
+        fun deserializeFromSocket(game: Game, serializedAction: String): Action {
             try {
-                val query = URLEncodedUtils.parse(input, Charset.defaultCharset())
+                val query = URLEncodedUtils.parse(serializedAction, Charset.defaultCharset())
                 val labelField = query.first(ActionField.LABEL) ?: "no_label"
 
                 val action = when (ActionLabel.valueOf(labelField)) {
@@ -83,7 +84,7 @@ abstract class Action {
 
                 return action
             } catch (err: Throwable) {
-                throw UnknownAction(input, err)
+                throw UnknownAction(serializedAction, err)
             }
         }
     }
@@ -105,9 +106,8 @@ abstract class Action {
     /**
      * Format this action as a URL Encoded string of name/value pairs, so it can be sent over the websocket
      */
-    fun serializeForSocket(): String {
-        return URLEncodedUtils.format(parameters.filter { !it.value.isNullOrBlank() }, Charset.defaultCharset())
-    }
+    fun serializeForSocket(): String =
+        URLEncodedUtils.format(parameters.filter { !it.value.isNullOrBlank() }, Charset.defaultCharset())
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true

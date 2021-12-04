@@ -57,6 +57,7 @@ fun Route.game(actions: MutableSharedFlow<Action>, viewUpdateRouter: ViewUpdateR
 
             viewUpdateRouter.addSession(game, session, this)
 
+            // This will block the thread while listeing for incoming messages
             incoming.consumeEach { frame ->
                 when (frame) {
                     is Frame.Text -> {
@@ -77,6 +78,7 @@ fun Route.game(actions: MutableSharedFlow<Action>, viewUpdateRouter: ViewUpdateR
                 }
             }
 
+            // At this point, the websocket connection was aborted (by either client or server)
             viewUpdateRouter.removeSession(game, session, this)
         }
     }
