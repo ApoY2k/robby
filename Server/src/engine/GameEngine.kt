@@ -201,17 +201,7 @@ class GameEngine(private val updates: MutableSharedFlow<ViewUpdate>) {
         updates.emit(ViewUpdate(game))
         delay(1000)
 
-        // Remove the laser conditions on fields after they fired
-        game.board.fields.flatten().forEach { it.conditions.remove(FieldCondition.LASER) }
-        updates.emit(ViewUpdate(game))
-        delay(1000)
-
         game.board.fireLasers(FieldType.LASER)
-        updates.emit(ViewUpdate(game))
-        delay(1000)
-
-        // Remove the laser conditions on fields after they fired
-        game.board.fields.flatten().forEach { it.conditions.remove(FieldCondition.LASER_2) }
         updates.emit(ViewUpdate(game))
         delay(1000)
     }

@@ -7,6 +7,11 @@ import kotlin.math.atan2
 data class Board(val fields: List<List<Field>>) {
     private val logger = LoggerFactory.getLogger(this.javaClass)
 
+    init {
+        // Add laser conditions on all fields in a lasers way (just once on intializing the field)
+        applyLaserConditions()
+    }
+
     /**
      * Get the position of a robot on the field
      */
@@ -230,7 +235,11 @@ data class Board(val fields: List<List<Field>>) {
         }
     }
 
-    fun fireLasers(laserType: FieldType) {
+    /**
+     * Apply the laser(_2)(_h/_v) condition on all fields that are in the direction of any laser
+     * on the board. Must be called directly after the board fields are initialized
+     */
+    fun applyLaserConditions() {
         /**
          * For each laser:
          *  - determine orientation and find next wall (or end of board)
@@ -240,11 +249,11 @@ data class Board(val fields: List<List<Field>>) {
          *  - damage each robot for 1 point
          */
         fields.flatten()
-            .filter { it.type == laserType }
-            .forEach { field ->
-                val startPos = positionOf(field)
-                val direction = field.outgoingDirection
-                val nextWall = firstFieldByDirection(field, direction, FieldType.WALL)
+            .filter { listOf(FieldType.LASER, FieldType.LASER_2).contains(it.type) }
+            .forEach { sourceField ->
+                val startPos = positionOf(sourceField)
+                val direction = sourceField.outgoingDirection
+                val nextWall = firstFieldByDirection(sourceField, direction, FieldType.WALL)
                 val wallPosition = positionOf(nextWall)
 
                 // Depending on *where* the wall is on the field, the laser might still hit a target on the field,
@@ -275,36 +284,47 @@ data class Board(val fields: List<List<Field>>) {
                 // With the start and endField finalized, iterate over all fields between
                 // them in the direction of the laser, depending on the direciton of the laser and collect
                 // all fields on the way to the map edge
+
+                // Also, add an addtional step to the position so the laser conditions is not applied on the
+                // lasers source field itself!
+
                 val fields = when (direction) {
-                    Direction.LEFT -> (endPos.col..startPos.col).map { fieldAt(Position(startPos.row, it)) }
-                    Direction.RIGHT -> (startPos.col..endPos.col).map { fieldAt(Position(startPos.row, it)) }
-                    Direction.UP -> (endPos.row..startPos.row).map { fieldAt(Position(it, startPos.col)) }
-                    Direction.DOWN -> (startPos.row..endPos.row).map { fieldAt(Position(it, startPos.col)) }
+                    Direction.LEFT -> (endPos.col until startPos.col).map { fieldAt(Position(startPos.row, it)) }
+                    Direction.RIGHT -> (startPos.col + 1..endPos.col).map { fieldAt(Position(startPos.row, it)) }
+                    Direction.UP -> (endPos.row until startPos.row).map { fieldAt(Position(it, startPos.col)) }
+                    Direction.DOWN -> (startPos.row + 1..endPos.row).map { fieldAt(Position(it, startPos.col)) }
                     else -> emptyList()
                 }
 
-                applyLaserCondition(fields, laserType)
+                // Then apply the laser condition of the source laser field to all fields in the
+                // direction of the source laser to build the "firing line" of the laser on the board
+                fields.forEach apply@{ inLineField ->
+                    val condition = sourceField.getInLineLaserFieldsCondition() ?: return@apply
+                    inLineField.conditions.add(condition)
+                }
             }
     }
 
     /**
-     * Aplys the `LASER` condition to all provided fields, until either:
-     * - A robot is encountered. It is then damaged for 1 and the iteration stops
-     * - The end of the list is reached
+     * Fire all lasers of the given type, damaging all robots in its line
      */
-    private fun applyLaserCondition(fields: Iterable<Field>, laserType: FieldType) {
-        fields.forEach { field ->
-            when (laserType) {
-                FieldType.LASER -> field.conditions.add(FieldCondition.LASER)
-                FieldType.LASER_2 -> field.conditions.add(FieldCondition.LASER_2)
-                else -> Unit
-            }
+    fun fireLasers(type: FieldType) {
+        fields.flatten()
+            .forEach { field ->
+                val robot = field.robot ?: return@forEach
 
-            field.robot?.let {
-                it.damage += 1
-                return
+                if (type == FieldType.LASER
+                    || field.conditions.any { it == FieldCondition.LASER_H || it == FieldCondition.LASER_V }
+                ) {
+                    robot.damage += 1
+                }
+
+                if (type == FieldType.LASER_2
+                    || field.conditions.any { it == FieldCondition.LASER_2_H || it == FieldCondition.LASER_2_V }
+                ) {
+                    robot.damage += 2
+                }
             }
-        }
     }
 
     /**
@@ -313,6 +333,9 @@ data class Board(val fields: List<List<Field>>) {
      */
     fun firstFieldByDirection(startField: Field, direction: Direction, fieldType: FieldType): Field {
         val startPos = positionOf(startField)
+
+        // TODO When fieldType == WALL, the walls from lasers and pushers also need to be respected
+        // depending on the outgoing position of these fields!
 
         return when (direction) {
             Direction.RIGHT -> {

@@ -26,7 +26,7 @@ class GameEngineTest {
         val player = game.playerFor(s1)
         assertNotNull(player)
 
-        val card = player!!.drawnCards[0]
+        val card = player.drawnCards[0]
         engine.perform(SelectCardAction("1", card.id).also {
             it.session = s1
             it.game = game

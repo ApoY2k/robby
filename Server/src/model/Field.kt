@@ -41,6 +41,22 @@ data class Field(val id: String = RandomStringUtils.randomAlphanumeric(5)) {
     // true, if this field has any directions, no matter in or outgoing
     fun hasDirections() = getDirections().isNotEmpty()
 
+    // Returns the FieldCondition to apply to any fields that might be in line of this lasser
+    // on the board when applying laser conditions
+    fun getInLineLaserFieldsCondition() = when (type) {
+        FieldType.LASER -> when (outgoingDirection) {
+            Direction.DOWN, Direction.UP -> FieldCondition.LASER_V
+            Direction.LEFT, Direction.RIGHT -> FieldCondition.LASER_H
+            else -> null
+        }
+        FieldType.LASER_2 -> when (outgoingDirection) {
+            Direction.DOWN, Direction.UP -> FieldCondition.LASER_2_V
+            Direction.LEFT, Direction.RIGHT -> FieldCondition.LASER_2_H
+            else -> null
+        }
+        else -> null
+    }
+
     override fun toString(): String {
         val directions = getDirections()
         return "Field($id, $directions, $robot)"
@@ -60,4 +76,11 @@ enum class FieldType {
     FLAG,
     REPAIR,
     REPAIR_MOD,
+}
+
+enum class FieldCondition {
+    LASER_H,
+    LASER_V,
+    LASER_2_H,
+    LASER_2_V,
 }

@@ -15,7 +15,7 @@ class GameTpl(val game: Game, val session: Session?) : Template<FlowContent> {
 
             div("row") {
                 div("col") {
-                    renderBoard(game, session)
+                    renderBoard(game.board)
                 }
 
                 div("col-2") {

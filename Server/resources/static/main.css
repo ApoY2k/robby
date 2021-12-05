@@ -51,6 +51,7 @@
 
 .field[class*="type-rotate"]::after,
 .field[class*="type-laser"]::after,
+div[class*="condition"]::after,
 .field[class*="type-belt"]::after,
 .field[class*="type-pusher"]::after,
 .type-repair::after,
@@ -71,27 +72,23 @@
     background-position: center;
 }
 
-.type-wall_d, .type-wall_ld, .type-wall_ldr, .type-wall_lud, .type-wall_urd, .type-wall_lurd, .type-wall_ud, .type-wall_rd, .type-wall_d,
-.type-laser_d, .type-laser_2_d,
-.type-pusher_d {
+.type-wall_d, .type-wall_ld, .type-wall_ldr, .type-wall_lud, .type-wall_urd, .type-wall_lurd, .type-wall_ud,
+.type-wall_rd, .type-wall_d, .type-laser_u, .type-laser_2_u, .type-pusher_u {
     border-bottom-style: solid;
 }
 
-.type-wall_lu, .type-wall_lur, .type-wall_lud, .type-wall_urd, .type-wall_lurd, .type-wall_u, .type-wall_ur, .type-wall_ud,
-.type-laser_u, .type-laser_2_u,
-.type-pusher_u {
+.type-wall_lu, .type-wall_lur, .type-wall_lud, .type-wall_urd, .type-wall_lurd, .type-wall_u, .type-wall_ur,
+.type-wall_ud, .type-laser_d, .type-laser_2_d, .type-pusher_d {
     border-top-style: solid;
 }
 
-.type-wall_l, .type-wall_lu, .type-wall_lr, .type-wall_lr, .type-wall_ld, .type-wall_lur, .type-wall_ldr, .type-wall_lud, .type-wall_lurd,
-.type-laser_l, .type-laser_2_l,
-.type-pusher_l {
+.type-wall_l, .type-wall_lu, .type-wall_lr, .type-wall_lr, .type-wall_ld, .type-wall_lur, .type-wall_ldr,
+.type-wall_lud, .type-wall_lurd, .type-laser_r, .type-laser_2_r, .type-pusher_r {
     border-left-style: solid;
 }
 
-.type-wall_lr, .type-wall_lur, .type-wall_ldr, .type-wall_urd, .type-wall_lurd, .type-wall_ur, .type-wall_r, .type-wall_rd,
-.type-laser_r, .type-laser_2_r,
-.type-pusher_r {
+.type-wall_lr, .type-wall_lur, .type-wall_ldr, .type-wall_urd, .type-wall_lurd, .type-wall_ur, .type-wall_r,
+.type-wall_rd, .type-laser_l, .type-laser_2_l, .type-pusher_l {
     border-right-style: solid;
 }
 
@@ -162,21 +159,21 @@
 .type-belt_l::after, .type-belt_ld::after, .type-belt_ul::after, .type-belt_dl::after, .type-belt_lur::after,
 .type-belt_lud::after, .type-belt_lrd::after, .type-belt_lurd::after,.type-belt_2_l::after, .type-belt_2_ul::after,
 .type-belt_2_dl::after, .type-belt_2_lur::after, .type-belt_2_lud::after, .type-belt_2_lrd::after,
-.type-belt_2_lurd::after, .type-laser_l::after, .type-laser_2_l::after, .type-pusher_l::after {
+.type-belt_2_lurd::after, .type-laser_r::after, .type-laser_2_r::after, .type-pusher_r::after {
     transform: rotate(-90deg);
 }
 
 .type-belt_r::after, .type-belt_dr::after, .type-belt_ur::after, .type-belt_rud::after, .type-belt_rlu::after,
 .type-belt_rld::after, .type-belt_rlud::after, .type-belt_2_r::after, .type-belt_2_dr::after, .type-belt_2_ur::after,
 .type-belt_2_rud::after, .type-belt_2_rlu::after, .type-belt_2_rld::after, .type-belt_2_rlud::after,
-.type-laser_r::after, .type-laser_2_r::after, .type-pusher_r::after {
+.type-laser_l::after, .type-laser_2_l::after, .type-pusher_l::after {
     transform: rotate(90deg);
 }
 
 .type-belt_d::after, .type-belt_rd::after, .type-belt_dlu::after, .type-belt_dur::after, .type-belt_dlur::after,
 .type-belt_dlr::after,.type-belt_2_d::after, .type-belt_2_ld::after, .type-belt_2_rd::after, .type-belt_2_dlu::after,
-.type-belt_2_dur::after, .type-belt_2_dlur::after, .type-belt_2_dlr::after, .type-laser_d::after,
-.type-laser_2_d::after, .type-pusher_d::after {
+.type-belt_2_dur::after, .type-belt_2_dlur::after, .type-belt_2_dlr::after, .type-laser_u::after,
+.type-laser_2_u::after, .type-pusher_u::after {
     transform: rotate(180deg);
 }
 
@@ -191,6 +188,18 @@
 .field[class*="type-pusher"]::after {
     background-image: url("/static/icons/pusher.png");
     background-position: center -10px;
+}
+
+div.condition-laser_h::after, div.condition-laser_v::after {
+    background-image: url("/static/icons/condition-laser.png");
+}
+
+div.condition-laser_2_h::after, div.condition-laser_2_v::after {
+    background-image: url("/static/icons/condition-laser_2.png");
+}
+
+div.condition-laser_h::after, div.condition-laser_2_h::after {
+    transform: rotate(90deg);
 }
 
 .type-repair::after {

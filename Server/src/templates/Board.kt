@@ -1,9 +1,8 @@
 package apoy2k.robby.templates
 
+import apoy2k.robby.model.Board
 import apoy2k.robby.model.Field
-import apoy2k.robby.model.Game
 import apoy2k.robby.model.Robot
-import apoy2k.robby.model.Session
 import kotlinx.html.Entities
 import kotlinx.html.HtmlBlockTag
 import kotlinx.html.div
@@ -13,16 +12,21 @@ fun Field.directionsToCssClass(): String =
         .plus(this.incomingDirections)
         .joinToString("") { it.name.take(1).lowercase() }
 
-fun HtmlBlockTag.renderField(game: Game, field: Field, session: Session?) {
+fun HtmlBlockTag.renderField(field: Field) {
     div("field type-${field.type.name.lowercase()}") {
         if (field.hasDirections()) {
             attributes["class"] += "_${field.directionsToCssClass()}"
         }
 
-        val playerRobot = game.playerFor(session)?.robot
+        field.conditions.forEach { condition ->
+            div("condition-${condition.name.lowercase()}") {
+                +Entities.nbsp
+            }
+        }
+
         val robot = field.robot
         if (robot == null) {
-            entity(Entities.nbsp)
+            +Entities.nbsp
             return@div
         }
 
@@ -37,17 +41,17 @@ fun HtmlBlockTag.renderRobot(robot: Robot) {
     }
 }
 
-fun HtmlBlockTag.renderBoard(game: Game, session: Session?) {
+fun HtmlBlockTag.renderBoard(board: Board) {
     div("row") {
         div("col") {
             div("board") {
-                val rowTemplate = "60px ".repeat(game.board.fields.count())
-                val colTemplate = "60px ".repeat(game.board.fields[0].count())
+                val rowTemplate = "60px ".repeat(board.fields.count())
+                val colTemplate = "60px ".repeat(board.fields[0].count())
 
                 attributes["style"] = "grid-template-rows: $rowTemplate; grid-template-columns: $colTemplate;"
 
-                game.board.fields.flatten().forEach {
-                    renderField(game, it, session)
+                board.fields.flatten().forEach {
+                    renderField(it)
                 }
             }
         }
