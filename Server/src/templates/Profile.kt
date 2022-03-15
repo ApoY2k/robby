@@ -127,7 +127,7 @@ fun HtmlBlockTag.renderRegister(register: Int, player: Player) {
 
     div("col pb-3") {
         if (locked) {
-            div("register-locked")
+            attributes["class"] += " register-locked"
         }
 
         h5 {

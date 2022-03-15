@@ -253,7 +253,7 @@ data class Board(val fields: List<List<Field>>) {
             .forEach { sourceField ->
                 val startPos = positionOf(sourceField)
                 val direction = sourceField.outgoingDirection
-                val nextWall = firstFieldByDirection(sourceField, direction, FieldType.WALL)
+                val nextWall = findLastNonBlockedField(sourceField, direction)
                 val wallPosition = positionOf(nextWall)
 
                 // Depending on *where* the wall is on the field, the laser might still hit a target on the field,
@@ -328,21 +328,30 @@ data class Board(val fields: List<List<Field>>) {
     }
 
     /**
-     * Finds the first field, starting from a field and going in a direciton until a field of the
-     * searched type is found. Returns the found field.
+     * Finds the last field, starting from a field and going in a direciton until any blocking wall is encountered.
+     * Returns the last field right before the blocking wall.
      */
-    fun firstFieldByDirection(startField: Field, direction: Direction, fieldType: FieldType): Field {
+    fun findLastNonBlockedField(startField: Field, direction: Direction): Field {
         val startPos = positionOf(startField)
-
-        // TODO When fieldType == WALL, the walls from lasers and pushers also need to be respected
-        // depending on the outgoing position of these fields!
 
         return when (direction) {
             Direction.RIGHT -> {
                 for (col in startPos.col + 1 until fields[startPos.row].size) {
                     val field = fieldAt(Position(startPos.row, col))
-                    if (field.type == fieldType) {
-                        return field
+                    if (!field.type.isBlocking() || !field.hasHorizontalDirection()) {
+                        continue
+                    }
+
+                    if (field.type == FieldType.WALL) {
+                        return when (field.hasDirection(Direction.LEFT)) {
+                            true -> fieldAt(Position(startPos.row, col - 1))
+                            else -> field
+                        }
+                    }
+
+                    return when (field.hasDirection(Direction.RIGHT)) {
+                        true -> fieldAt(Position(startPos.row, col - 1))
+                        else -> field
                     }
                 }
 
@@ -351,8 +360,20 @@ data class Board(val fields: List<List<Field>>) {
             Direction.LEFT -> {
                 for (col in startPos.col - 1 downTo 0) {
                     val field = fieldAt(Position(startPos.row, col))
-                    if (field.type == fieldType) {
-                        return field
+                    if (!field.type.isBlocking() || !field.hasHorizontalDirection()) {
+                        continue
+                    }
+
+                    if (field.type == FieldType.WALL) {
+                        return when (field.hasDirection(Direction.RIGHT)) {
+                            true -> fieldAt(Position(startPos.row, col + 1))
+                            else -> field
+                        }
+                    }
+
+                    return when (field.hasDirection(Direction.LEFT)) {
+                        true -> fieldAt(Position(startPos.row, col + 1))
+                        else -> field
                     }
                 }
 
@@ -361,8 +382,20 @@ data class Board(val fields: List<List<Field>>) {
             Direction.DOWN -> {
                 for (row in startPos.row + 1 until fields.size) {
                     val field = fieldAt(Position(row, startPos.col))
-                    if (field.type == fieldType) {
-                        return field
+                    if (!field.type.isBlocking() || !field.hasVerticalDirection()) {
+                        continue
+                    }
+
+                    if (field.type == FieldType.WALL) {
+                        return when (field.hasDirection(Direction.UP)) {
+                            true -> fieldAt(Position(row - 1, startPos.col))
+                            else -> field
+                        }
+                    }
+
+                    return when (field.hasDirection(Direction.DOWN)) {
+                        true -> fieldAt(Position(row - 1, startPos.col))
+                        else -> field
                     }
                 }
 
@@ -371,8 +404,20 @@ data class Board(val fields: List<List<Field>>) {
             Direction.UP -> {
                 for (row in startPos.row - 1 downTo 0) {
                     val field = fieldAt(Position(row, startPos.col))
-                    if (field.type == fieldType) {
-                        return field
+                    if (!field.type.isBlocking() || !field.hasVerticalDirection()) {
+                        continue
+                    }
+
+                    if (field.type == FieldType.WALL) {
+                        return when (field.hasDirection(Direction.DOWN)) {
+                            true -> fieldAt(Position(row + 1, startPos.col))
+                            else -> field
+                        }
+                    }
+
+                    return when (field.hasDirection(Direction.UP)) {
+                        true -> fieldAt(Position(row + 1, startPos.col))
+                        else -> field
                     }
                 }
 

@@ -1,8 +1,7 @@
 package apoy2k.robby.routes
 
 import apoy2k.robby.data.Storage
-import apoy2k.robby.model.Board
-import apoy2k.robby.model.Session
+import apoy2k.robby.model.*
 import apoy2k.robby.model.predef.board.generateChopShopBoard
 import apoy2k.robby.templates.HomeTpl
 import apoy2k.robby.templates.LayoutTpl
@@ -14,10 +13,7 @@ import io.ktor.request.*
 import io.ktor.response.*
 import io.ktor.routing.*
 import io.ktor.sessions.*
-import kotlinx.html.a
-import kotlinx.html.div
-import kotlinx.html.li
-import kotlinx.html.ul
+import kotlinx.html.*
 import org.slf4j.LoggerFactory
 
 fun Route.base(storage: Storage) {
@@ -51,6 +47,11 @@ fun Route.base(storage: Storage) {
                                     +"Chop Shop"
                                 }
                             }
+                            li {
+                                a(Location.BOARDS_VIEW.build(mapOf("id" to "laser-test"))) {
+                                    +"Laser Render Test"
+                                }
+                            }
                         }
                     }
                 }
@@ -61,6 +62,14 @@ fun Route.base(storage: Storage) {
     get(Location.BOARDS_VIEW.path) {
         val board = when (call.parameters["id"]) {
             "chop-shop" -> Board(generateChopShopBoard())
+            "laser-test" -> Board(
+                listOf(
+                    listOf(Field(), Field(FieldType.WALL, Direction.LEFT), Field()),
+                    listOf(Field(FieldType.WALL, Direction.DOWN), Field(), Field()),
+                    listOf(Field(), Field(), Field(FieldType.WALL, Direction.RIGHT)),
+                    listOf(Field(), Field(FieldType.WALL, Direction.UP), Field()),
+                ),
+            )
             else -> null
         }
 
@@ -71,6 +80,9 @@ fun Route.base(storage: Storage) {
 
         call.respondHtmlTemplate(LayoutTpl()) {
             content {
+                h2 {
+                    +"Board Preview"
+                }
                 div {
                     renderBoard(board)
                 }

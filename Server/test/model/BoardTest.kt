@@ -299,7 +299,7 @@ class BoardTest {
     @ParameterizedTest
     @MethodSource("provideTestFirstFieldByDirection")
     fun `find field by direction`(board: Board, startField: Field, direction: Direction, expectedEndField: Field) {
-        val endField = board.firstFieldByDirection(startField, direction, FieldType.WALL)
+        val endField = board.findLastNonBlockedField(startField, direction)
         assertEquals(expectedEndField, endField)
     }
 
@@ -308,20 +308,20 @@ class BoardTest {
         fun provideTestFirstFieldByDirection(): Stream<Arguments> {
             val board = Board(
                 listOf(
-                    listOf(Field(), Field(), Field()),
-                    listOf(Field(FieldType.WALL), Field(), Field()),
-                    listOf(Field(), Field(), Field(FieldType.WALL)),
-                    listOf(Field(), Field(FieldType.WALL), Field()),
+                    listOf(Field(), Field(FieldType.WALL, Direction.LEFT), Field()),
+                    listOf(Field(FieldType.WALL, Direction.DOWN), Field(), Field()),
+                    listOf(Field(), Field(), Field(FieldType.WALL, Direction.RIGHT)),
+                    listOf(Field(), Field(FieldType.WALL, Direction.UP), Field()),
                 )
             )
 
             return Stream.of(
-                Arguments.of(board, board.fieldAt(0, 0), Direction.RIGHT, board.fieldAt(0, 2)),
+                Arguments.of(board, board.fieldAt(0, 0), Direction.RIGHT, board.fieldAt(0, 0)),
                 Arguments.of(board, board.fieldAt(1, 1), Direction.UP, board.fieldAt(0, 1)),
                 Arguments.of(board, board.fieldAt(1, 1), Direction.LEFT, board.fieldAt(1, 0)),
-                Arguments.of(board, board.fieldAt(0, 2), Direction.DOWN, board.fieldAt(2, 2)),
-                Arguments.of(board, board.fieldAt(3, 2), Direction.LEFT, board.fieldAt(3, 1)),
-                Arguments.of(board, board.fieldAt(3, 0), Direction.RIGHT, board.fieldAt(3, 1)),
+                Arguments.of(board, board.fieldAt(0, 2), Direction.DOWN, board.fieldAt(3, 2)),
+                Arguments.of(board, board.fieldAt(3, 2), Direction.LEFT, board.fieldAt(3, 0)),
+                Arguments.of(board, board.fieldAt(3, 0), Direction.RIGHT, board.fieldAt(3, 2)),
                 Arguments.of(board, board.fieldAt(3, 1), Direction.UP, board.fieldAt(0, 1)),
                 Arguments.of(board, board.fieldAt(0, 0), Direction.LEFT, board.fieldAt(0, 0)),
                 Arguments.of(board, board.fieldAt(0, 0), Direction.UP, board.fieldAt(0, 0)),

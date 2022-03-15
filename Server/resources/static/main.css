@@ -2,12 +2,6 @@
 .register-locked {
     background-color: #ffc107;
     opacity: 0.5;
-    position: absolute;
-    width: 100%;
-    height: 100%;
-    z-index: 1;
-    left: 0;
-    top: 0;
 }
 
 .register-card {
@@ -108,19 +102,19 @@ div[class*="condition"]::after,
     background-image: url("/static/icons/straight_2.png");
 }
 
-.type-belt_ru::after, .type-belt_dr::after, .type-belt_ul::after {
+.type-belt_lu::after, .type-belt_ru::after, .type-belt_dr::after, .type-belt_ul::after {
     background-image: url("/static/icons/turn_right.png");
 }
 
-.type-belt_2_ru::after, .type-belt_2_dr::after, .type-belt_2_ld::after, .type-belt_2_ul::after {
+.type-belt_2_lu::after, .type-belt_2_ru::after, .type-belt_2_dr::after, .type-belt_2_ld::after, .type-belt_2_ul::after {
     background-image: url("/static/icons/turn_2_right.png");
 }
 
-.type-belt_lu::after, .type-belt_dl::after, .type-belt_ld::after, .type-belt_rd::after, .type-belt_ur::after {
+.type-belt_dl::after, .type-belt_ld::after, .type-belt_rd::after, .type-belt_ur::after {
     background-image: url("/static/icons/turn_left.png");
 }
 
-.type-belt_2_lu::after, .type-belt_2_dl::after, .type-belt_2_rd::after, .type-belt_2_ur::after {
+.type-belt_2_dl::after, .type-belt_2_rd::after, .type-belt_2_ur::after {
     background-image: url("/static/icons/turn_2_left.png");
 }
 
@@ -156,10 +150,10 @@ div[class*="condition"]::after,
     background-image: url("/static/icons/merge_2_lrd.png");
 }
 
-.type-belt_l::after, .type-belt_ld::after, .type-belt_ul::after, .type-belt_dl::after, .type-belt_lur::after,
-.type-belt_lud::after, .type-belt_lrd::after, .type-belt_lurd::after,.type-belt_2_l::after, .type-belt_2_ul::after,
-.type-belt_2_dl::after, .type-belt_2_lur::after, .type-belt_2_lud::after, .type-belt_2_lrd::after,
-.type-belt_2_lurd::after, .type-laser_r::after, .type-laser_2_r::after, .type-pusher_r::after {
+.type-belt_l::after, .type-belt_lu::after, .type-belt_2_lu::after, .type-belt_ld::after, .type-belt_ul::after,
+.type-belt_dl::after, .type-belt_lur::after, .type-belt_lud::after, .type-belt_lrd::after, .type-belt_lurd::after,
+.type-belt_2_l::after, .type-belt_2_ul::after, .type-belt_2_dl::after, .type-belt_2_lur::after, .type-belt_2_lud::after,
+.type-belt_2_lrd::after, .type-belt_2_lurd::after, .type-laser_r::after, .type-laser_2_r::after, .type-pusher_r::after {
     transform: rotate(-90deg);
 }
 
@@ -217,6 +211,9 @@ div.condition-laser_h::after, div.condition-laser_2_h::after {
 .robot {
     height: 100%;
     width: 100%;
+    position: absolute;
+    top: 0;
+    left: 0;
 }
 
 .robot .model {

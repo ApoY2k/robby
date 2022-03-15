@@ -41,6 +41,9 @@ data class Field(val id: String = RandomStringUtils.randomAlphanumeric(5)) {
     // true, if this field has any directions, no matter in or outgoing
     fun hasDirections() = getDirections().isNotEmpty()
 
+    fun hasVerticalDirection() = getDirections().any { it.isVertical() }
+    fun hasHorizontalDirection() = getDirections().any { it.isHorizontal() }
+
     // Returns the FieldCondition to apply to any fields that might be in line of this lasser
     // on the board when applying laser conditions
     fun getInLineLaserFieldsCondition() = when (type) {
@@ -75,7 +78,9 @@ enum class FieldType {
     PUSHER,
     FLAG,
     REPAIR,
-    REPAIR_MOD,
+    REPAIR_MOD;
+
+    fun isBlocking() = this == WALL || this == LASER || this == LASER_2 || this == PUSHER
 }
 
 enum class FieldCondition {

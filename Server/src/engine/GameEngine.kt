@@ -244,6 +244,9 @@ class GameEngine(private val updates: MutableSharedFlow<ViewUpdate>) {
     }
 
     private fun addPlayer(game: Game, name: String, model: RobotModel, session: Session) {
+        if (name.isBlank()) {
+            throw IncompleteAction("No name provided")
+        }
         if (game.players.any { it.session == session }) {
             throw InvalidGameState("$session already joined")
         }

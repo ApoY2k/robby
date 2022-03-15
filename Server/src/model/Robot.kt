@@ -14,7 +14,10 @@ enum class Direction {
     UP,
     RIGHT,
     DOWN,
-    LEFT
+    LEFT;
+
+    fun isVertical() = this == UP || this == DOWN
+    fun isHorizontal() = this == LEFT || this == RIGHT
 }
 
 data class Vec2(val x: Float, val y: Float)
