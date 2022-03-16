@@ -303,6 +303,29 @@ class BoardTest {
         assertEquals(expectedEndField, endField)
     }
 
+    @Test
+    fun `laser damages robot`() {
+        val board = Board(
+            listOf(
+                listOf(Field(FieldType.LASER, Direction.DOWN), Field()),
+                listOf(Field(), Field()),
+                listOf(Field(), Field()),
+                listOf(Field(), Field()),
+            )
+        )
+
+        val zippy = Robot(RobotModel.ZIPPY)
+        board.fieldAt(2, 0).robot = zippy
+
+        val klaus = Robot(RobotModel.KLAUS)
+        board.fieldAt(2, 1).robot = klaus
+
+        board.fireLasers(FieldType.LASER)
+
+        assertEquals(1, zippy.damage)
+        assertEquals(0, klaus.damage)
+    }
+
     companion object {
         @JvmStatic
         fun provideTestFirstFieldByDirection(): Stream<Arguments> {

@@ -314,13 +314,17 @@ data class Board(val fields: List<List<Field>>) {
                 val robot = field.robot ?: return@forEach
 
                 if (type == FieldType.LASER
-                    || field.conditions.any { it == FieldCondition.LASER_H || it == FieldCondition.LASER_V }
+                    && (field.type == FieldType.LASER
+                            || field.conditions.contains(FieldCondition.LASER_H)
+                            || field.conditions.contains(FieldCondition.LASER_V))
                 ) {
                     robot.damage += 1
                 }
 
                 if (type == FieldType.LASER_2
-                    || field.conditions.any { it == FieldCondition.LASER_2_H || it == FieldCondition.LASER_2_V }
+                    && (field.type == FieldType.LASER_2
+                            || field.conditions.contains(FieldCondition.LASER_2_H)
+                            || field.conditions.contains(FieldCondition.LASER_2_V))
                 ) {
                     robot.damage += 2
                 }
