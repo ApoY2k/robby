@@ -1,6 +1,6 @@
 package apoy2k.robby.templates
 
-import io.ktor.html.*
+import io.ktor.server.html.*
 import kotlinx.html.*
 
 class LayoutTpl : Template<HTML> {

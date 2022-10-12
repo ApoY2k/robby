@@ -6,13 +6,13 @@ import apoy2k.robby.model.predef.board.generateChopShopBoard
 import apoy2k.robby.templates.HomeTpl
 import apoy2k.robby.templates.LayoutTpl
 import apoy2k.robby.templates.renderBoard
-import io.ktor.application.*
-import io.ktor.html.*
-import io.ktor.http.content.*
-import io.ktor.request.*
-import io.ktor.response.*
-import io.ktor.routing.*
-import io.ktor.sessions.*
+import io.ktor.server.application.*
+import io.ktor.server.html.*
+import io.ktor.server.http.content.*
+import io.ktor.server.request.*
+import io.ktor.server.response.*
+import io.ktor.server.routing.*
+import io.ktor.server.sessions.*
 import kotlinx.html.*
 import org.slf4j.LoggerFactory
 
@@ -49,7 +49,12 @@ fun Route.base(storage: Storage) {
                             }
                             li {
                                 a(Location.BOARDS_VIEW.build(mapOf("id" to "laser-test"))) {
-                                    +"Laser Render Test"
+                                    +"Laser Render"
+                                }
+                            }
+                            li {
+                                a(Location.BOARDS_VIEW.build(mapOf("id" to "robot-states"))) {
+                                    +"Robot States"
                                 }
                             }
                         }
@@ -70,6 +75,26 @@ fun Route.base(storage: Storage) {
                     listOf(Field(), Field(FieldType.WALL, Direction.UP), Field()),
                 ),
             )
+
+            "robot-states" -> {
+                val board = Board(
+                    listOf(
+                        listOf(Field(), Field()),
+                        listOf(Field(), Field()),
+                    )
+                )
+                val robot1 = Robot(RobotModel.HUZZA)
+                robot1.damage = 1
+                robot1.passedCheckpoints = 2
+                val robot2 = Robot(RobotModel.GEROG)
+                robot2.damage = 1
+                robot2.passedCheckpoints = 2
+                robot2.poweredDown = true
+                board.fieldAt(0, 0).robot = robot1
+                board.fieldAt(1, 1).robot = robot2
+                board
+            }
+
             else -> null
         }
 

@@ -36,8 +36,15 @@ fun HtmlBlockTag.renderField(field: Field) {
 
 fun HtmlBlockTag.renderRobot(robot: Robot) {
     div("robot") {
-        div("model icon-${robot.model.name.lowercase()} facing-${robot.facing.name.lowercase()}")
+        var modelClasses = ""
+        if (robot.poweredDown) {
+            modelClasses += " down"
+        }
+
+        div("model icon-${robot.model.name.lowercase()} facing-${robot.facing.name.lowercase()}$modelClasses")
         div("arrow arrow-${robot.facing.name.lowercase()}")
+        div("flag-${robot.passedCheckpoints}")
+        div("damage-${robot.damage}")
     }
 }
 

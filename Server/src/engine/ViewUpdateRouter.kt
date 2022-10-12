@@ -4,8 +4,8 @@ import apoy2k.robby.model.Game
 import apoy2k.robby.model.Session
 import apoy2k.robby.model.ViewUpdate
 import apoy2k.robby.templates.GameTpl
-import io.ktor.html.*
-import io.ktor.http.cio.websocket.*
+import io.ktor.server.html.*
+import io.ktor.websocket.*
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.launchIn

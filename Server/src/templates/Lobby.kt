@@ -2,7 +2,7 @@ package apoy2k.robby.templates
 
 import apoy2k.robby.data.Storage
 import apoy2k.robby.routes.Location
-import io.ktor.html.*
+import io.ktor.server.html.*
 import kotlinx.html.*
 
 class Lobby(private val storage: Storage) : Template<FlowContent> {

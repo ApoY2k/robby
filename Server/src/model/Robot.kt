@@ -43,7 +43,7 @@ data class Robot(val model: RobotModel, val id: String = RandomStringUtils.rando
 
     var damage = 0
 
-    val poweredDown = false
+    var poweredDown = false
 
     val modifications = emptyList<ModificationCard>()
 
