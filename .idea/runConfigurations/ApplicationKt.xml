@@ -1,16 +1,8 @@
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="ApplicationKt" type="JetRunConfigurationType" nameIsGenerated="true">
-    <module name="Server" />
-    <option name="VM_PARAMETERS" value="" />
-    <option name="PROGRAM_PARAMETERS" value="" />
-    <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="false" />
-    <option name="ALTERNATIVE_JRE_PATH" />
-    <option name="PASS_PARENT_ENVS" value="true" />
+  <configuration default="false" name="ApplicationKt" type="JetRunConfigurationType">
     <option name="MAIN_CLASS_NAME" value="apoy2k.robby.ApplicationKt" />
-    <option name="WORKING_DIRECTORY" value="" />
-    <envs>
-      <env name="ENABLE_CONSOLE" value="true" />
-    </envs>
+    <module name="robby" />
+    <shortenClasspath name="NONE" />
     <method v="2">
       <option name="Make" enabled="true" />
     </method>

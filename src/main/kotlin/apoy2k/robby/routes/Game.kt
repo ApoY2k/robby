@@ -57,7 +57,7 @@ fun Route.game(actions: MutableSharedFlow<Action>, viewUpdateRouter: ViewUpdateR
 
             viewUpdateRouter.addSession(game, session, this)
 
-            // This will block the thread while listeing for incoming messages
+            // This will block the thread while listening for incoming messages
             incoming.consumeEach { frame ->
                 when (frame) {
                     is Frame.Text -> {

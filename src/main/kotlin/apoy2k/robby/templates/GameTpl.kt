@@ -6,6 +6,7 @@ import io.ktor.server.html.*
 import kotlinx.html.FlowContent
 import kotlinx.html.div
 import kotlinx.html.script
+import kotlinx.html.unsafe
 import kotlin.collections.set
 
 class GameTpl(val game: Game, val session: Session?) : Template<FlowContent> {
@@ -28,7 +29,9 @@ class GameTpl(val game: Game, val session: Session?) : Template<FlowContent> {
 
             // Add a javscript marker so the websocket connection can be established
             script("text/javascript") {
-                +"const connectWs = true;"
+                unsafe {
+                    +"window.connectWs = true;"
+                }
             }
         }
     }

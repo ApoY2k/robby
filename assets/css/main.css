@@ -87,67 +87,67 @@ div[class*="condition"]::after,
 }
 
 .type-rotate_l::after {
-    background-image: url("/static/icons/rotate_left.png");
+    background-image: url("/assets/icons/rotate_left.png");
 }
 
 .type-rotate_r::after {
-    background-image: url("/static/icons/rotate_right.png");
+    background-image: url("/assets/icons/rotate_right.png");
 }
 
 .type-belt_l::after, .type-belt_u::after, .type-belt_d::after, .type-belt_r::after {
-    background-image: url("/static/icons/straight.png");
+    background-image: url("/assets/icons/straight.png");
 }
 
 .type-belt_2_l::after, .type-belt_2_u::after, .type-belt_2_d::after, .type-belt_2_r::after {
-    background-image: url("/static/icons/straight_2.png");
+    background-image: url("/assets/icons/straight_2.png");
 }
 
 .type-belt_lu::after, .type-belt_ru::after, .type-belt_dr::after, .type-belt_ul::after {
-    background-image: url("/static/icons/turn_right.png");
+    background-image: url("/assets/icons/turn_right.png");
 }
 
 .type-belt_2_lu::after, .type-belt_2_ru::after, .type-belt_2_dr::after, .type-belt_2_ld::after, .type-belt_2_ul::after {
-    background-image: url("/static/icons/turn_2_right.png");
+    background-image: url("/assets/icons/turn_2_right.png");
 }
 
 .type-belt_dl::after, .type-belt_ld::after, .type-belt_rd::after, .type-belt_ur::after {
-    background-image: url("/static/icons/turn_left.png");
+    background-image: url("/assets/icons/turn_left.png");
 }
 
 .type-belt_2_dl::after, .type-belt_2_rd::after, .type-belt_2_ur::after {
-    background-image: url("/static/icons/turn_2_left.png");
+    background-image: url("/assets/icons/turn_2_left.png");
 }
 
 .type-belt_lur::after, .type-belt_urd::after, .type-belt_dlu::after, .type-belt_rld::after {
-    background-image: url("/static/icons/merge_r.png");
+    background-image: url("/assets/icons/merge_r.png");
 }
 
 .type-belt_2_lur::after, .type-belt_2_urd::after, .type-belt_2_dlu::after, .type-belt_2_rld::after {
-    background-image: url("/static/icons/merge_2_r.png");
+    background-image: url("/assets/icons/merge_2_r.png");
 }
 
 .type-belt_lud::after, .type-belt_ulr::after, .type-belt_rud::after, .type-belt_dlr::after {
-    background-image: url("/static/icons/merge_lr.png");
+    background-image: url("/assets/icons/merge_lr.png");
 }
 
 .type-belt_2_lud::after, .type-belt_2_ulr::after, .type-belt_2_rud::after, .type-belt_2_dlr::after {
-    background-image: url("/static/icons/merge_2_lr.png");
+    background-image: url("/assets/icons/merge_2_lr.png");
 }
 
 .type-belt_lrd::after, .type-belt_uld::after, .type-belt_rlu::after, .type-belt_dur::after {
-    background-image: url("/static/icons/merge_l.png");
+    background-image: url("/assets/icons/merge_l.png");
 }
 
 .type-belt_2_lrd::after, .type-belt_2_uld::after, .type-belt_2_rlu::after, .type-belt_2_dur::after {
-    background-image: url("/static/icons/merge_2_l.png");
+    background-image: url("/assets/icons/merge_2_l.png");
 }
 
 .type-belt_lurd::after, .type-belt_ulrd::after, .type-belt_dlur::after, .type-belt_rlud::after {
-    background-image: url("/static/icons/merge_lrd.png");
+    background-image: url("/assets/icons/merge_lrd.png");
 }
 
 .type-belt_2_lurd::after, .type-belt_2_ulrd::after, .type-belt_2_dlur::after, .type-belt_2_rlud::after {
-    background-image: url("/static/icons/merge_2_lrd.png");
+    background-image: url("/assets/icons/merge_2_lrd.png");
 }
 
 .type-belt_l::after, .type-belt_lu::after, .type-belt_2_lu::after, .type-belt_ld::after, .type-belt_ul::after,
@@ -172,24 +172,24 @@ div[class*="condition"]::after,
 }
 
 .field[class*="type-laser"]::after {
-    background-image: url("/static/icons/laser.png");
+    background-image: url("/assets/icons/laser.png");
 }
 
 .field[class*="type-laser_2"]::after {
-    background-image: url("/static/icons/laser_2.png");
+    background-image: url("/assets/icons/laser_2.png");
 }
 
 .field[class*="type-pusher"]::after {
-    background-image: url("/static/icons/pusher.png");
+    background-image: url("/assets/icons/pusher.png");
     background-position: center -10px;
 }
 
 div.condition-laser_h::after, div.condition-laser_v::after {
-    background-image: url("/static/icons/condition-laser.png");
+    background-image: url("/assets/icons/condition-laser.png");
 }
 
 div.condition-laser_2_h::after, div.condition-laser_2_v::after {
-    background-image: url("/static/icons/condition-laser_2.png");
+    background-image: url("/assets/icons/condition-laser_2.png");
 }
 
 div.condition-laser_h::after, div.condition-laser_2_h::after {
@@ -233,7 +233,7 @@ div.condition-laser_h::after, div.condition-laser_2_h::after {
     background-repeat: no-repeat;
     background-size: contain;
     background-position: center;
-    background-image: url("/static/icons/hourglass.png");
+    background-image: url("/assets/icons/hourglass.png");
 }
 
 .robot div[class*="flag"]::after {
@@ -263,19 +263,19 @@ div.condition-laser_h::after, div.condition-laser_2_h::after {
 }
 
 .icon-zippy {
-    background-image: url("/static/icons/zippy.png");
+    background-image: url("/assets/icons/zippy.png");
 }
 
 .icon-gerog {
-    background-image: url("/static/icons/gerog.png");
+    background-image: url("/assets/icons/gerog.png");
 }
 
 .icon-huzza {
-    background-image: url("/static/icons/huzza.png");
+    background-image: url("/assets/icons/huzza.png");
 }
 
 .icon-klaus {
-    background-image: url("/static/icons/klaus.png");
+    background-image: url("/assets/icons/klaus.png");
 }
 
 .facing-up {

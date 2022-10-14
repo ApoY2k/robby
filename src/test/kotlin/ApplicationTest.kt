@@ -1,4 +1,4 @@
-package apoy2k.robby
+package apoy2k.robby.kotlin
 
 import io.ktor.client.request.*
 import io.ktor.http.*

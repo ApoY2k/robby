@@ -1,6 +1,7 @@
-package apoy2k.robby.model
+package kotlin.model
 
 import apoy2k.robby.exceptions.UnknownAction
+import apoy2k.robby.model.*
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith

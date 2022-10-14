@@ -18,7 +18,7 @@ class LayoutTpl : Template<HTML> {
                 attributes["integrity"] = "sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3"
                 attributes["crossorigin"] = "anonymous"
             }
-            link(rel = "stylesheet", href = "/static/main.css")
+            link(rel = "stylesheet", href = "/assets/css/main.css")
         }
         body {
             div("container") {
@@ -59,7 +59,7 @@ class LayoutTpl : Template<HTML> {
                 attributes["integrity"] = "sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p"
                 attributes["crossorigin"] = "anonymous"
             }
-            script("text/javascript", src = "/static/main.js") { }
+            script("text/javascript", src = "/assets/js/main.js") { }
         }
     }
 }

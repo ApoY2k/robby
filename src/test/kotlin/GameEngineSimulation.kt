@@ -1,4 +1,4 @@
-package apoy2k.robby
+package apoy2k.robby.kotlin
 
 import apoy2k.robby.engine.GameEngine
 import apoy2k.robby.model.*

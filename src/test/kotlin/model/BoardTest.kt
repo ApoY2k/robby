@@ -1,5 +1,6 @@
-package apoy2k.robby.model
+package kotlin.model
 
+import apoy2k.robby.model.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest

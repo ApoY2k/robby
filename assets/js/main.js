@@ -62,6 +62,6 @@ const connect = () => {
 }
 
 // Connect websocket if the current page was marked as ws-enabled
-if (connectWs) {
+if (window.connectWs) {
     connect();
 }

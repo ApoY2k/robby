@@ -1,4 +1,4 @@
-package apoy2k.robby.model
+package kotlin.model
 
 import apoy2k.robby.model.Movement
 import apoy2k.robby.model.MovementCard
