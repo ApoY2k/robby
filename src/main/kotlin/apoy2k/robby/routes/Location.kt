@@ -5,6 +5,7 @@ enum class Location(val path: String) {
     SET_USERNAME("/set-username"),
     GAME_ROOT("/game"),
     GAME_VIEW("${GAME_ROOT.path}/{id}"),
+    GAME_IMAGE("${GAME_ROOT.path}/{id}/image"),
     BOARDS_ROOT("/boards"),
     BOARDS_VIEW("${BOARDS_ROOT.path}/{id}");
 

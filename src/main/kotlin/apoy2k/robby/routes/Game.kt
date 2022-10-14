@@ -17,6 +17,7 @@ import io.ktor.websocket.*
 import kotlinx.coroutines.channels.consumeEach
 import kotlinx.coroutines.flow.MutableSharedFlow
 import org.slf4j.LoggerFactory
+import java.io.File
 
 fun Route.game(actions: MutableSharedFlow<Action>, viewUpdateRouter: ViewUpdateRouter, storage: Storage) {
     val logger = LoggerFactory.getLogger("${this.javaClass.name}.game")
@@ -81,5 +82,11 @@ fun Route.game(actions: MutableSharedFlow<Action>, viewUpdateRouter: ViewUpdateR
             // At this point, the websocket connection was aborted (by either client or server)
             viewUpdateRouter.removeSession(game, session, this)
         }
+    }
+
+    get(Location.GAME_IMAGE.path) {
+        // TODO: generate image preview of game state
+        val dummy = javaClass.getResource("/assets/dummy-board-preview.png").toURI()
+        call.respondFile(File(dummy))
     }
 }

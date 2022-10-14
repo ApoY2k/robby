@@ -9,22 +9,28 @@ class Lobby(private val storage: Storage) : Template<FlowContent> {
     override fun FlowContent.apply() {
         div("row") {
             div("col") {
-                ul {
-                    storage.listGames().forEach {
-                        li {
-                            a(Location.GAME_VIEW.build(mapOf("id" to it.id))) {
-                                +it.id
-                            }
-                        }
-                    }
+                h2 { +"Available games" }
+            }
+            div("col-2") {
+                form(Location.GAME_ROOT.path, method = FormMethod.post) {
+                    button(classes = "btn btn-primary") { +"Start new game" }
                 }
             }
         }
         div("row") {
-            div("col") {
-                form(Location.GAME_ROOT.path, method = FormMethod.post) {
-                    button(classes = "btn btn-primary") {
-                        +"Start new game"
+            storage.listGames().forEach {
+                div("col-3") {
+                    a(Location.GAME_VIEW.build(mapOf("id" to it.id)), classes = "card") {
+                        img("Game Preview", "/game/${it.id}/image", "card-img-top")
+                        div("card-body") {
+                            h5("card-title") { +it.id }
+                        }
+                        ul("list-group list-group-flush") {
+                            // TODO: show game run info (started/ended)
+                            // TODO: show joined players
+                            li("list-group-item") { +"<board type>" }
+                            li("list-group-item") { +"<more info>" }
+                        }
                     }
                 }
             }
