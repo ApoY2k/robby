@@ -19,7 +19,7 @@ class GameTpl(val game: Game, val session: Session?) : Template<FlowContent> {
                     renderBoard(game.board)
                 }
 
-                div("col-2") {
+                div("col-3") {
                     renderPlayers(game, session)
                     renderJoinForm(game, session)
                 }

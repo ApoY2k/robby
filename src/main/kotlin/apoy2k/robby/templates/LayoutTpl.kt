@@ -38,9 +38,7 @@ class LayoutTpl : Template<HTML> {
                         p("text-center text-muted") {
                             small {
                                 +"Icons made by "
-                                a("https://www.flaticon.com/authors/smashicons") { +"Smashicons" }
-                                +" from "
-                                a("https://www.flaticon.com/") { +"www.flaticon.com" }
+                                a("https://smashicons.com/") { +"Smashicons" }
                             }
                         }
                     }

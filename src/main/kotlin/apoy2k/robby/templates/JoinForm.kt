@@ -6,25 +6,23 @@ import kotlinx.html.*
 fun HtmlBlockTag.renderJoinForm(game: Game, session: Session?) {
     div("row") {
         div("col") {
-            form("form") {
-                if (game.hasJoined(session)) {
-                    attributes["data-action"] = LeaveGameAction().serializeForSocket()
+            div("card") {
+                div("card-body") {
+                    form("form row") {
+                        if (game.hasJoined(session)) {
+                            attributes["data-action"] = LeaveGameAction().serializeForSocket()
+                            button(classes = "btn btn-primary", type = ButtonType.submit) { +"Leave game" }
+                            return@form
+                        }
 
-                    button(classes = "btn btn-primary", type = ButtonType.submit) {
-                        +"Leave"
+                        if (game.hasStarted) {
+                            p("alert alert-info") { +"You have not joined in the game. Specating only" }
+                            return@form
+                        }
+
+                        joinForm(game)
                     }
-
-                    return@form
                 }
-
-                if (game.hasStarted) {
-                    p("alert alert-info") {
-                        +"You have not joined in the game. Specating only"
-                    }
-                    return@form
-                }
-
-                joinForm(game)
             }
         }
     }
@@ -33,24 +31,18 @@ fun HtmlBlockTag.renderJoinForm(game: Game, session: Session?) {
 fun HtmlBlockTag.joinForm(game: Game) {
     attributes["data-action"] = JoinGameAction().serializeForSocket()
 
-    div("row") {
-        div("col") {
-            select("form-control") {
-                attributes["name"] = ActionField.ROBOT_MODEL.name
+    p { +"The game is open to join." }
+    p { +"Select a robot" }
 
-                RobotModel.values()
-                    .filter { model -> !game.players.mapNotNull { player -> player.robot?.model }.contains(model) }
-                    .forEach {
-                        option {
-                            +it.name
-                        }
-                    }
+    select("form-control") {
+        attributes["name"] = ActionField.ROBOT_MODEL.name
+
+        RobotModel.values()
+            .filter { model -> !game.players.mapNotNull { player -> player.robot?.model }.contains(model) }
+            .forEach {
+                option { +it.name }
             }
-        }
-        div("col") {
-            button(classes = "btn btn-primary", type = ButtonType.submit) {
-                +"Join"
-            }
-        }
     }
+
+    button(classes = "btn btn-primary", type = ButtonType.submit) { +"Join" }
 }
