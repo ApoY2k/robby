@@ -11,6 +11,7 @@ enum class ActionLabel {
     LEAVE_GAME,
     SET_REGISTER,
     CONFIRM_CARDS,
+    POWER_DOWN
 }
 
 enum class ActionField {
@@ -77,7 +78,9 @@ abstract class Action {
                         query.first(ActionField.REGISTER),
                         query.first(ActionField.CARD_ID)
                     )
+
                     ActionLabel.CONFIRM_CARDS -> ConfirmCardsAction()
+                    ActionLabel.POWER_DOWN -> PowerDownAction()
                 }
 
                 action.game = game
@@ -141,3 +144,5 @@ class SelectCardAction(register: String?, cardId: String?) :
 }
 
 class ConfirmCardsAction : Action(ActionLabel.CONFIRM_CARDS)
+
+class PowerDownAction : Action(ActionLabel.POWER_DOWN)

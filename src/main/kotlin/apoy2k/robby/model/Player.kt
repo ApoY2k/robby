@@ -13,6 +13,9 @@ data class Player(val name: String, val session: Session, val id: String = Rando
     var cardsConfirmed = false
         private set
 
+    var powerDownScheduled = false
+        private set
+
     /**
      * Draw a new set of cards
      */
@@ -28,7 +31,7 @@ data class Player(val name: String, val session: Session, val id: String = Rando
             ?: throw InvalidGameState("Card with id [$id] not found")
 
         if (register == null) {
-            throw IncompleteAction("Register [$register] is not a valid register number")
+            throw IncompleteAction("Invalid register number")
         }
 
         val robot = robot ?: throw InvalidGameState("Player has no robot assigned")
@@ -37,13 +40,16 @@ data class Player(val name: String, val session: Session, val id: String = Rando
     }
 
     /**
+     * Toggle power down for the round
+     */
+    fun togglePowerDown() {
+        powerDownScheduled = !powerDownScheduled
+    }
+
+    /**
      * Confirm the current selection of cards
      */
     fun toggleConfirm() {
-        if (!cardsConfirmed && robot?.hasAllRegistersFilled() == false) {
-            throw InvalidGameState("Not all registers are filled yet")
-        }
-
         cardsConfirmed = !cardsConfirmed
     }
 

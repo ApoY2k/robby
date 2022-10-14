@@ -78,9 +78,15 @@ class GameEngine(private val updates: MutableSharedFlow<ViewUpdate>) {
             is SelectCardAction -> {
                 player.selectCard(action.register, action.cardId)
             }
+
             is ConfirmCardsAction -> {
                 player.toggleConfirm()
             }
+
+            is PowerDownAction -> {
+                player.togglePowerDown()
+            }
+
             else -> {
                 logger.warn("No executor for $action")
             }
@@ -145,8 +151,17 @@ class GameEngine(private val updates: MutableSharedFlow<ViewUpdate>) {
             game.state = GameState.PROGRAMMING_REGISTERS
             game.players.forEach {
                 it.robot?.clearRegisters()
-                drawCards(game, it)
-                it.toggleConfirm()
+
+                if (it.powerDownScheduled) {
+                    it.togglePowerDown()
+                    it.robot?.poweredDown = true
+
+                    // TODO: Automatically advance game state when all robots are powered down
+                    // Triggering action from client is missing for check...?
+                } else {
+                    drawCards(game, it)
+                    it.toggleConfirm()
+                }
             }
         }
     }

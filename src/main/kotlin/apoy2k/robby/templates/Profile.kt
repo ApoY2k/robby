@@ -15,9 +15,7 @@ fun HtmlBlockTag.renderProfile(game: Game, session: Session?) {
         if (robot == null) {
             div("row") {
                 div("col") {
-                    p("alert alert-info") {
-                        +"You do not have a robot in the game. Specating only"
-                    }
+                    p("alert alert-info") { +"You do not have a robot in the game. Specating only" }
                 }
             }
 
@@ -27,9 +25,7 @@ fun HtmlBlockTag.renderProfile(game: Game, session: Session?) {
         if (game.isFinished) {
             div("row") {
                 div("col") {
-                    p("alert alert-info") {
-                        +"Game is finished. Nothing else to do here"
-                    }
+                    p("alert alert-info") { +"Game is finished. Nothing else to do here" }
                 }
             }
 
@@ -39,12 +35,20 @@ fun HtmlBlockTag.renderProfile(game: Game, session: Session?) {
         div("row") {
             div("col") {
                 if (game.state == GameState.PROGRAMMING_REGISTERS) {
-                    div("row row-cols-5") {
-                        renderRegister(1, player)
-                        renderRegister(2, player)
-                        renderRegister(3, player)
-                        renderRegister(4, player)
-                        renderRegister(5, player)
+                    if (player.robot?.poweredDown == true) {
+                        div("row") {
+                            div("col") {
+                                p("alert alert-warning") { +"Robot is powered down" }
+                            }
+                        }
+                    } else {
+                        div("row row-cols-5") {
+                            renderRegister(1, player)
+                            renderRegister(2, player)
+                            renderRegister(3, player)
+                            renderRegister(4, player)
+                            renderRegister(5, player)
+                        }
                     }
 
                     if (player.drawnCards.isNotEmpty()) {
@@ -88,12 +92,8 @@ fun HtmlBlockTag.renderProfile(game: Game, session: Session?) {
                 }
             }
             div("col-3") {
-                h4 {
-                    +robot.model.name
-                }
-                h5 {
-                    +"Damage buffer"
-                }
+                h4 { +robot.model.name }
+                h5 { +"Damage buffer" }
                 div("progress") {
                     renderDamageBuffer(robot, 1, "secondary")
                     renderDamageBuffer(robot, 2, "secondary")
@@ -106,15 +106,16 @@ fun HtmlBlockTag.renderProfile(game: Game, session: Session?) {
                     renderDamageBuffer(robot, 9, "warning", "LOCKS Register 1")
                     renderDamageBuffer(robot, 10, "danger", "DESTROYED")
                 }
-                h5("mt-3") {
-                    +"Modifications"
+                if (player.robot?.poweredDown == false && game.state == GameState.PROGRAMMING_REGISTERS) {
+                    button(classes = "btn mt-3 btn-warning") {
+                        attributes["data-toggle"] = "tooltip"
+                        attributes["data-action"] = PowerDownAction().serializeForSocket()
+                        attributes["title"] = "Powers down the robot, repairing some damage at the end of the round"
+                        +"Toggle Power Down"
+                    }
                 }
-                hr {}
-                button(classes = "btn btn-warning") {
-                    attributes["data-toggle"] = "tooltip"
-                    attributes["title"] = "Powers down the robot, repairing some damage at the end of the round"
-
-                    +"Power down"
+                if (player.powerDownScheduled) {
+                    p("alert mt-3 alert-warning") { +"Power Down scheduled" }
                 }
             }
         }
@@ -130,17 +131,14 @@ fun HtmlBlockTag.renderRegister(register: Int, player: Player) {
             attributes["class"] += " register-locked"
         }
 
-        h5 {
-            +"Register $register"
-        }
+        h5 { +"Register $register" }
 
-        div("btn-group-vertical w-100") {
+        div("btn-group-vertical w-100") cards@{
             if (locked) {
                 renderCard(register, robot.getRegister(register), locked = true, selected = true)
             } else {
                 player.drawnCards.forEach {
                     val selected = robot.getRegister(register) == it
-
                     renderCard(register, it, locked = false, selected)
                 }
             }
