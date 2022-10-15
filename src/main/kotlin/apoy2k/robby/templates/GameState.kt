@@ -8,24 +8,42 @@ import kotlinx.html.li
 import kotlinx.html.ul
 
 fun HtmlBlockTag.renderGameState(game: Game) {
+    if (game.state == GameState.PROGRAMMING_REGISTERS) {
+        return
+    }
+
     ul("list-group mb-3") {
-        render("Programming Registers", game.state == GameState.PROGRAMMING_REGISTERS)
-        render("Executing Register #1", game.state == GameState.EXECUTING_REGISTER_1)
-        render("Executing Register #2", game.state == GameState.EXECUTING_REGISTER_2)
-        render("Executing Register #3", game.state == GameState.EXECUTING_REGISTER_3)
-        render("Executing Register #4", game.state == GameState.EXECUTING_REGISTER_4)
-        render("Executing Register #5", game.state == GameState.EXECUTING_REGISTER_5)
-        render("Moving Board Elements", game.state == GameState.MOVE_BARD_ELEMENTS)
-        render("Fire Lasers", game.state == GameState.FIRE_LASERS)
-        render("Touching Checkpoints", game.state == GameState.CHECKPOINTS)
-        render("Repair & Powerups", game.state == GameState.REPAIR_POWERUPS)
+        renderRegister(game, 1)
+        renderRegister(game, 2)
+        renderRegister(game, 3)
+        renderRegister(game, 4)
+        renderRegister(game, 5)
     }
 }
 
-fun UL.render(name: String, isActive: Boolean) {
+fun UL.renderRegister(game: Game, register: Int) {
+    val isActive = register == game.currentRegister
+
     li("list-group-item") {
         if (isActive) {
             attributes["class"] += " active"
+        }
+        +"Register #$register"
+    }
+
+    if (isActive) {
+        renderState("Executing Registers", game.state == GameState.EXECUTING_REGISTER)
+        renderState("Moving Board Elements", game.state == GameState.MOVE_BARD_ELEMENTS)
+        renderState("Fire Lasers", game.state == GameState.FIRE_LASERS)
+        renderState("Touching Checkpoints", game.state == GameState.CHECKPOINTS)
+        renderState("Repair & Powerups", game.state == GameState.REPAIR_POWERUPS)
+    }
+}
+
+fun UL.renderState(name: String, isActive: Boolean) {
+    li("list-group-item ps-4") {
+        if (isActive) {
+            attributes["class"] += " bg-primary bg-opacity-50"
         }
         +name
     }

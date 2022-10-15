@@ -5,11 +5,7 @@ import org.apache.commons.lang3.RandomStringUtils
 
 enum class GameState {
     PROGRAMMING_REGISTERS,
-    EXECUTING_REGISTER_1,
-    EXECUTING_REGISTER_2,
-    EXECUTING_REGISTER_3,
-    EXECUTING_REGISTER_4,
-    EXECUTING_REGISTER_5,
+    EXECUTING_REGISTER,
     MOVE_BARD_ELEMENTS,
     FIRE_LASERS,
     CHECKPOINTS,
@@ -20,6 +16,7 @@ data class Game(val id: String = RandomStringUtils.randomAlphanumeric(5)) {
     val players = mutableSetOf<Player>()
     val deck = generateStandardDeck()
     var state = GameState.PROGRAMMING_REGISTERS
+    var currentRegister = 1
     var isFinished = false
     var hasStarted = false
 

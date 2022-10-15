@@ -13,6 +13,8 @@ import kotlinx.coroutines.launch
 import org.slf4j.LoggerFactory
 import java.lang.Integer.max
 
+private const val GAME_ENGINE_STEP_DELAY = 1000L
+
 /**
  * Game engine to advance games based on incoming actions
  */
@@ -122,24 +124,18 @@ class GameEngine(private val updates: MutableSharedFlow<ViewUpdate>) {
         game.hasStarted = true
 
         // Send view updates between registers so players see the new state after "preparing" the execution of movements
-        game.state = GameState.EXECUTING_REGISTER_1
-        updates.emit(ViewUpdate(game))
         runRegister(game, 1)
         runAutomaticSteps(game)
 
-        game.state = GameState.EXECUTING_REGISTER_2
         runRegister(game, 2)
         runAutomaticSteps(game)
 
-        game.state = GameState.EXECUTING_REGISTER_3
         runRegister(game, 3)
         runAutomaticSteps(game)
 
-        game.state = GameState.EXECUTING_REGISTER_4
         runRegister(game, 4)
         runAutomaticSteps(game)
 
-        game.state = GameState.EXECUTING_REGISTER_5
         runRegister(game, 5)
         runAutomaticSteps(game)
 
@@ -187,6 +183,10 @@ class GameEngine(private val updates: MutableSharedFlow<ViewUpdate>) {
      * Movements of more than 1 step are executed individually, with updates sent between every step
      */
     private suspend fun runRegister(game: Game, register: Int) {
+        game.state = GameState.EXECUTING_REGISTER
+        game.currentRegister = register
+        updates.emit(ViewUpdate(game))
+
         try {
             getRegister(game, register)
                 .forEach {
@@ -199,7 +199,7 @@ class GameEngine(private val updates: MutableSharedFlow<ViewUpdate>) {
                     for (step in 1..steps) {
                         game.board.execute(it)
                         updates.emit(ViewUpdate(game))
-                        delay(1000)
+                        delay(GAME_ENGINE_STEP_DELAY)
                     }
                 }
         } catch (err: Throwable) {
@@ -210,21 +210,21 @@ class GameEngine(private val updates: MutableSharedFlow<ViewUpdate>) {
     private suspend fun runMoveBoardElements(game: Game) {
         game.board.moveBelts(FieldType.BELT_2)
         updates.emit(ViewUpdate(game))
-        delay(1000)
+        delay(GAME_ENGINE_STEP_DELAY)
 
         game.board.moveBelts(FieldType.BELT)
         updates.emit(ViewUpdate(game))
-        delay(1000)
+        delay(GAME_ENGINE_STEP_DELAY)
     }
 
     private suspend fun runFireLasers(game: Game) {
         game.board.fireLasers(FieldType.LASER_2)
         updates.emit(ViewUpdate(game))
-        delay(1000)
+        delay(GAME_ENGINE_STEP_DELAY)
 
         game.board.fireLasers(FieldType.LASER)
         updates.emit(ViewUpdate(game))
-        delay(1000)
+        delay(GAME_ENGINE_STEP_DELAY)
     }
 
     private suspend fun runCheckpoints(game: Game) {
@@ -233,7 +233,7 @@ class GameEngine(private val updates: MutableSharedFlow<ViewUpdate>) {
             .mapNotNull { it.robot }
             .forEach { it.passedCheckpoints += 1 }
         updates.emit(ViewUpdate(game))
-        delay(1000)
+        delay(GAME_ENGINE_STEP_DELAY)
     }
 
     private suspend fun runRepairPowerups(game: Game) {
@@ -245,7 +245,7 @@ class GameEngine(private val updates: MutableSharedFlow<ViewUpdate>) {
         // TODO Implement powerups
 
         updates.emit(ViewUpdate(game))
-        delay(1000)
+        delay(GAME_ENGINE_STEP_DELAY)
     }
 
     private fun drawCards(game: Game, player: Player) {

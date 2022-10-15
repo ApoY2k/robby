@@ -27,8 +27,6 @@ fun HtmlBlockTag.renderProfile(game: Game, session: Session?) {
 }
 
 fun HtmlBlockTag.renderRegisterPanel(game: Game, player: Player) {
-    val canProgram = game.state == GameState.PROGRAMMING_REGISTERS
-
     if (player.robot.poweredDown) {
         div("row") {
             div("col") {
@@ -37,25 +35,26 @@ fun HtmlBlockTag.renderRegisterPanel(game: Game, player: Player) {
         }
     } else {
         div("row row-cols-5") {
-            renderRegister(game.state == GameState.EXECUTING_REGISTER_1, 1, player)
-            renderRegister(game.state == GameState.EXECUTING_REGISTER_2, 2, player)
-            renderRegister(game.state == GameState.EXECUTING_REGISTER_3, 3, player)
-            renderRegister(game.state == GameState.EXECUTING_REGISTER_4, 4, player)
-            renderRegister(game.state == GameState.EXECUTING_REGISTER_5, 5, player)
+            renderRegister(game, player, 1)
+            renderRegister(game, player, 2)
+            renderRegister(game, player, 3)
+            renderRegister(game, player, 4)
+            renderRegister(game, player, 5)
         }
     }
 }
 
-fun HtmlBlockTag.renderRegister(isActive: Boolean, register: Int, player: Player) {
+fun HtmlBlockTag.renderRegister(game: Game, player: Player, register: Int) {
+    val isActive = game.state != GameState.PROGRAMMING_REGISTERS && game.currentRegister == register
     val locked = player.ready || player.robot.isLocked(register)
 
-    div("col pb-3") {
-        if (locked) {
+    div("col pb-3 rounded") {
+        if (locked && !isActive) {
             attributes["class"] += " register-locked"
         }
 
         if (isActive) {
-            attributes["class"] += " shadow"
+            attributes["class"] += " border border-primary shadow"
         }
 
         h5 { +"Register $register" }

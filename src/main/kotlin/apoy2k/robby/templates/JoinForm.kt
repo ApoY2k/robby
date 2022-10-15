@@ -4,7 +4,7 @@ import apoy2k.robby.model.*
 import kotlinx.html.*
 
 fun HtmlBlockTag.renderJoinForm(game: Game, session: Session?) {
-    div("row") {
+    div("row mb-3") {
         div("col") {
             div("card") {
                 div("card-body") {
