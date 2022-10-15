@@ -12,9 +12,7 @@ class Lobby(private val storage: Storage) : Template<FlowContent> {
                 h2 { +"Available games" }
             }
             div("col-2") {
-                form(Location.GAME_ROOT.path, method = FormMethod.post) {
-                    button(classes = "btn btn-primary") { +"Start new game" }
-                }
+                renderCreateGameButton()
             }
         }
         div("row") {

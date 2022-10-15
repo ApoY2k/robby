@@ -27,46 +27,35 @@ fun HtmlBlockTag.renderProfile(game: Game, session: Session?) {
 }
 
 fun HtmlBlockTag.renderRegisterPanel(game: Game, player: Player) {
-    if (game.state == GameState.PROGRAMMING_REGISTERS) {
-        if (player.robot.poweredDown) {
-            div("row") {
-                div("col") {
-                    p("alert alert-warning") { +"Robot is powered down" }
-                }
-            }
-        } else {
-            div("row row-cols-5") {
-                renderRegister(1, player)
-                renderRegister(2, player)
-                renderRegister(3, player)
-                renderRegister(4, player)
-                renderRegister(5, player)
+    val canProgram = game.state == GameState.PROGRAMMING_REGISTERS
+
+    if (player.robot.poweredDown) {
+        div("row") {
+            div("col") {
+                p("alert alert-warning") { +"Robot is powered down" }
             }
         }
     } else {
-        p("alert alert-info") {
-            when (game.state) {
-                GameState.EXECUTING_REGISTER_1 -> +"Executing register 1"
-                GameState.EXECUTING_REGISTER_2 -> +"Executing register 2"
-                GameState.EXECUTING_REGISTER_3 -> +"Executing register 3"
-                GameState.EXECUTING_REGISTER_4 -> +"Executing register 4"
-                GameState.EXECUTING_REGISTER_5 -> +"Executing register 5"
-                GameState.MOVE_BARD_ELEMENTS -> +"Moving board elements"
-                GameState.FIRE_LASERS -> +"Firing lasers"
-                GameState.CHECKPOINTS -> +"Touching checkpoints"
-                GameState.REPAIR_POWERUPS -> +"Repair & powerups"
-                else -> +"Waiting"
-            }
+        div("row row-cols-5") {
+            renderRegister(game.state == GameState.EXECUTING_REGISTER_1, 1, player)
+            renderRegister(game.state == GameState.EXECUTING_REGISTER_2, 2, player)
+            renderRegister(game.state == GameState.EXECUTING_REGISTER_3, 3, player)
+            renderRegister(game.state == GameState.EXECUTING_REGISTER_4, 4, player)
+            renderRegister(game.state == GameState.EXECUTING_REGISTER_5, 5, player)
         }
     }
 }
 
-fun HtmlBlockTag.renderRegister(register: Int, player: Player) {
+fun HtmlBlockTag.renderRegister(isActive: Boolean, register: Int, player: Player) {
     val locked = player.ready || player.robot.isLocked(register)
 
     div("col pb-3") {
         if (locked) {
             attributes["class"] += " register-locked"
+        }
+
+        if (isActive) {
+            attributes["class"] += " shadow"
         }
 
         h5 { +"Register $register" }

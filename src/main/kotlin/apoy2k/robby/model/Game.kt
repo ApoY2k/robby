@@ -1,12 +1,10 @@
 package apoy2k.robby.model
 
-import apoy2k.robby.model.predef.board.generateChopShopBoard
 import apoy2k.robby.model.predef.deck.generateStandardDeck
 import org.apache.commons.lang3.RandomStringUtils
 
 enum class GameState {
     PROGRAMMING_REGISTERS,
-    POWER_DOWN,
     EXECUTING_REGISTER_1,
     EXECUTING_REGISTER_2,
     EXECUTING_REGISTER_3,
@@ -20,11 +18,20 @@ enum class GameState {
 
 data class Game(val id: String = RandomStringUtils.randomAlphanumeric(5)) {
     val players = mutableSetOf<Player>()
-    val board = Board(generateChopShopBoard())
     val deck = generateStandardDeck()
     var state = GameState.PROGRAMMING_REGISTERS
     var isFinished = false
     var hasStarted = false
+
+    var board = Board(emptyList())
+        private set
+
+    /**
+     * Load in a board to this game
+     */
+    fun loadBoard(board: Board) {
+        this.board = board
+    }
 
     /**
      * Find the player associated with a session

@@ -427,6 +427,7 @@ data class Board(val fields: List<List<Field>>) {
 
                 return fieldAt(Position(0, startPos.col))
             }
+
             else -> startField
         }
     }
@@ -435,3 +436,9 @@ data class Board(val fields: List<List<Field>>) {
 }
 
 data class Position(val row: Int, val col: Int)
+
+enum class BoardType {
+    SANDBOX,
+    CHOPSHOP,
+    DEMO,
+}

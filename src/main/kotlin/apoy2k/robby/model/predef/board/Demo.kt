@@ -4,7 +4,7 @@ import apoy2k.robby.model.Direction
 import apoy2k.robby.model.Field
 import apoy2k.robby.model.FieldType
 
-val DEMO_BOARD = listOf(
+fun generateDemoBoard() = listOf(
     listOf(
         Field(),
         Field(),
