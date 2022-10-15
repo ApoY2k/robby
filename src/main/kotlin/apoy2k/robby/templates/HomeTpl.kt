@@ -13,7 +13,7 @@ class HomeTpl(val storage: Storage, val session: Session?) : Template<FlowConten
                 div("col") {
                     p {
                         +"Welcome back "
-                        b { session.name }
+                        b { +session.name }
                     }
                 }
             }

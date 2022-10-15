@@ -10,8 +10,8 @@ enum class ActionLabel {
     JOIN_GAME,
     LEAVE_GAME,
     SET_REGISTER,
-    CONFIRM_CARDS,
-    POWER_DOWN
+    TOGGLE_READY,
+    TOGGLE_POWERDOWN,
 }
 
 enum class ActionField {
@@ -73,14 +73,15 @@ abstract class Action {
                     ActionLabel.JOIN_GAME -> JoinGameAction(
                         query.first(ActionField.ROBOT_MODEL)
                     )
+
                     ActionLabel.LEAVE_GAME -> LeaveGameAction()
                     ActionLabel.SET_REGISTER -> SelectCardAction(
                         query.first(ActionField.REGISTER),
                         query.first(ActionField.CARD_ID)
                     )
 
-                    ActionLabel.CONFIRM_CARDS -> ConfirmCardsAction()
-                    ActionLabel.POWER_DOWN -> PowerDownAction()
+                    ActionLabel.TOGGLE_READY -> ToggleReady()
+                    ActionLabel.TOGGLE_POWERDOWN -> TogglePowerDown()
                 }
 
                 action.game = game
@@ -143,6 +144,6 @@ class SelectCardAction(register: String?, cardId: String?) :
     val cardId = getFirst(ActionField.CARD_ID)
 }
 
-class ConfirmCardsAction : Action(ActionLabel.CONFIRM_CARDS)
+class ToggleReady : Action(ActionLabel.TOGGLE_READY)
 
-class PowerDownAction : Action(ActionLabel.POWER_DOWN)
+class TogglePowerDown : Action(ActionLabel.TOGGLE_POWERDOWN)

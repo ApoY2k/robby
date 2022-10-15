@@ -44,8 +44,7 @@ class GameEngine(private val updates: MutableSharedFlow<ViewUpdate>) {
                 launch {
                     perform(action)
                     updates.emit(ViewUpdate(game))
-                    runRegisters(game)
-                    updates.emit(ViewUpdate(game))
+                    runEngine(game)
                 }
             } catch (err: Throwable) {
                 logger.error("Error executing $action: $err", err)
@@ -79,11 +78,11 @@ class GameEngine(private val updates: MutableSharedFlow<ViewUpdate>) {
                 player.selectCard(action.register, action.cardId)
             }
 
-            is ConfirmCardsAction -> {
-                player.toggleConfirm()
+            is ToggleReady -> {
+                player.toggleReady()
             }
 
-            is PowerDownAction -> {
+            is TogglePowerDown -> {
                 player.togglePowerDown()
             }
 
@@ -93,7 +92,9 @@ class GameEngine(private val updates: MutableSharedFlow<ViewUpdate>) {
         }
     }
 
-    // Run all automatic steps in the game state (executed between each register)
+    /**
+     * Run all automatic steps in the game state (executed between each register)
+     */
     private suspend fun runAutomaticSteps(game: Game) {
         game.state = GameState.MOVE_BARD_ELEMENTS
         runMoveBoardElements(game)
@@ -109,13 +110,12 @@ class GameEngine(private val updates: MutableSharedFlow<ViewUpdate>) {
     }
 
     /**
-     * Run through registers of all player's automaticall, if all of them confirmed.
-     * Sends view updates accordingly.
+     * Run engine on game state, sends view updates accordingly
      */
-    private suspend fun runRegisters(game: Game) {
+    private suspend fun runEngine(game: Game) {
 
         // Check conditions for running automatic registers are fulfilled
-        if (game.players.isEmpty() || game.players.any { !it.cardsConfirmed }) {
+        if (game.players.isEmpty() || game.players.any { !it.ready }) {
             return
         }
 
@@ -144,26 +144,32 @@ class GameEngine(private val updates: MutableSharedFlow<ViewUpdate>) {
         runAutomaticSteps(game)
 
         // Check for game end condition. If it is met, end the game
-        if (game.players.any { it.robot?.passedCheckpoints == 3 }) {
+        if (game.players.any { it.robot.passedCheckpoints == 3 }) {
             game.isFinished = true
         } else {
             // After all automatic turns are done, deal new cards so players can plan their next move
             game.state = GameState.PROGRAMMING_REGISTERS
             game.players.forEach {
-                it.robot?.clearRegisters()
+                it.robot.clearRegisters()
+                it.toggleReady()
 
                 if (it.powerDownScheduled) {
                     it.togglePowerDown()
-                    it.robot?.poweredDown = true
-
-                    // TODO: Automatically advance game state when all robots are powered down
-                    // Triggering action from client is missing for check...?
+                    it.robot.poweredDown = true
                 } else {
                     drawCards(game, it)
-                    it.toggleConfirm()
+
+                    with(it.robot) {
+                        if (poweredDown) {
+                            damage = 0
+                            poweredDown = false
+                        }
+                    }
                 }
             }
         }
+
+        updates.emit(ViewUpdate(game))
     }
 
     /**
@@ -171,7 +177,7 @@ class GameEngine(private val updates: MutableSharedFlow<ViewUpdate>) {
      */
     private fun getRegister(game: Game, register: Int): List<MovementCard> {
         return game.players
-            .mapNotNull { it.robot?.getRegister(register) }
+            .mapNotNull { it.robot.getRegister(register) }
             .sortedByDescending { it.priority }
     }
 
@@ -243,8 +249,7 @@ class GameEngine(private val updates: MutableSharedFlow<ViewUpdate>) {
     }
 
     private fun drawCards(game: Game, player: Player) {
-        val robot = player.robot ?: return
-
+        val robot = player.robot
         val drawnCards = game.deck.take(max(0, 9 - robot.damage))
         game.deck.removeAll(drawnCards)
         player.takeCards(drawnCards)
@@ -266,10 +271,8 @@ class GameEngine(private val updates: MutableSharedFlow<ViewUpdate>) {
             throw InvalidGameState("$session already joined")
         }
 
-        val player = Player(name, session)
-
         val robot = Robot(model)
-        player.robot = robot
+        val player = Player(name, robot, session)
 
         game.players.add(player)
 

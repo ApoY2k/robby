@@ -5,126 +5,64 @@ import kotlinx.html.*
 
 fun HtmlBlockTag.renderProfile(game: Game, session: Session?) {
     val player = game.playerFor(session)
-    val robot = player?.robot
 
     div("my-3") {
         if (player == null) {
             return@div
         }
 
-        if (robot == null) {
-            div("row") {
-                div("col") {
-                    p("alert alert-info") { +"You do not have a robot in the game. Specating only" }
-                }
-            }
-
-            return@div
-        }
-
         if (game.isFinished) {
-            div("row") {
-                div("col") {
-                    p("alert alert-info") { +"Game is finished. Nothing else to do here" }
-                }
-            }
-
             return@div
         }
 
         div("row") {
             div("col") {
-                if (game.state == GameState.PROGRAMMING_REGISTERS) {
-                    if (player.robot?.poweredDown == true) {
-                        div("row") {
-                            div("col") {
-                                p("alert alert-warning") { +"Robot is powered down" }
-                            }
-                        }
-                    } else {
-                        div("row row-cols-5") {
-                            renderRegister(1, player)
-                            renderRegister(2, player)
-                            renderRegister(3, player)
-                            renderRegister(4, player)
-                            renderRegister(5, player)
-                        }
-                    }
-
-                    if (player.drawnCards.isNotEmpty()) {
-                        div("row mt-3") {
-                            div("col") {
-                                if (player.cardsConfirmed) {
-                                    button(classes = "btn btn-danger") {
-                                        attributes["data-action"] = ConfirmCardsAction().serializeForSocket()
-                                        +"Revoke confirmation of cards"
-                                    }
-                                } else {
-                                    if (robot.hasAllRegistersFilled()) {
-                                        button(classes = "btn btn-primary") {
-                                            attributes["data-action"] = ConfirmCardsAction().serializeForSocket()
-                                            +"Confirm selected cards"
-                                        }
-                                    } else {
-                                        p("alert alert-info") {
-                                            +"Select a card for all registers to confirm"
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                } else {
-                    p("alert alert-info") {
-                        when (game.state) {
-                            GameState.EXECUTING_REGISTER_1 -> +"Executing register 1"
-                            GameState.EXECUTING_REGISTER_2 -> +"Executing register 2"
-                            GameState.EXECUTING_REGISTER_3 -> +"Executing register 3"
-                            GameState.EXECUTING_REGISTER_4 -> +"Executing register 4"
-                            GameState.EXECUTING_REGISTER_5 -> +"Executing register 5"
-                            GameState.MOVE_BARD_ELEMENTS -> +"Moving board elements"
-                            GameState.FIRE_LASERS -> +"Firing lasers"
-                            GameState.CHECKPOINTS -> +"Touching checkpoints"
-                            GameState.REPAIR_POWERUPS -> +"Repair & powerups"
-                            else -> +"Waiting"
-                        }
-                    }
-                }
+                renderRegisterPanel(game, player)
             }
             div("col-3") {
-                h4 { +robot.model.name }
-                h5 { +"Damage buffer" }
-                div("progress") {
-                    renderDamageBuffer(robot, 1, "secondary")
-                    renderDamageBuffer(robot, 2, "secondary")
-                    renderDamageBuffer(robot, 3, "secondary")
-                    renderDamageBuffer(robot, 4, "secondary")
-                    renderDamageBuffer(robot, 5, "warning", "LOCKS Register 5")
-                    renderDamageBuffer(robot, 6, "warning", "LOCKS Register 4")
-                    renderDamageBuffer(robot, 7, "warning", "LOCKS Register 3")
-                    renderDamageBuffer(robot, 8, "warning", "LOCKS Register 2")
-                    renderDamageBuffer(robot, 9, "warning", "LOCKS Register 1")
-                    renderDamageBuffer(robot, 10, "danger", "DESTROYED")
+                renderInfoPanel(game, player)
+            }
+        }
+    }
+}
+
+fun HtmlBlockTag.renderRegisterPanel(game: Game, player: Player) {
+    if (game.state == GameState.PROGRAMMING_REGISTERS) {
+        if (player.robot.poweredDown) {
+            div("row") {
+                div("col") {
+                    p("alert alert-warning") { +"Robot is powered down" }
                 }
-                if (player.robot?.poweredDown == false && game.state == GameState.PROGRAMMING_REGISTERS) {
-                    button(classes = "btn mt-3 btn-warning") {
-                        attributes["data-toggle"] = "tooltip"
-                        attributes["data-action"] = PowerDownAction().serializeForSocket()
-                        attributes["title"] = "Powers down the robot, repairing some damage at the end of the round"
-                        +"Toggle Power Down"
-                    }
-                }
-                if (player.powerDownScheduled) {
-                    p("alert mt-3 alert-warning") { +"Power Down scheduled" }
-                }
+            }
+        } else {
+            div("row row-cols-5") {
+                renderRegister(1, player)
+                renderRegister(2, player)
+                renderRegister(3, player)
+                renderRegister(4, player)
+                renderRegister(5, player)
+            }
+        }
+    } else {
+        p("alert alert-info") {
+            when (game.state) {
+                GameState.EXECUTING_REGISTER_1 -> +"Executing register 1"
+                GameState.EXECUTING_REGISTER_2 -> +"Executing register 2"
+                GameState.EXECUTING_REGISTER_3 -> +"Executing register 3"
+                GameState.EXECUTING_REGISTER_4 -> +"Executing register 4"
+                GameState.EXECUTING_REGISTER_5 -> +"Executing register 5"
+                GameState.MOVE_BARD_ELEMENTS -> +"Moving board elements"
+                GameState.FIRE_LASERS -> +"Firing lasers"
+                GameState.CHECKPOINTS -> +"Touching checkpoints"
+                GameState.REPAIR_POWERUPS -> +"Repair & powerups"
+                else -> +"Waiting"
             }
         }
     }
 }
 
 fun HtmlBlockTag.renderRegister(register: Int, player: Player) {
-    val robot = player.robot ?: return
-    val locked = player.cardsConfirmed || robot.isLocked(register)
+    val locked = player.ready || player.robot.isLocked(register)
 
     div("col pb-3") {
         if (locked) {
@@ -135,10 +73,10 @@ fun HtmlBlockTag.renderRegister(register: Int, player: Player) {
 
         div("btn-group-vertical w-100") cards@{
             if (locked) {
-                renderCard(register, robot.getRegister(register), locked = true, selected = true)
+                renderCard(register, player.robot.getRegister(register), locked = true, selected = true)
             } else {
                 player.drawnCards.forEach {
-                    val selected = robot.getRegister(register) == it
+                    val selected = player.robot.getRegister(register) == it
                     renderCard(register, it, locked = false, selected)
                 }
             }
@@ -177,6 +115,48 @@ fun HtmlBlockTag.renderCard(register: Int, card: MovementCard?, locked: Boolean,
 
         span("card-priority") {
             +card.priority.toString()
+        }
+    }
+}
+
+fun HtmlBlockTag.renderInfoPanel(game: Game, player: Player) {
+    h4 { +player.robot.model.name }
+    h5 { +"Damage buffer" }
+    div("progress") {
+        renderDamageBuffer(player.robot, 1, "secondary")
+        renderDamageBuffer(player.robot, 2, "secondary")
+        renderDamageBuffer(player.robot, 3, "secondary")
+        renderDamageBuffer(player.robot, 4, "secondary")
+        renderDamageBuffer(player.robot, 5, "warning", "LOCKS Register 5")
+        renderDamageBuffer(player.robot, 6, "warning", "LOCKS Register 4")
+        renderDamageBuffer(player.robot, 7, "warning", "LOCKS Register 3")
+        renderDamageBuffer(player.robot, 8, "warning", "LOCKS Register 2")
+        renderDamageBuffer(player.robot, 9, "warning", "LOCKS Register 1")
+        renderDamageBuffer(player.robot, 10, "danger", "DESTROYED")
+    }
+    if (!player.robot.poweredDown && game.state == GameState.PROGRAMMING_REGISTERS) {
+        button(classes = "btn mt-3 btn-warning") {
+            attributes["data-toggle"] = "tooltip"
+            attributes["data-action"] = TogglePowerDown().serializeForSocket()
+            attributes["title"] = "Powers down the robot, repairing some damage at the end of the round"
+            if (player.powerDownScheduled) {
+                attributes["class"] += " btn-danger"
+                +"Revoke Power Down"
+            } else {
+                +"Schedule Power Down"
+            }
+        }
+    }
+    if (game.state == GameState.PROGRAMMING_REGISTERS) {
+        button(classes = "btn mt-3") {
+            attributes["data-action"] = ToggleReady().serializeForSocket()
+            if (player.ready) {
+                attributes["class"] += " btn-danger"
+                +"Revoke Ready"
+            } else {
+                attributes["class"] += " btn-success"
+                +"Ready"
+            }
         }
     }
 }

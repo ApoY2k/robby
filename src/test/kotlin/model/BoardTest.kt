@@ -1,4 +1,4 @@
-package kotlin.model
+package apoy2k.robby.kotlin.model
 
 import apoy2k.robby.model.*
 import org.junit.jupiter.api.BeforeEach
@@ -15,17 +15,11 @@ class BoardTest {
     private var board = Board(emptyList())
     private var emptyBoard = Board(emptyList())
     private val sess1 = Session("s1")
-    private val player1 = Player("p1", sess1).also {
-        it.robot = Robot(RobotModel.ZIPPY)
-    }
+    private val player1 = Player("p1", Robot(RobotModel.ZIPPY), sess1)
     private val sess2 = Session("s2")
-    private val player2 = Player("p2", sess2).also {
-        it.robot = Robot(RobotModel.HUZZA)
-    }
+    private val player2 = Player("p2", Robot(RobotModel.HUZZA), sess2)
     private val sess3 = Session("s3")
-    private val player3 = Player("p3", sess3).also {
-        it.robot = Robot(RobotModel.KLAUS)
-    }
+    private val player3 = Player("p3", Robot(RobotModel.KLAUS), sess3)
 
     @BeforeEach
     fun setup() {
@@ -167,7 +161,7 @@ class BoardTest {
         assertNull(start.robot)
         assertNotNull(end.robot)
         assertEquals(player1.robot, end.robot)
-        assertEquals(player1.robot?.facing, Direction.RIGHT)
+        assertEquals(player1.robot.facing, Direction.RIGHT)
     }
 
     @Test
@@ -190,7 +184,7 @@ class BoardTest {
     fun `robot moves 3 steps straight`() {
         val card = MovementCard(Movement.STRAIGHT_3, 1)
         card.player = player1
-        player1.robot?.facing = Direction.RIGHT
+        player1.robot.facing = Direction.RIGHT
 
         val source = emptyBoard.fields[1][1]
         val target = emptyBoard.fields[1][3]
@@ -225,7 +219,7 @@ class BoardTest {
     fun `robot turns right`() {
         val card = MovementCard(Movement.TURN_RIGHT, 1)
         card.player = player1
-        player1.robot?.facing = Direction.RIGHT
+        player1.robot.facing = Direction.RIGHT
 
         val field = emptyBoard.fields[1][1]
 

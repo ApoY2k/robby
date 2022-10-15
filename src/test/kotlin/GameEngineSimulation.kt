@@ -66,11 +66,11 @@ fun main() {
 
         delay(1000)
         launch {
-            actions.emit(ConfirmCardsAction().also {
+            actions.emit(ToggleReady().also {
                 it.game = game1
                 it.session = s1
             })
-            actions.emit(ConfirmCardsAction().also {
+            actions.emit(ToggleReady().also {
                 it.game = game2
                 it.session = s1
             })

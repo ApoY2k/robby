@@ -4,13 +4,19 @@ import apoy2k.robby.exceptions.IncompleteAction
 import apoy2k.robby.exceptions.InvalidGameState
 import org.apache.commons.lang3.RandomStringUtils
 
-data class Player(val name: String, val session: Session, val id: String = RandomStringUtils.randomAlphanumeric(5)) {
-    var robot: Robot? = null
+data class Player(
+    val name: String,
+    val robot: Robot,
+    val session: Session,
+    val id: String = RandomStringUtils.randomAlphanumeric(5)
+) {
 
+    // Drawn cards to choose for registers
     var drawnCards = emptyList<MovementCard>()
         private set
 
-    var cardsConfirmed = false
+    // Player is ready for the turn to start
+    var ready = false
         private set
 
     var powerDownScheduled = false
@@ -34,8 +40,6 @@ data class Player(val name: String, val session: Session, val id: String = Rando
             throw IncompleteAction("Invalid register number")
         }
 
-        val robot = robot ?: throw InvalidGameState("Player has no robot assigned")
-
         robot.setRegister(register, card)
     }
 
@@ -47,10 +51,10 @@ data class Player(val name: String, val session: Session, val id: String = Rando
     }
 
     /**
-     * Confirm the current selection of cards
+     * Toggle ready state
      */
-    fun toggleConfirm() {
-        cardsConfirmed = !cardsConfirmed
+    fun toggleReady() {
+        ready = !ready
     }
 
     override fun toString() = "Player($name, $robot)"
