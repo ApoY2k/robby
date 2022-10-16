@@ -10,8 +10,10 @@ fun HtmlBlockTag.renderJoinForm(game: Game, session: Session?) {
                 div("card-body") {
                     form("form row") {
                         if (game.hasJoined(session)) {
-                            attributes["data-action"] = LeaveGameAction().serializeForSocket()
-                            button(classes = "btn btn-primary", type = ButtonType.submit) { +"Leave game" }
+                            if (game.state == GameState.PROGRAMMING_REGISTERS) {
+                                attributes["data-action"] = LeaveGameAction().serializeForSocket()
+                                button(classes = "btn btn-primary", type = ButtonType.submit) { +"Leave game" }
+                            }
                             return@form
                         }
 
@@ -20,29 +22,24 @@ fun HtmlBlockTag.renderJoinForm(game: Game, session: Session?) {
                             return@form
                         }
 
-                        joinForm(game)
+                        attributes["data-action"] = JoinGameAction().serializeForSocket()
+                        p { +"The game is open to join." }
+                        p { +"Select a robot" }
+                        select("form-control") {
+                            attributes["name"] = ActionField.ROBOT_MODEL.name
+
+                            RobotModel.values()
+                                .filter { model ->
+                                    !game.players.map { player -> player.robot.model }.contains(model)
+                                }
+                                .forEach {
+                                    option { +it.name }
+                                }
+                        }
+                        button(classes = "btn btn-primary", type = ButtonType.submit) { +"Join" }
                     }
                 }
             }
         }
     }
-}
-
-fun HtmlBlockTag.joinForm(game: Game) {
-    attributes["data-action"] = JoinGameAction().serializeForSocket()
-
-    p { +"The game is open to join." }
-    p { +"Select a robot" }
-
-    select("form-control") {
-        attributes["name"] = ActionField.ROBOT_MODEL.name
-
-        RobotModel.values()
-            .filter { model -> !game.players.mapNotNull { player -> player.robot?.model }.contains(model) }
-            .forEach {
-                option { +it.name }
-            }
-    }
-
-    button(classes = "btn btn-primary", type = ButtonType.submit) { +"Join" }
 }
