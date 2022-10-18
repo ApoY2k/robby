@@ -5,9 +5,11 @@ import org.apache.commons.lang3.RandomStringUtils
 
 enum class GameState {
     PROGRAMMING_REGISTERS,
-    EXECUTING_REGISTER,
-    MOVE_BARD_ELEMENTS,
-    FIRE_LASERS,
+    EXECUTING_REGISTERS,
+    MOVE_BARD_ELEMENTS_2,
+    MOVE_BARD_ELEMENTS_1,
+    FIRE_LASERS_2,
+    FIRE_LASERS_1,
     CHECKPOINTS,
     REPAIR_POWERUPS
 }

@@ -98,16 +98,9 @@ class GameEngine(private val updates: MutableSharedFlow<ViewUpdate>) {
      * Run all automatic steps in the game state (executed between each register)
      */
     private suspend fun runAutomaticSteps(game: Game) {
-        game.state = GameState.MOVE_BARD_ELEMENTS
         runMoveBoardElements(game)
-
-        game.state = GameState.FIRE_LASERS
         runFireLasers(game)
-
-        game.state = GameState.CHECKPOINTS
         runCheckpoints(game)
-
-        game.state = GameState.REPAIR_POWERUPS
         runRepairPowerups(game)
     }
 
@@ -183,7 +176,7 @@ class GameEngine(private val updates: MutableSharedFlow<ViewUpdate>) {
      * Movements of more than 1 step are executed individually, with updates sent between every step
      */
     private suspend fun runRegister(game: Game, register: Int) {
-        game.state = GameState.EXECUTING_REGISTER
+        game.state = GameState.EXECUTING_REGISTERS
         game.currentRegister = register
         updates.emit(ViewUpdate(game))
 
@@ -208,26 +201,31 @@ class GameEngine(private val updates: MutableSharedFlow<ViewUpdate>) {
     }
 
     private suspend fun runMoveBoardElements(game: Game) {
+        game.state = GameState.MOVE_BARD_ELEMENTS_2
         game.board.moveBelts(FieldType.BELT_2)
         updates.emit(ViewUpdate(game))
         delay(GAME_ENGINE_STEP_DELAY)
 
+        game.state = GameState.MOVE_BARD_ELEMENTS_1
         game.board.moveBelts(FieldType.BELT)
         updates.emit(ViewUpdate(game))
         delay(GAME_ENGINE_STEP_DELAY)
     }
 
     private suspend fun runFireLasers(game: Game) {
+        game.state = GameState.MOVE_BARD_ELEMENTS_2
         game.board.fireLasers(FieldType.LASER_2)
         updates.emit(ViewUpdate(game))
         delay(GAME_ENGINE_STEP_DELAY)
 
+        game.state = GameState.MOVE_BARD_ELEMENTS_1
         game.board.fireLasers(FieldType.LASER)
         updates.emit(ViewUpdate(game))
         delay(GAME_ENGINE_STEP_DELAY)
     }
 
     private suspend fun runCheckpoints(game: Game) {
+        game.state = GameState.CHECKPOINTS
         game.board.fields.flatten()
             .filter { it.type == FieldType.FLAG }
             .mapNotNull { it.robot }
@@ -237,6 +235,7 @@ class GameEngine(private val updates: MutableSharedFlow<ViewUpdate>) {
     }
 
     private suspend fun runRepairPowerups(game: Game) {
+        game.state = GameState.REPAIR_POWERUPS
         game.board.fields.flatten()
             .filter { it.type == FieldType.REPAIR }
             .mapNotNull { it.robot }

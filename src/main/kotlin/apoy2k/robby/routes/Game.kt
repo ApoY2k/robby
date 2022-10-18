@@ -42,7 +42,12 @@ fun Route.game(actions: MutableSharedFlow<Action>, viewUpdateRouter: ViewUpdateR
 
     route(Location.GAME_VIEW.path) {
         get {
-            val game = storage.findGame(call.parameters["id"])
+            val gameId = call.parameters["id"].orEmpty()
+            if (gameId.isBlank()) {
+                call.respond(HttpStatusCode.BadRequest)
+                return@get
+            }
+            val game = storage.findGame(gameId)
             if (game == null) {
                 call.respond(HttpStatusCode.NotFound)
                 return@get
@@ -63,7 +68,13 @@ fun Route.game(actions: MutableSharedFlow<Action>, viewUpdateRouter: ViewUpdateR
                 return@webSocket
             }
 
-            val game = storage.findGame(call.parameters["id"])
+            val gameId = call.parameters["id"].orEmpty()
+            if (gameId.isBlank()) {
+                call.respond(HttpStatusCode.BadRequest)
+                return@webSocket
+            }
+
+            val game = storage.findGame(gameId)
             if (game == null) {
                 logger.error("No game found")
                 return@webSocket
@@ -85,6 +96,7 @@ fun Route.game(actions: MutableSharedFlow<Action>, viewUpdateRouter: ViewUpdateR
                             logger.error(err.message, err)
                         }
                     }
+
                     else -> {
                         val data = frame.readBytes().toString()
                         logger.warn("Unknown socket message [$data]")
