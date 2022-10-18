@@ -5,13 +5,14 @@ import apoy2k.robby.exceptions.InvalidGameState
 import apoy2k.robby.model.*
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import org.slf4j.LoggerFactory
 import java.lang.Integer.max
+import java.lang.Integer.min
 
 private const val GAME_ENGINE_STEP_DELAY = 1000L
 
@@ -25,7 +26,7 @@ class GameEngine(private val updates: MutableSharedFlow<ViewUpdate>) {
      * Starts listening to message on the command channel and executes them on the corresponding game,
      * sending back viewupdates for the game along the way
      */
-    suspend fun connect(actions: SharedFlow<Action>) = coroutineScope {
+    suspend fun connect(actions: Flow<Action>) = coroutineScope {
         actions.onEach { action ->
             val game = action.game
             if (game == null) {
@@ -64,7 +65,8 @@ class GameEngine(private val updates: MutableSharedFlow<ViewUpdate>) {
         val game = action.game ?: throw IncompleteAction("No game attached to $action")
 
         if (action is JoinGameAction) {
-            addPlayer(game, session.name, RobotModel.valueOf(action.model ?: "ZIPPY"), session)
+            val model = action.model ?: throw IncompleteAction("No robot model specified")
+            addPlayer(game, session.name, RobotModel.valueOf(model), session)
             return
         }
 
@@ -113,6 +115,9 @@ class GameEngine(private val updates: MutableSharedFlow<ViewUpdate>) {
         if (game.players.isEmpty() || game.players.any { !it.ready }) {
             return
         }
+        if (game.isFinished) {
+            return
+        }
 
         game.hasStarted = true
 
@@ -133,7 +138,7 @@ class GameEngine(private val updates: MutableSharedFlow<ViewUpdate>) {
         runAutomaticSteps(game)
 
         // Check for game end condition. If it is met, end the game
-        if (game.players.any { it.robot.passedCheckpoints == 3 }) {
+        if (game.players.any { it.robot.passedCheckpoints >= 3 }) {
             game.isFinished = true
         } else {
             // After all automatic turns are done, deal new cards so players can plan their next move
@@ -213,12 +218,12 @@ class GameEngine(private val updates: MutableSharedFlow<ViewUpdate>) {
     }
 
     private suspend fun runFireLasers(game: Game) {
-        game.state = GameState.MOVE_BARD_ELEMENTS_2
+        game.state = GameState.FIRE_LASERS_2
         game.board.fireLasers(FieldType.LASER_2)
         updates.emit(ViewUpdate(game))
         delay(GAME_ENGINE_STEP_DELAY)
 
-        game.state = GameState.MOVE_BARD_ELEMENTS_1
+        game.state = GameState.FIRE_LASERS_1
         game.board.fireLasers(FieldType.LASER)
         updates.emit(ViewUpdate(game))
         delay(GAME_ENGINE_STEP_DELAY)
@@ -229,7 +234,8 @@ class GameEngine(private val updates: MutableSharedFlow<ViewUpdate>) {
         game.board.fields.flatten()
             .filter { it.type == FieldType.FLAG }
             .mapNotNull { it.robot }
-            .forEach { it.passedCheckpoints += 1 }
+            .forEach { it.passedCheckpoints = min(3, it.passedCheckpoints + 1) }
+        // TODO: Touching the same checkpoint multiple times should not increase the counter
         updates.emit(ViewUpdate(game))
         delay(GAME_ENGINE_STEP_DELAY)
     }

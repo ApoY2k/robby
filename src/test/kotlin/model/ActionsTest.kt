@@ -1,4 +1,4 @@
-package kotlin.model
+package apoy2k.robby.kotlin.model
 
 import apoy2k.robby.exceptions.UnknownAction
 import apoy2k.robby.model.*
@@ -12,8 +12,12 @@ class ActionsTest {
     fun `deserialize action`() {
         val game = Game()
         assertEquals(
-            JoinGameAction().also { it.game = game },
-            Action.deserializeFromSocket(game, "${ActionField.LABEL}=${ActionLabel.JOIN_GAME}")
+            JoinGameAction(RobotModel.ZIPPY.name).also { it.game = game },
+            Action.deserializeFromSocket(
+                game,
+                "${ActionField.LABEL}=${ActionLabel.JOIN_GAME}&" +
+                        "${ActionField.ROBOT_MODEL}=${RobotModel.ZIPPY.name}"
+            )
         )
     }
 

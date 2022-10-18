@@ -8,7 +8,7 @@ import kotlinx.html.li
 import kotlinx.html.ul
 
 fun HtmlBlockTag.renderGameState(game: Game) {
-    if (game.state == GameState.PROGRAMMING_REGISTERS) {
+    if (game.isFinished || game.state == GameState.PROGRAMMING_REGISTERS) {
         return
     }
 

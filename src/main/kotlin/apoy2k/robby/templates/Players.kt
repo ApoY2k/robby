@@ -21,11 +21,11 @@ fun HtmlBlockTag.renderPlayers(game: Game, session: Session?) {
                             +it.name
                         }
 
-                        +" (${it.robot?.passedCheckpoints})"
+                        +" (${it.robot.passedCheckpoints})"
 
                         br {}
 
-                        it.robot?.model?.name
+                        it.robot.model.name
                     }
                 }
             }

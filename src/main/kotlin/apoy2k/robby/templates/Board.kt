@@ -1,23 +1,26 @@
 package apoy2k.robby.templates
 
 import apoy2k.robby.model.Board
+import apoy2k.robby.model.Direction
 import apoy2k.robby.model.Field
 import apoy2k.robby.model.Robot
 import kotlinx.html.Entities
 import kotlinx.html.HtmlBlockTag
 import kotlinx.html.div
 
-fun Field.directionsToCssClass(): String =
-    listOf(this.outgoingDirection)
+fun Field.toCssClass(): String {
+    val directions = listOf(this.outgoingDirection)
         .plus(this.incomingDirections)
-        .joinToString("") { it.name.take(1).lowercase() }
+        .filter { it != Direction.NONE }
+        .joinToString("") { it.name.take(1) }
+
+    return listOf(this.type.name, directions)
+        .filter { it.isNotBlank() }
+        .joinToString("_") { it.lowercase() }
+}
 
 fun HtmlBlockTag.renderField(field: Field) {
-    div("field type-${field.type.name.lowercase()}") {
-        if (field.hasDirections()) {
-            attributes["class"] += "_${field.directionsToCssClass()}"
-        }
-
+    div("field type-${field.toCssClass()}") {
         field.conditions.forEach { condition ->
             div("condition-${condition.name.lowercase()}") {
                 +Entities.nbsp
