@@ -19,8 +19,8 @@ class ViewUpdateRouter {
     private val logger = LoggerFactory.getLogger(this.javaClass)
 
     /**
-     * Keep a map of existing game -> http session -> websocket session relations
-     * which can be used to send the viewupdates, renderd in the context of the http session, per game
+     * Keeps a map of existing game -> http sessions -> websocket sessions relations
+     * which can be used to send the viewupdates, rendered in the context of the http session, per game
      */
     private val sessions: MutableMap<Game, MutableMap<Session, MutableCollection<WebSocketSession>>> = mutableMapOf()
 

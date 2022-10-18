@@ -131,7 +131,7 @@ abstract class Action {
     override fun toString() = "Action($game, $parameters, $session)"
 }
 
-class JoinGameAction(model: String? = "") :
+class JoinGameAction(model: String?) :
     Action(ActionLabel.JOIN_GAME, mapOf(ActionField.ROBOT_MODEL to model)) {
     val model = getFirst(ActionField.ROBOT_MODEL)
 }

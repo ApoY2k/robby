@@ -1,5 +1,7 @@
 package apoy2k.robby.kotlin
 
+import apoy2k.robby.data.MemoryStorage
+import apoy2k.robby.setup
 import io.ktor.client.request.*
 import io.ktor.http.*
 import io.ktor.server.testing.*
@@ -10,7 +12,14 @@ class ApplicationTest {
 
     @Test
     fun `request to root`() = testApplication {
-        val response = client.get("/")
-        assertEquals(HttpStatusCode.OK, response.status)
+        val storage = MemoryStorage()
+
+        application {
+            setup(storage)
+        }
+
+        client.get("/").apply {
+            assertEquals(HttpStatusCode.OK, status)
+        }
     }
 }

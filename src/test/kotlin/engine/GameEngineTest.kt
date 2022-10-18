@@ -1,10 +1,11 @@
-package kotlin.engine
+package apoy2k.robby.kotlin.engine
 
 import apoy2k.robby.data.MemoryStorage
 import apoy2k.robby.engine.GameEngine
 import apoy2k.robby.exceptions.IncompleteAction
 import apoy2k.robby.exceptions.InvalidGameState
 import apoy2k.robby.model.*
+import apoy2k.robby.model.predef.board.generateSandboxBoard
 import kotlinx.coroutines.flow.MutableSharedFlow
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
@@ -18,8 +19,9 @@ class GameEngineTest {
     @Test
     fun `select card for register`() {
         val game = Game()
+        game.loadBoard(Board(generateSandboxBoard()))
         val s1 = Session("s1", "player1")
-        engine.perform(JoinGameAction().also {
+        engine.perform(JoinGameAction(RobotModel.ZIPPY.name).also {
             it.session = s1
             it.game = game
         })
@@ -41,8 +43,9 @@ class GameEngineTest {
     @Test
     fun `card selection override from different register`() {
         val game = Game()
+        game.loadBoard(Board(generateSandboxBoard()))
         val s1 = Session("s1", "player1")
-        engine.perform(JoinGameAction().also {
+        engine.perform(JoinGameAction(RobotModel.ZIPPY.name).also {
             it.session = s1
             it.game = game
         })
@@ -71,7 +74,9 @@ class GameEngineTest {
     fun `join parallel games`() {
         val storage = MemoryStorage()
         val game1 = storage.createGame()
+        game1.loadBoard(Board(generateSandboxBoard()))
         val game2 = storage.createGame()
+        game2.loadBoard(Board(generateSandboxBoard()))
         val session = Session("s1", "player1")
 
         val join1 = JoinGameAction(RobotModel.GEROG.name).also {
@@ -100,9 +105,10 @@ class GameEngineTest {
     @Test
     fun `join game`() {
         val game = Game()
+        game.loadBoard(Board(generateSandboxBoard()))
         val s1 = Session("s1", "player1")
 
-        engine.perform(JoinGameAction().also {
+        engine.perform(JoinGameAction(RobotModel.ZIPPY.name).also {
             it.session = s1
             it.game = game
         })
@@ -114,7 +120,7 @@ class GameEngineTest {
         val game = Game()
 
         assertFailsWith(IncompleteAction::class) {
-            engine.perform(JoinGameAction().also {
+            engine.perform(JoinGameAction(RobotModel.ZIPPY.name).also {
                 it.session = Session("s3")
                 it.game = game
             })
@@ -124,14 +130,15 @@ class GameEngineTest {
     @Test
     fun `multiple players join same game`() {
         val game = Game()
+        game.loadBoard(Board(generateSandboxBoard()))
         val s1 = Session("s1", "player1")
         val s2 = Session("s2", "player2")
 
-        engine.perform(JoinGameAction().also {
+        engine.perform(JoinGameAction(RobotModel.ZIPPY.name).also {
             it.session = s1
             it.game = game
         })
-        engine.perform(JoinGameAction().also {
+        engine.perform(JoinGameAction(RobotModel.ZIPPY.name).also {
             it.session = s2
             it.game = game
         })
@@ -141,14 +148,15 @@ class GameEngineTest {
     @Test
     fun `join same game twice`() {
         val game = Game()
+        game.loadBoard(Board(generateSandboxBoard()))
         val s1 = Session("s1", "player1")
 
         assertFailsWith(InvalidGameState::class) {
-            engine.perform(JoinGameAction().also {
+            engine.perform(JoinGameAction(RobotModel.ZIPPY.name).also {
                 it.session = s1
                 it.game = game
             })
-            engine.perform(JoinGameAction().also {
+            engine.perform(JoinGameAction(RobotModel.ZIPPY.name).also {
                 it.session = s1
                 it.game = game
             })
@@ -158,9 +166,10 @@ class GameEngineTest {
     @Test
     fun `leave game`() {
         val game = Game()
+        game.loadBoard(Board(generateSandboxBoard()))
         val s1 = Session("s1", "player1")
 
-        engine.perform(JoinGameAction().also {
+        engine.perform(JoinGameAction(RobotModel.ZIPPY.name).also {
             it.session = s1
             it.game = game
         })
@@ -174,14 +183,15 @@ class GameEngineTest {
     @Test
     fun `leave game with multiple players`() {
         val game = Game()
+        game.loadBoard(Board(generateSandboxBoard()))
         val s1 = Session("s1", "player1")
         val s2 = Session("s2", "player2")
 
-        engine.perform(JoinGameAction().also {
+        engine.perform(JoinGameAction(RobotModel.ZIPPY.name).also {
             it.session = s1
             it.game = game
         })
-        engine.perform(JoinGameAction().also {
+        engine.perform(JoinGameAction(RobotModel.ZIPPY.name).also {
             it.session = s2
             it.game = game
         })
