@@ -32,9 +32,11 @@ fun UL.renderRegister(game: Game, register: Int) {
     }
 
     if (isActive) {
-        renderState("Executing Registers", game.state == GameState.EXECUTING_REGISTER)
-        renderState("Moving Board Elements", game.state == GameState.MOVE_BARD_ELEMENTS)
-        renderState("Fire Lasers", game.state == GameState.FIRE_LASERS)
+        renderState("Executing Registers", game.state == GameState.EXECUTING_REGISTERS)
+        renderState("Moving Fast Board Elements", game.state == GameState.MOVE_BARD_ELEMENTS_2)
+        renderState("Moving Slow Board Elements", game.state == GameState.MOVE_BARD_ELEMENTS_1)
+        renderState("Fire Double Lasers", game.state == GameState.FIRE_LASERS_2)
+        renderState("Fire Single Lasers", game.state == GameState.FIRE_LASERS_1)
         renderState("Touching Checkpoints", game.state == GameState.CHECKPOINTS)
         renderState("Repair & Powerups", game.state == GameState.REPAIR_POWERUPS)
     }
