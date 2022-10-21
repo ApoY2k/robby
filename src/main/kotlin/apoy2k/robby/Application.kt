@@ -26,20 +26,33 @@ import io.ktor.server.websocket.*
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.launch
 import org.apache.commons.lang3.RandomStringUtils
+import org.ktorm.database.Database
+import org.ktorm.logging.Slf4jLoggerAdapter
+import org.ktorm.support.sqlite.SQLiteDialect
 import org.slf4j.LoggerFactory
 import org.slf4j.event.Level
 import java.io.File
+import java.time.Clock
 import kotlin.collections.set
 
 fun main() {
     embeddedServer(Netty, port = 8080, host = "0.0.0.0", watchPaths = listOf("classes")) {
+        val clock = Clock.systemDefaultZone()
+        val database = Database.connect(
+            url = "jdbc:sqlite:${envStr(Environment.DATABASE_PATH)}",
+            dialect = SQLiteDialect(),
+            logger = Slf4jLoggerAdapter(LoggerFactory.getLogger("db")),
+        )
         val storage = MemoryStorage()
-        setup(storage)
+
+        setup(clock, storage, database)
     }.start(wait = true)
 }
 
 fun Application.setup(
-    storage: Storage
+    clock: Clock,
+    storage: Storage,
+    database: Database,
 ) {
     val logger = LoggerFactory.getLogger(this.javaClass)
 
@@ -96,7 +109,7 @@ fun Application.setup(
             staticRootFolder = File("assets")
             files(".")
         }
-        base(storage)
-        game(actionChannel, viewUpdateRouter, storage)
+        base(clock, storage)
+        game(clock, database, storage, actionChannel, viewUpdateRouter)
     }
 }

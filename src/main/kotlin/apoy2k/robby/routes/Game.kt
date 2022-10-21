@@ -3,18 +3,12 @@ package apoy2k.robby.routes
 import apoy2k.robby.data.Storage
 import apoy2k.robby.engine.ViewUpdateRouter
 import apoy2k.robby.model.Action
-import apoy2k.robby.model.Board
-import apoy2k.robby.model.BoardType
 import apoy2k.robby.model.Session
-import apoy2k.robby.model.predef.board.generateChopShopBoard
-import apoy2k.robby.model.predef.board.generateDemoBoard
-import apoy2k.robby.model.predef.board.generateSandboxBoard
 import apoy2k.robby.templates.GameTpl
 import apoy2k.robby.templates.LayoutTpl
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.html.*
-import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.ktor.server.sessions.*
@@ -22,21 +16,22 @@ import io.ktor.server.websocket.*
 import io.ktor.websocket.*
 import kotlinx.coroutines.channels.consumeEach
 import kotlinx.coroutines.flow.MutableSharedFlow
+import org.ktorm.database.Database
 import org.slf4j.LoggerFactory
 import java.io.File
+import java.time.Clock
 
-fun Route.game(actions: MutableSharedFlow<Action>, viewUpdateRouter: ViewUpdateRouter, storage: Storage) {
+fun Route.game(
+    clock: Clock,
+    database: Database,
+    storage: Storage,
+    actions: MutableSharedFlow<Action>,
+    viewUpdateRouter: ViewUpdateRouter,
+) {
     val logger = LoggerFactory.getLogger("${this.javaClass.name}.game")
 
     post(Location.GAME_ROOT.path) {
-        val params = call.receiveParameters()
-        val board = when (BoardType.valueOf(params["board"].orEmpty())) {
-            BoardType.SANDBOX -> Board(generateSandboxBoard())
-            BoardType.CHOPSHOP -> Board(generateChopShopBoard())
-            BoardType.DEMO -> Board(generateDemoBoard())
-        }
-        val game = storage.createGame()
-        game.loadBoard(board)
+
         call.respondRedirect(Location.ROOT.path)
     }
 

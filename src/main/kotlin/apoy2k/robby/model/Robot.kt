@@ -1,6 +1,10 @@
 package apoy2k.robby.model
 
 import org.apache.commons.lang3.RandomStringUtils
+import org.ktorm.database.Database
+import org.ktorm.entity.Entity
+import org.ktorm.entity.sequenceOf
+import org.ktorm.schema.*
 
 enum class RobotModel {
     ZIPPY,
@@ -29,6 +33,30 @@ fun Direction.toVec2() = when (this) {
     Direction.DOWN -> Vec2(0f, -1f)
     Direction.LEFT -> Vec2(-1f, 0f)
 }
+
+interface DbRobot : Entity<DbRobot> {
+    companion object : Entity.Factory<DbRobot>()
+
+    val id: Long
+    var game: DbGame
+    var model: RobotModel
+    var facing: Direction
+    var damage: Short
+    var poweredDown: Boolean
+    var passedCheckpoints: Short
+}
+
+object Robots : Table<DbRobot>("robots") {
+    val id = long("id").primaryKey().bindTo { it.id }
+    val game = long("game_id").references(Games) { it.game }
+    val model = enum<RobotModel>("model").bindTo { it.model }
+    val facing = enum<Direction>("facing").bindTo { it.facing }
+    val damage = short("damage").bindTo { it.damage }
+    val poweredDown = boolean("poweredDown").bindTo { it.poweredDown }
+    val passedCheckpoints = short("passedCheckpoints").bindTo { it.passedCheckpoints }
+}
+
+val Database.robots get() = this.sequenceOf(Robots)
 
 data class Robot(val model: RobotModel, val id: String = RandomStringUtils.randomAlphanumeric(5)) {
     var facing = Direction.DOWN
