@@ -1,6 +1,40 @@
 package apoy2k.robby.model
 
 import org.apache.commons.lang3.RandomStringUtils
+import org.ktorm.entity.Entity
+import org.ktorm.schema.Table
+import org.ktorm.schema.enum
+import org.ktorm.schema.long
+
+interface DbField : Entity<DbField> {
+    companion object : Entity.Factory<DbField>() {
+        fun new(type: FieldType, vararg directions: Direction) = DbField {
+            this.type = type
+            this.outgoingDirection = directions.first()
+            this.incomingDirections = directions.drop(1)
+        }
+    }
+
+    val id: Long
+    var type: FieldType
+    var positionX: Long
+    var positionY: Long
+    var conditions: List<FieldCondition>
+    var incomingDirections: List<Direction>
+    var outgoingDirection: Direction
+    var game: DbGame
+}
+
+object Fields : Table<DbField>("fields") {
+    val id = long("id").primaryKey().bindTo { it.id }
+    val gameId = long("game_id").references(Games) { it.game }
+    val type = enum<FieldType>("type").bindTo { it.type }
+    val conditions = enumList<FieldCondition>("conditions").bindTo { it.conditions }
+    val x = long("positionX").bindTo { it.positionX }
+    val y = long("positionY").bindTo { it.positionY }
+    val incomingDirections = enumList<Direction>("incomingDirections").bindTo { it.incomingDirections }
+    val outgoingDirection = enum<Direction>("outgoingDirection").bindTo { it.outgoingDirection }
+}
 
 data class Field(val id: String = RandomStringUtils.randomAlphanumeric(5)) {
     var robot: Robot? = null
@@ -37,10 +71,6 @@ data class Field(val id: String = RandomStringUtils.randomAlphanumeric(5)) {
 
     // Get list of all directions, not matter in or outgoing
     fun getDirections() = listOf(outgoingDirection).plus(incomingDirections)
-
-    // true, if this field has any directions, no matter in or outgoing
-    fun hasDirections() = getDirections().isNotEmpty()
-
     fun hasVerticalDirection() = getDirections().any { it.isVertical() }
     fun hasHorizontalDirection() = getDirections().any { it.isHorizontal() }
 

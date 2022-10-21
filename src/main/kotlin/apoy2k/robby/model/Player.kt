@@ -3,6 +3,32 @@ package apoy2k.robby.model
 import apoy2k.robby.exceptions.IncompleteAction
 import apoy2k.robby.exceptions.InvalidGameState
 import org.apache.commons.lang3.RandomStringUtils
+import org.ktorm.entity.Entity
+import org.ktorm.schema.Table
+import org.ktorm.schema.boolean
+import org.ktorm.schema.long
+import org.ktorm.schema.varchar
+
+interface DbPlayer : Entity<DbPlayer> {
+    companion object : Entity.Factory<DbPlayer>()
+
+    val id: Long
+    var sessionId: String
+    var robot: DbRobot
+    var name: String
+    var cards: List<MovementCard>
+    var ready: Boolean
+    var powerDownScheduled: Boolean
+}
+
+object Players : Table<DbPlayer>("players") {
+    val id = long("id").primaryKey().bindTo { it.id }
+    val sessionId = varchar("sessionId").bindTo { it.sessionId }
+    val robot = long("robot_id").references(Robots) { it.robot }
+    val name = varchar("name").bindTo { it.name }
+    val ready = boolean("ready").bindTo { it.ready }
+    val powerDownScheduled = boolean("powerDownScheduled").bindTo { it.powerDownScheduled }
+}
 
 data class Player(
     val name: String,

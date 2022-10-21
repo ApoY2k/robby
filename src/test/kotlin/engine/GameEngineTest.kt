@@ -35,7 +35,7 @@ class GameEngineTest {
             it.game = game
         })
 
-        val registerCard = player.robot?.getRegister(1)
+        val registerCard = player.robot.getRegister(1)
         assertNotNull(registerCard)
         assertEquals(card, registerCard)
     }
@@ -63,8 +63,8 @@ class GameEngineTest {
             it.game = game
         })
 
-        val register1 = player.robot?.getRegister(1)
-        val register2 = player.robot?.getRegister(2)
+        val register1 = player.robot.getRegister(1)
+        val register2 = player.robot.getRegister(2)
         assertNull(register1)
         assertNotNull(register2)
         assertEquals(card, register2)

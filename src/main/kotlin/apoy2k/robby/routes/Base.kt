@@ -14,8 +14,12 @@ import io.ktor.server.routing.*
 import io.ktor.server.sessions.*
 import kotlinx.html.*
 import org.slf4j.LoggerFactory
+import java.time.Clock
 
-fun Route.base(storage: Storage) {
+fun Route.base(
+    clock: Clock,
+    storage: Storage,
+) {
     val logger = LoggerFactory.getLogger("${this.javaClass.name}.base")
 
     get("/") {

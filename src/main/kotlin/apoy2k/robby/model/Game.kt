@@ -2,6 +2,9 @@ package apoy2k.robby.model
 
 import apoy2k.robby.model.predef.deck.generateStandardDeck
 import org.apache.commons.lang3.RandomStringUtils
+import org.ktorm.entity.Entity
+import org.ktorm.schema.*
+import java.time.Instant
 
 enum class GameState {
     PROGRAMMING_REGISTERS,
@@ -12,6 +15,24 @@ enum class GameState {
     FIRE_LASERS_1,
     CHECKPOINTS,
     REPAIR_POWERUPS
+}
+
+interface DbGame : Entity<DbGame> {
+    companion object : Entity.Factory<DbGame>()
+
+    val id: Long
+    var currentRegister: Short
+    var state: GameState
+    var startedAt: Instant?
+    var finishedAt: Instant?
+}
+
+object Games : Table<DbGame>("games") {
+    val id = long("id").primaryKey().bindTo { it.id }
+    val currentRegister = short("currentRegister").bindTo { it.currentRegister }
+    val state = enum<GameState>("state").bindTo { it.state }
+    val startedAt = timestamp("startedAt").bindTo { it.startedAt }
+    val finishedAt = timestamp("finishedAt").bindTo { it.finishedAt }
 }
 
 data class Game(val id: String = RandomStringUtils.randomAlphanumeric(5)) {
