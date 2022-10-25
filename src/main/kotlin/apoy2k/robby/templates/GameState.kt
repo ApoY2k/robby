@@ -2,13 +2,15 @@ package apoy2k.robby.templates
 
 import apoy2k.robby.model.Game
 import apoy2k.robby.model.GameState
+import apoy2k.robby.model.isFinished
 import kotlinx.html.HtmlBlockTag
 import kotlinx.html.UL
 import kotlinx.html.li
 import kotlinx.html.ul
+import java.time.Instant
 
-fun HtmlBlockTag.renderGameState(game: Game) {
-    if (game.isFinished || game.state == GameState.PROGRAMMING_REGISTERS) {
+fun HtmlBlockTag.renderGameState(now: Instant, game: Game) {
+    if (game.isFinished(now) || game.state == GameState.PROGRAMMING_REGISTERS) {
         return
     }
 

@@ -1,31 +1,35 @@
 package apoy2k.robby.templates
 
-import apoy2k.robby.model.Game
+import apoy2k.robby.model.Cards.robot
+import apoy2k.robby.model.Robot
 import apoy2k.robby.model.Session
 import kotlinx.html.*
 
-fun HtmlBlockTag.renderPlayers(game: Game, session: Session?) {
+fun HtmlBlockTag.renderPlayers(
+    robots: List<Robot>,
+    session: Session?
+) {
     div("row mb-3") {
         div("col") {
             ul("list-group") {
-                game.players.forEach {
-                    val isSessionPlayer = it.session == session
+                robots.forEach {
+                    val isSessionPlayer = it.session == session?.id
                     li("list-group-item") {
                         if (it.ready) {
                             attributes["class"] += " text-success"
                         }
 
                         if (isSessionPlayer) {
-                            strong { +it.name }
+                            strong { +robot.name }
                         } else {
-                            +it.name
+                            +robot.name
                         }
 
-                        +" (${it.robot.passedCheckpoints})"
+                        +" (${it.passedCheckpoints})"
 
                         br {}
 
-                        it.robot.model.name
+                        it.model.name
                     }
                 }
             }

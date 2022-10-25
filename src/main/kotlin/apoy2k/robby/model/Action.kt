@@ -1,15 +1,15 @@
 package apoy2k.robby.model
 
-import apoy2k.robby.exceptions.UnknownAction
 import org.apache.http.NameValuePair
 import org.apache.http.client.utils.URLEncodedUtils
 import org.apache.http.message.BasicNameValuePair
+import java.io.Serializable
 import java.nio.charset.Charset
 
 enum class ActionLabel {
     JOIN_GAME,
     LEAVE_GAME,
-    SET_REGISTER,
+    SELECT_CARD,
     TOGGLE_READY,
     TOGGLE_POWERDOWN,
 }
@@ -22,128 +22,69 @@ enum class ActionField {
 }
 
 /**
- * Find the first value in a list of NameValuePairs for an action
+ * Transferrable model object for communicating actions by users to the server
  */
-fun List<NameValuePair>.first(field: ActionField): String? {
-    return this.firstOrNull { it.name == field.name }?.value
-}
-
-/**
- * Base class for all game actions, handles serialization and comparing between action instances
- */
-abstract class Action {
-
+data class Action(
+    val label: ActionLabel,
+    private val parameters: List<NameValuePair> = emptyList()
+) : Serializable {
     /**
      * Session that issued the action (null if server action)
      */
+    @Transient
     var session: Session? = null
 
     /**
      * Game that this action was created for
      */
+    @Transient
     var game: Game? = null
-
-    private var parameters: MutableCollection<NameValuePair> = mutableListOf()
-
-    constructor(label: ActionLabel) : this(label, emptyMap())
-
-    constructor(label: ActionLabel, rest: Map<ActionField, String?>) {
-        parameters = mutableListOf(BasicNameValuePair(ActionField.LABEL.name, label.name))
-        parameters.addAll(
-            rest.filter { !it.value.isNullOrBlank() }
-                .map { BasicNameValuePair(it.key.name, it.value) }
-        )
-    }
 
     companion object {
 
         /**
          * Convert a serialized, url encoded query string to a typed action instance.
          * Counterpart for the `serializeForSocket` method.
-         * @param game Game instance to attach to the deserialized action
-         * @param serializedAction Serialized action object
-         * @throws UnknownAction if the string cannot be converted
          */
-        fun deserializeFromSocket(game: Game, serializedAction: String): Action {
-            try {
-                val query = URLEncodedUtils.parse(serializedAction, Charset.defaultCharset())
-                val labelField = query.first(ActionField.LABEL) ?: "no_label"
-
-                val action = when (ActionLabel.valueOf(labelField)) {
-                    ActionLabel.JOIN_GAME -> JoinGameAction(
-                        query.first(ActionField.ROBOT_MODEL)
-                    )
-
-                    ActionLabel.LEAVE_GAME -> LeaveGameAction()
-                    ActionLabel.SET_REGISTER -> SelectCardAction(
-                        query.first(ActionField.REGISTER),
-                        query.first(ActionField.CARD_ID)
-                    )
-
-                    ActionLabel.TOGGLE_READY -> ToggleReady()
-                    ActionLabel.TOGGLE_POWERDOWN -> TogglePowerDown()
-                }
-
-                action.game = game
-
-                return action
-            } catch (err: Throwable) {
-                throw UnknownAction(serializedAction, err)
-            }
+        fun deserializeFromSocket(serializedAction: String): Action {
+            val query = URLEncodedUtils.parse(serializedAction, Charset.defaultCharset())
+            val label = query.firstOrNull { it.name == ActionField.LABEL.name }?.value.orEmpty()
+            return Action(
+                ActionLabel.valueOf(label),
+                query
+            )
         }
-    }
 
-    /**
-     * Get all parameters that have the provided field name
-     */
-    fun get(field: ActionField): List<String> {
-        return parameters.filter { field.name == it.name }.map { it.value }
-    }
+        fun joinGame(model: RobotModel? = null) = Action(
+            ActionLabel.JOIN_GAME,
+            listOf(
+                BasicNameValuePair(ActionField.ROBOT_MODEL.name, model?.name.orEmpty())
+            )
+        )
 
-    /**
-     * Get the first parameter value with the provided field name
-     */
-    fun getFirst(field: ActionField): String? {
-        return get(field).firstOrNull()
+        fun leaveGame() = Action(ActionLabel.LEAVE_GAME)
+
+        fun selectCard(register: Int, cardId: Int) = Action(
+            ActionLabel.SELECT_CARD,
+            listOf(
+                BasicNameValuePair(ActionField.CARD_ID.name, cardId.toString()),
+                BasicNameValuePair(ActionField.REGISTER.name, register.toString()),
+            )
+        )
+
+        fun toggleReady() = Action(ActionLabel.TOGGLE_READY)
+
+        fun togglePowerDown() = Action(ActionLabel.TOGGLE_POWERDOWN)
     }
 
     /**
      * Format this action as a URL Encoded string of name/value pairs, so it can be sent over the websocket
      */
-    fun serializeForSocket(): String =
+    fun serializeForSocket() =
         URLEncodedUtils.format(parameters.filter { !it.value.isNullOrBlank() }, Charset.defaultCharset())
 
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if (javaClass != other?.javaClass) return false
+    fun getString(field: ActionField, fallback: String? = null) =
+        parameters.firstOrNull { it.name == field.name }?.value ?: fallback
 
-        other as Action
-
-        if (parameters != other.parameters) return false
-
-        return true
-    }
-
-    override fun hashCode(): Int {
-        return parameters.hashCode()
-    }
-
-    override fun toString() = "Action($game, $parameters, $session)"
+    fun getInt(field: ActionField, fallback: Int? = null) = getString(field)?.toInt() ?: fallback
 }
-
-class JoinGameAction(model: String?) :
-    Action(ActionLabel.JOIN_GAME, mapOf(ActionField.ROBOT_MODEL to model)) {
-    val model = getFirst(ActionField.ROBOT_MODEL)
-}
-
-class LeaveGameAction : Action(ActionLabel.LEAVE_GAME)
-
-class SelectCardAction(register: String?, cardId: String?) :
-    Action(ActionLabel.SET_REGISTER, mapOf(ActionField.CARD_ID to cardId, ActionField.REGISTER to register)) {
-    val register = getFirst(ActionField.REGISTER)?.toInt()
-    val cardId = getFirst(ActionField.CARD_ID)
-}
-
-class ToggleReady : Action(ActionLabel.TOGGLE_READY)
-
-class TogglePowerDown : Action(ActionLabel.TOGGLE_POWERDOWN)

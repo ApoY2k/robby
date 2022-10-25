@@ -1,14 +1,14 @@
 package apoy2k.robby.routes
 
-import apoy2k.robby.data.Storage
+import apoy2k.robby.engine.GameEngine
 import apoy2k.robby.engine.ViewUpdateRouter
-import apoy2k.robby.model.Action
-import apoy2k.robby.model.Session
+import apoy2k.robby.model.*
 import apoy2k.robby.templates.GameTpl
 import apoy2k.robby.templates.LayoutTpl
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.html.*
+import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.ktor.server.sessions.*
@@ -17,6 +17,10 @@ import io.ktor.websocket.*
 import kotlinx.coroutines.channels.consumeEach
 import kotlinx.coroutines.flow.MutableSharedFlow
 import org.ktorm.database.Database
+import org.ktorm.dsl.eq
+import org.ktorm.entity.filter
+import org.ktorm.entity.find
+import org.ktorm.entity.map
 import org.slf4j.LoggerFactory
 import java.io.File
 import java.time.Clock
@@ -24,84 +28,108 @@ import java.time.Clock
 fun Route.game(
     clock: Clock,
     database: Database,
-    storage: Storage,
+    gameEngine: GameEngine,
     actions: MutableSharedFlow<Action>,
     viewUpdateRouter: ViewUpdateRouter,
 ) {
     val logger = LoggerFactory.getLogger("${this.javaClass.name}.game")
 
     post(Location.GAME_ROOT.path) {
-
+        val params = call.receiveParameters()
+        val type = BoardType.valueOf(params["board"].orEmpty())
+        gameEngine.createNewGame(type)
         call.respondRedirect(Location.ROOT.path)
     }
 
     route(Location.GAME_VIEW.path) {
         get {
-            val gameId = call.parameters["id"].orEmpty()
-            if (gameId.isBlank()) {
+            val gameId = call.parameters["id"]?.toInt()
+            if (gameId == null) {
                 call.respond(HttpStatusCode.BadRequest)
                 return@get
             }
-            val game = storage.findGame(gameId)
+
+            val game = database.games.find { it.id eq gameId }
             if (game == null) {
                 call.respond(HttpStatusCode.NotFound)
                 return@get
             }
 
+            val robots = database.robots.filter { it.gameId eq game.id }.map { it }
+            val fields = database.fields.filter { it.gameId eq game.id }.map { it }
+            val session = call.sessions.get<Session>()
+            val robot = robots.firstOrNull { it.session == session?.id }
+            val cards = when (robot) {
+                null -> listOf()
+                else -> database.cards.filter { it.robot eq robot.id }.map { it }
+            }
+
             call.respondHtmlTemplate(LayoutTpl()) {
                 content {
-                    insert(GameTpl(game, call.sessions.get<Session>())) {}
+                    insert(
+                        GameTpl(
+                            clock.instant(),
+                            game,
+                            robots,
+                            fields,
+                            session,
+                            robot,
+                            cards
+                        )
+                    ) {}
                 }
             }
         }
+    }
 
-        webSocket("/ws") {
-            val session = call.sessions.get<Session>()
-            if (session == null) {
-                logger.error("No session associated with WebSocket connection")
-                call.respond(HttpStatusCode.Forbidden)
-                return@webSocket
-            }
+    webSocket("/ws") {
+        val session = call.sessions.get<Session>()
+        if (session == null) {
+            logger.error("No session associated with WebSocket connection")
+            call.respond(HttpStatusCode.Forbidden)
+            return@webSocket
+        }
 
-            val gameId = call.parameters["id"].orEmpty()
-            if (gameId.isBlank()) {
-                call.respond(HttpStatusCode.BadRequest)
-                return@webSocket
-            }
+        val gameId = call.parameters["id"]?.toInt()
+        if (gameId == null) {
+            call.respond(HttpStatusCode.BadRequest)
+            return@webSocket
+        }
 
-            val game = storage.findGame(gameId)
-            if (game == null) {
-                logger.error("No game found")
-                return@webSocket
-            }
+        val game = database.games.find { it.id eq gameId }
+        if (game == null) {
+            logger.error("No game found")
+            return@webSocket
+        }
 
-            viewUpdateRouter.addSession(game, session, this)
+        viewUpdateRouter.addSession(gameId, session, this)
 
-            // This will block the thread while listening for incoming messages
-            incoming.consumeEach { frame ->
-                when (frame) {
-                    is Frame.Text -> {
-                        try {
-                            val data = frame.readText()
-                            logger.debug("Received [$data] from $session on $game")
-                            val action = Action.deserializeFromSocket(game, data)
-                            action.session = session
-                            actions.emit(action)
-                        } catch (err: Throwable) {
-                            logger.error(err.message, err)
+        // This will block the thread while listening for incoming messages
+        incoming.consumeEach { frame ->
+            when (frame) {
+                is Frame.Text -> {
+                    try {
+                        val data = frame.readText()
+                        logger.debug("Received [$data] from $session on Game($gameId)")
+                        val action = Action.deserializeFromSocket(data).also {
+                            it.game = game
+                            it.session = session
                         }
-                    }
-
-                    else -> {
-                        val data = frame.readBytes().toString()
-                        logger.warn("Unknown socket message [$data]")
+                        actions.emit(action)
+                    } catch (err: Throwable) {
+                        logger.error(err.message, err)
                     }
                 }
-            }
 
-            // At this point, the websocket connection was aborted (by either client or server)
-            viewUpdateRouter.removeSession(game, session, this)
+                else -> {
+                    val data = frame.readBytes().toString()
+                    logger.warn("Unknown socket message [$data]")
+                }
+            }
         }
+
+        // At this point, the websocket connection was aborted (by either client or server)
+        viewUpdateRouter.removeSession(gameId, session, this)
     }
 
     get(Location.GAME_IMAGE.path) {

@@ -2,21 +2,27 @@ package apoy2k.robby.templates
 
 import apoy2k.robby.model.*
 import kotlinx.html.*
+import java.time.Instant
 
-fun HtmlBlockTag.renderJoinForm(game: Game, session: Session?) {
+fun HtmlBlockTag.renderJoinForm(
+    now: Instant,
+    game: Game,
+    robots: List<Robot>,
+    session: Session?,
+) {
     div("row mb-3") {
         div("col") {
             div("card") {
                 div("card-body") card@{
-                    if (game.isFinished) {
+                    if (game.isFinished(now)) {
                         p("alert alert-info m-0") { +"Game has finished" }
                         return@card
                     }
 
                     form("form row") {
-                        if (game.hasJoined(session)) {
+                        if (robots.any { it.session == session?.id }) {
                             if (game.state == GameState.PROGRAMMING_REGISTERS) {
-                                attributes["data-action"] = LeaveGameAction().serializeForSocket()
+                                attributes["data-action"] = Action.leaveGame().serializeForSocket()
                                 button(classes = "btn btn-primary", type = ButtonType.submit) { +"Leave game" }
                             } else {
                                 p("alert alert-info m-0") { +"Engine is running..." }
@@ -24,21 +30,19 @@ fun HtmlBlockTag.renderJoinForm(game: Game, session: Session?) {
                             return@form
                         }
 
-                        if (game.hasStarted) {
+                        if (game.hasStarted(now)) {
                             p("alert alert-info m-0") { +"Game has started. Specating only" }
                             return@form
                         }
 
-                        attributes["data-action"] = JoinGameAction(null).serializeForSocket()
+                        attributes["data-action"] = Action.joinGame().serializeForSocket()
                         p { +"The game is open to join." }
                         p { +"Select a robot" }
                         select("form-control") {
                             attributes["name"] = ActionField.ROBOT_MODEL.name
 
                             RobotModel.values()
-                                .filter { model ->
-                                    !game.players.map { player -> player.robot.model }.contains(model)
-                                }
+                                .filter { model -> !robots.map { it.model }.contains(model) }
                                 .forEach {
                                     option { +it.name }
                                 }
