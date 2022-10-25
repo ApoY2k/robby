@@ -1,6 +1,5 @@
 package apoy2k.robby.templates
 
-import apoy2k.robby.model.Board
 import apoy2k.robby.model.Direction
 import apoy2k.robby.model.Field
 import apoy2k.robby.model.Robot
@@ -51,16 +50,16 @@ fun HtmlBlockTag.renderRobot(robot: Robot) {
     }
 }
 
-fun HtmlBlockTag.renderBoard(board: Board) {
+fun HtmlBlockTag.renderBoard(fields: List<List<Field>>) {
     div("row") {
         div("col") {
             div("board") {
-                val rowTemplate = "60px ".repeat(board.fields.count())
-                val colTemplate = "60px ".repeat(board.fields[0].count())
+                val rowTemplate = "60px ".repeat(fields.count())
+                val colTemplate = "60px ".repeat(fields[0].count())
 
                 attributes["style"] = "grid-template-rows: $rowTemplate; grid-template-columns: $colTemplate;"
 
-                board.fields.flatten().forEach {
+                fields.flatten().forEach {
                     renderField(it)
                 }
             }

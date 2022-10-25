@@ -3,6 +3,10 @@ package apoy2k.robby.engine
 import apoy2k.robby.exceptions.IncompleteAction
 import apoy2k.robby.exceptions.InvalidGameState
 import apoy2k.robby.model.*
+import apoy2k.robby.model.predef.board.generateChopShopBoard
+import apoy2k.robby.model.predef.board.generateDemoBoard
+import apoy2k.robby.model.predef.board.generateSandboxBoard
+import apoy2k.robby.model.predef.board.linkBoard
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
@@ -10,16 +14,26 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
+import org.ktorm.database.Database
+import org.ktorm.dsl.eq
+import org.ktorm.entity.add
+import org.ktorm.entity.find
 import org.slf4j.LoggerFactory
 import java.lang.Integer.max
 import java.lang.Integer.min
+import java.time.Clock
 
 private const val GAME_ENGINE_STEP_DELAY = 1000L
 
 /**
  * Game engine to advance games based on incoming actions
  */
-class GameEngine(private val updates: MutableSharedFlow<ViewUpdate>) {
+class GameEngine(
+    private val clock: Clock,
+    private val database: Database,
+    private val playerEngine: PlayerEngine,
+    private val updates: MutableSharedFlow<ViewUpdate>
+) {
     private val logger = LoggerFactory.getLogger(this.javaClass)
 
     /**
@@ -34,7 +48,7 @@ class GameEngine(private val updates: MutableSharedFlow<ViewUpdate>) {
                 return@onEach
             }
 
-            if (game.isFinished) {
+            if (clock.instant().isAfter(game.finishedAt)) {
                 logger.warn("$game is already finished! Ignorning $action")
                 return@onEach
             }
@@ -64,35 +78,61 @@ class GameEngine(private val updates: MutableSharedFlow<ViewUpdate>) {
         val session = action.session ?: throw IncompleteAction("No session attached to $action")
         val game = action.game ?: throw IncompleteAction("No game attached to $action")
 
-        if (action is JoinGameAction) {
-            val model = action.model ?: throw IncompleteAction("No robot model specified")
+        if (action.label == ActionLabel.JOIN_GAME) {
+            val model = action.getString(ActionField.ROBOT_MODEL) ?: throw IncompleteAction("No robot model specified")
             addPlayer(game, session.name, RobotModel.valueOf(model), session)
             return
         }
 
-        val player = game.players.firstOrNull { it.session == session }
+        val player = database.players.find { it.sessionId eq session.id }
         if (player == null) {
             logger.warn("No player found for $session")
             return
         }
 
-        when (action) {
-            is LeaveGameAction -> removePlayer(game, player)
-            is SelectCardAction -> {
-                player.selectCard(action.register, action.cardId)
-            }
+        when (action.label) {
+            ActionLabel.LEAVE_GAME -> removePlayer(game, player)
+            ActionLabel.TOGGLE_READY -> player.toggleReady()
+            ActionLabel.TOGGLE_POWERDOWN -> player.togglePowerDown()
 
-            is ToggleReady -> {
-                player.toggleReady()
-            }
-
-            is TogglePowerDown -> {
-                player.togglePowerDown()
+            ActionLabel.SELECT_CARD -> {
+                val cardId = action.getInt(ActionField.CARD_ID) ?: throw IncompleteAction("No cardId defined")
+                val register = action.getInt(ActionField.REGISTER) ?: throw IncompleteAction("No register defined")
+                playerEngine.selectCard(player, register, cardId)
             }
 
             else -> {
                 logger.warn("No executor for $action")
             }
+        }
+    }
+
+    /**
+     * Create a new game and return the created instance
+     */
+    fun createNewGame(type: BoardType): Game {
+        val game = Game {
+            state = GameState.PROGRAMMING_REGISTERS
+            currentRegister = 1
+            startedAt = clock.instant()
+            finishedAt = null
+        }
+
+        val fields = when (type) {
+            BoardType.CHOPSHOP -> generateChopShopBoard()
+            BoardType.DEMO -> generateDemoBoard()
+            BoardType.SANDBOX -> generateSandboxBoard()
+        }
+
+        val dbFields = linkBoard(game, fields)
+
+        return database.useTransaction {
+            database.games.add(game)
+            dbFields
+                .forEach {
+                    database.fields.add(it)
+                }
+            game
         }
     }
 

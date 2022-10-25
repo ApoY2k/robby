@@ -3,10 +3,11 @@ package apoy2k.robby
 import apoy2k.robby.data.MemoryStorage
 import apoy2k.robby.data.Storage
 import apoy2k.robby.engine.GameEngine
+import apoy2k.robby.engine.PlayerEngine
+import apoy2k.robby.engine.ViewUpdate
 import apoy2k.robby.engine.ViewUpdateRouter
 import apoy2k.robby.model.Action
 import apoy2k.robby.model.Session
-import apoy2k.robby.model.ViewUpdate
 import apoy2k.robby.routes.base
 import apoy2k.robby.routes.game
 import io.ktor.http.*
@@ -93,11 +94,12 @@ fun Application.setup(
 
     val actionChannel = MutableSharedFlow<Action>()
     val viewUpdateChannel = MutableSharedFlow<ViewUpdate>()
-    val engine = GameEngine(viewUpdateChannel)
-    val viewUpdateRouter = ViewUpdateRouter()
+    val playerEngine = PlayerEngine(database)
+    val gameEngine = GameEngine(clock, database, playerEngine, viewUpdateChannel)
+    val viewUpdateRouter = ViewUpdateRouter(database)
 
     launch {
-        engine.connect(actionChannel)
+        gameEngine.connect(actionChannel)
     }
 
     launch {
@@ -110,6 +112,6 @@ fun Application.setup(
             files(".")
         }
         base(clock, storage)
-        game(clock, database, storage, actionChannel, viewUpdateRouter)
+        game(database, gameEngine, actionChannel, viewUpdateRouter)
     }
 }

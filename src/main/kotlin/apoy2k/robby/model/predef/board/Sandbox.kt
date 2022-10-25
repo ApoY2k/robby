@@ -6,18 +6,18 @@ import apoy2k.robby.model.FieldType
 
 fun generateSandboxBoard() = listOf(
     listOf(
-        Field(FieldType.LASER, Direction.RIGHT),
-        Field(),
-        Field(),
+        Field.new(FieldType.LASER, Direction.RIGHT),
+        Field.new(),
+        Field.new(),
     ),
     listOf(
-        Field(FieldType.BELT, Direction.LEFT),
-        Field(FieldType.ROTATE),
-        Field(FieldType.BELT, Direction.DOWN),
+        Field.new(FieldType.BELT, Direction.LEFT),
+        Field.new(FieldType.ROTATE),
+        Field.new(FieldType.BELT, Direction.DOWN),
     ),
     listOf(
-        Field(FieldType.FLAG),
-        Field(FieldType.FLAG),
-        Field(FieldType.FLAG),
+        Field.new(FieldType.FLAG),
+        Field.new(FieldType.FLAG),
+        Field.new(FieldType.FLAG),
     ),
 )
