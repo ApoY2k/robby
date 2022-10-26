@@ -1,6 +1,10 @@
 package apoy2k.robby.model
 
+import org.ktorm.database.Database
+import org.ktorm.dsl.eq
 import org.ktorm.entity.Entity
+import org.ktorm.entity.filter
+import org.ktorm.entity.map
 import org.ktorm.schema.*
 
 enum class RobotModel {
@@ -13,7 +17,8 @@ enum class RobotModel {
 object Robots : Table<Robot>("robots") {
     val id = int("id").primaryKey().bindTo { it.id }
     val gameId = int("game_id").references(Games) { it.game }
-    val session = varchar("session").bindTo { it.session }
+    val session = varchar("session").bindTo { it.sessionId }
+    val name = varchar("name").bindTo { it.name }
     val ready = boolean("ready").bindTo { it.ready }
     val model = enum<RobotModel>("model").bindTo { it.model }
     val facing = enum<Direction>("facing").bindTo { it.facing }
@@ -24,11 +29,18 @@ object Robots : Table<Robot>("robots") {
 }
 
 interface Robot : Entity<Robot> {
-    companion object : Entity.Factory<Robot>()
+    companion object : Entity.Factory<Robot>() {
+        fun new(model: RobotModel, session: Session) = Robot {
+            this.model = model
+            this.name = session.name
+            this.sessionId = session.id
+        }
+    }
 
     val id: Int
     var game: Game
-    var session: String
+    var sessionId: String
+    var name: String
     var ready: Boolean
     var model: RobotModel
     var facing: Direction
@@ -36,6 +48,8 @@ interface Robot : Entity<Robot> {
     var powerDownScheduled: Boolean
     var poweredDown: Boolean
     var passedCheckpoints: Int
+
+    fun cards(db: Database) = db.cards.filter { it.robotId eq id }.map { it }
 }
 
 /**

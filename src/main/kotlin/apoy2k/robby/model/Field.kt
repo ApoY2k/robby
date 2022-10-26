@@ -115,3 +115,17 @@ fun Field.getInLineLaserFieldsCondition() = when (type) {
 
     else -> null
 }
+
+/**
+ * Unwraps a list of fields to a list of lists of fields, such that the x/y positions of the fields
+ * are used to order the fields inside rows/cols of the result
+ */
+fun List<Field>.unwrapToBoard(): List<List<Field>> {
+    val rows = mutableListOf<MutableList<Field>>()
+    this.forEach {
+        val row = rows.getOrElse(it.positionY) { mutableListOf() }
+        row[it.positionX] = it
+        rows[it.positionY] = row
+    }
+    return rows
+}

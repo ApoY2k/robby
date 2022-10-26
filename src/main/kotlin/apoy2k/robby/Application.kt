@@ -3,7 +3,7 @@ package apoy2k.robby
 import apoy2k.robby.data.MemoryStorage
 import apoy2k.robby.data.Storage
 import apoy2k.robby.engine.GameEngine
-import apoy2k.robby.engine.PlayerEngine
+import apoy2k.robby.engine.RobotEngine
 import apoy2k.robby.engine.ViewUpdate
 import apoy2k.robby.engine.ViewUpdateRouter
 import apoy2k.robby.model.Action
@@ -94,8 +94,8 @@ fun Application.setup(
 
     val actionChannel = MutableSharedFlow<Action>()
     val viewUpdateChannel = MutableSharedFlow<ViewUpdate>()
-    val playerEngine = PlayerEngine(database)
-    val gameEngine = GameEngine(clock, database, playerEngine, viewUpdateChannel)
+    val robotEngine = RobotEngine(database)
+    val gameEngine = GameEngine(clock, database, robotEngine, viewUpdateChannel)
     val viewUpdateRouter = ViewUpdateRouter(database)
 
     launch {
@@ -112,6 +112,6 @@ fun Application.setup(
             files(".")
         }
         base(clock, storage)
-        game(database, gameEngine, actionChannel, viewUpdateRouter)
+        game(clock, database, gameEngine, actionChannel, viewUpdateRouter)
     }
 }

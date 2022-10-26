@@ -20,7 +20,7 @@ fun HtmlBlockTag.renderJoinForm(
                     }
 
                     form("form row") {
-                        if (robots.any { it.session == session?.id }) {
+                        if (robots.any { it.sessionId == session?.id }) {
                             if (game.state == GameState.PROGRAMMING_REGISTERS) {
                                 attributes["data-action"] = Action.leaveGame().serializeForSocket()
                                 button(classes = "btn btn-primary", type = ButtonType.submit) { +"Leave game" }

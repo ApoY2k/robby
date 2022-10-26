@@ -1,6 +1,10 @@
 package apoy2k.robby.model
 
+import org.ktorm.database.Database
+import org.ktorm.dsl.eq
 import org.ktorm.entity.Entity
+import org.ktorm.entity.filter
+import org.ktorm.entity.map
 import org.ktorm.schema.Table
 import org.ktorm.schema.enum
 import org.ktorm.schema.int
@@ -34,6 +38,10 @@ interface Game : Entity<Game> {
     var state: GameState
     var startedAt: Instant?
     var finishedAt: Instant?
+
+    fun cards(db: Database) = db.robots.filter { it.gameId eq id }.map { it }
+    fun robots(db: Database) = db.robots.filter { it.gameId eq id }.map { it }
+    fun fields(db: Database) = db.fields.filter { it.gameId eq id }.map { it }
 }
 
 fun Game.isFinished(now: Instant) = now.isAfter(this.finishedAt)

@@ -15,7 +15,7 @@ class GameTpl(
     private val robots: List<Robot>,
     private val fields: List<List<Field>>,
     private val session: Session?,
-    private val robot: Robot?,
+    private val currentRobot: Robot?,
     private val cards: List<MovementCard>,
 ) : Template<FlowContent> {
     override fun FlowContent.apply() {
@@ -34,8 +34,8 @@ class GameTpl(
                 }
             }
 
-            if (robot != null) {
-                renderProfile(now, game, cards, robot)
+            if (currentRobot != null) {
+                renderProfile(now, game, cards, currentRobot)
             }
 
             // Add a javscript marker so the websocket connection can be established

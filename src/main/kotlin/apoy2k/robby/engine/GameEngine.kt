@@ -7,6 +7,7 @@ import apoy2k.robby.model.predef.board.generateChopShopBoard
 import apoy2k.robby.model.predef.board.generateDemoBoard
 import apoy2k.robby.model.predef.board.generateSandboxBoard
 import apoy2k.robby.model.predef.board.linkBoard
+import io.ktor.server.html.*
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
@@ -15,9 +16,9 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import org.ktorm.database.Database
+import org.ktorm.dsl.and
 import org.ktorm.dsl.eq
-import org.ktorm.entity.add
-import org.ktorm.entity.find
+import org.ktorm.entity.*
 import org.slf4j.LoggerFactory
 import java.lang.Integer.max
 import java.lang.Integer.min
@@ -31,7 +32,7 @@ private const val GAME_ENGINE_STEP_DELAY = 1000L
 class GameEngine(
     private val clock: Clock,
     private val database: Database,
-    private val playerEngine: PlayerEngine,
+    private val robotEngine: RobotEngine,
     private val updates: MutableSharedFlow<ViewUpdate>
 ) {
     private val logger = LoggerFactory.getLogger(this.javaClass)
@@ -60,7 +61,7 @@ class GameEngine(
                 // with ViewUpdates in a separate coroutine so the channel isn't blocked
                 launch {
                     perform(action)
-                    updates.emit(ViewUpdate(game))
+                    updates.emit(ViewUpdate(game.id))
                     runEngine(game)
                 }
             } catch (err: Throwable) {
@@ -84,21 +85,21 @@ class GameEngine(
             return
         }
 
-        val player = database.players.find { it.sessionId eq session.id }
-        if (player == null) {
+        val robot = database.robots.find { it.session eq session.id }
+        if (robot == null) {
             logger.warn("No player found for $session")
             return
         }
 
         when (action.label) {
-            ActionLabel.LEAVE_GAME -> removePlayer(game, player)
-            ActionLabel.TOGGLE_READY -> player.toggleReady()
-            ActionLabel.TOGGLE_POWERDOWN -> player.togglePowerDown()
+            ActionLabel.LEAVE_GAME -> removeRobot(game, robot)
+            ActionLabel.TOGGLE_READY -> robot.toggleReady()
+            ActionLabel.TOGGLE_POWERDOWN -> robot.togglePowerDown()
 
             ActionLabel.SELECT_CARD -> {
                 val cardId = action.getInt(ActionField.CARD_ID) ?: throw IncompleteAction("No cardId defined")
                 val register = action.getInt(ActionField.REGISTER) ?: throw IncompleteAction("No register defined")
-                playerEngine.selectCard(player, register, cardId)
+                robotEngine.selectCard(robot, register, cardId)
             }
 
             else -> {
@@ -150,16 +151,21 @@ class GameEngine(
      * Run engine on game state, sends view updates accordingly
      */
     private suspend fun runEngine(game: Game) {
+        val robots = game.robots(database)
 
         // Check conditions for running automatic registers are fulfilled
-        if (game.players.isEmpty() || game.players.any { !it.ready }) {
-            return
-        }
-        if (game.isFinished) {
+        if (robots.isEmpty() || robots.any { !it.ready }) {
             return
         }
 
-        game.hasStarted = true
+        if (game.isFinished(clock.instant())) {
+            return
+        }
+
+        val now = clock.instant()
+        if (!game.hasStarted(now)) {
+            game.startedAt = now
+        }
 
         // Send view updates between registers so players see the new state after "preparing" the execution of movements
         runRegister(game, 1)
@@ -178,41 +184,27 @@ class GameEngine(
         runAutomaticSteps(game)
 
         // Check for game end condition. If it is met, end the game
-        if (game.players.any { it.robot.passedCheckpoints >= 3 }) {
-            game.isFinished = true
+        if (robots.any { it.passedCheckpoints >= 3 }) {
+            game.finishedAt = clock.instant()
         } else {
             // After all automatic turns are done, deal new cards so players can plan their next move
             game.state = GameState.PROGRAMMING_REGISTERS
-            game.players.forEach {
-                it.robot.clearRegisters()
-                it.toggleReady()
-
-                if (it.powerDownScheduled) {
-                    it.togglePowerDown()
-                    it.robot.poweredDown = true
-                } else {
-                    drawCards(game, it)
-
-                    with(it.robot) {
-                        if (poweredDown) {
-                            damage = 0
-                            poweredDown = false
-                        }
-                    }
-                }
+            robots.forEach {
+                robotEngine.prepareNewRound(game, it)
             }
         }
 
-        updates.emit(ViewUpdate(game))
+        updates.emit(ViewUpdate(game.id))
     }
 
     /**
      * Get all movement cards of a specific register, sorted, for all players robots
      */
-    private fun getRegister(game: Game, register: Int): List<MovementCard> {
-        return game.players
-            .mapNotNull { it.robot.getRegister(register) }
-            .sortedByDescending { it.priority }
+    private fun getRegister(gameId: Int, register: Int): List<MovementCard> {
+        return database.cards
+            .filter { (it.gameId eq gameId) and (it.register eq register) }
+            .sortedBy { it.priority }
+            .map { it }
     }
 
     /**
@@ -223,10 +215,10 @@ class GameEngine(
     private suspend fun runRegister(game: Game, register: Int) {
         game.state = GameState.EXECUTING_REGISTERS
         game.currentRegister = register
-        updates.emit(ViewUpdate(game))
+        updates.emit(ViewUpdate(game.id))
 
         try {
-            getRegister(game, register)
+            getRegister(game.id, register)
                 .forEach {
                     val steps = when (it.movement) {
                         Movement.STRAIGHT_2 -> 2
@@ -236,7 +228,7 @@ class GameEngine(
 
                     for (step in 1..steps) {
                         game.board.execute(it)
-                        updates.emit(ViewUpdate(game))
+                        updates.emit(ViewUpdate(game.id))
                         delay(GAME_ENGINE_STEP_DELAY)
                     }
                 }
@@ -248,24 +240,24 @@ class GameEngine(
     private suspend fun runMoveBoardElements(game: Game) {
         game.state = GameState.MOVE_BARD_ELEMENTS_2
         game.board.moveBelts(FieldType.BELT_2)
-        updates.emit(ViewUpdate(game))
+        updates.emit(ViewUpdate(game.id))
         delay(GAME_ENGINE_STEP_DELAY)
 
         game.state = GameState.MOVE_BARD_ELEMENTS_1
         game.board.moveBelts(FieldType.BELT)
-        updates.emit(ViewUpdate(game))
+        updates.emit(ViewUpdate(game.id))
         delay(GAME_ENGINE_STEP_DELAY)
     }
 
     private suspend fun runFireLasers(game: Game) {
         game.state = GameState.FIRE_LASERS_2
         game.board.fireLasers(FieldType.LASER_2)
-        updates.emit(ViewUpdate(game))
+        updates.emit(ViewUpdate(game.id))
         delay(GAME_ENGINE_STEP_DELAY)
 
         game.state = GameState.FIRE_LASERS_1
         game.board.fireLasers(FieldType.LASER)
-        updates.emit(ViewUpdate(game))
+        updates.emit(ViewUpdate(game.id))
         delay(GAME_ENGINE_STEP_DELAY)
     }
 
@@ -276,7 +268,7 @@ class GameEngine(
             .mapNotNull { it.robot }
             .forEach { it.passedCheckpoints = min(3, it.passedCheckpoints + 1) }
         // TODO: Touching the same checkpoint multiple times should not increase the counter
-        updates.emit(ViewUpdate(game))
+        updates.emit(ViewUpdate(game.di))
         delay(GAME_ENGINE_STEP_DELAY)
     }
 
@@ -289,39 +281,25 @@ class GameEngine(
 
         // TODO Implement powerups
 
-        updates.emit(ViewUpdate(game))
+        updates.emit(ViewUpdate(game.id))
         delay(GAME_ENGINE_STEP_DELAY)
     }
 
-    private fun drawCards(game: Game, player: Player) {
-        val robot = player.robot
-        val drawnCards = game.deck.take(max(0, 9 - robot.damage))
-        game.deck.removeAll(drawnCards)
-        player.takeCards(drawnCards)
-    }
-
-    private fun removePlayer(game: Game, player: Player) {
-        game.players.remove(player)
-
-        game.board.fields.flatten()
-            .firstOrNull { it.robot == player.robot }
-            .let { it?.robot = null }
+    private fun removeRobot(game: Game, robot: Robot) {
+        database.robots.removeIf { it.id eq robot.id }
     }
 
     private fun addPlayer(game: Game, name: String, model: RobotModel, session: Session) {
-        if (name.isBlank()) {
-            throw IncompleteAction("No name provided")
+        if (name.isBlank()) throw IncompleteAction("No name provided")
+        if (game.players.any { it.session == session }) throw InvalidGameState("$session already joined")
+
+        val robot = Robot.new(model, session).also {
+            it.game = game
         }
-        if (game.players.any { it.session == session }) {
-            throw InvalidGameState("$session already joined")
-        }
 
-        val robot = Robot(model)
-        val player = Player(name, robot, session)
+        database.robots.add(robot)
 
-        game.players.add(player)
-
-        drawCards(game, player)
+        robotEngine.drawCards(game, robot)
 
         game.board.fields.flatten()
             .first { it.robot == null }

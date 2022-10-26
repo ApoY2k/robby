@@ -1,7 +1,9 @@
 package apoy2k.robby.model
 
 import org.ktorm.entity.Entity
-import org.ktorm.schema.*
+import org.ktorm.schema.Table
+import org.ktorm.schema.enum
+import org.ktorm.schema.int
 
 enum class Movement {
     STAY,
@@ -16,9 +18,8 @@ enum class Movement {
 
 object Cards : Table<MovementCard>("cards") {
     val id = int("id").primaryKey().bindTo { it.id }
-    val player = int("player_id").references(Players) { it.player }
-    val game = int("game_id").references(Games) { it.game }
-    val robot = int("robot_id").references(Robots) { it.robot }
+    val gameId = int("game_id").references(Games) { it.game }
+    val robotId = int("robot_id").references(Robots) { it.robot }
     val movement = enum<Movement>("movement").bindTo { it.movement }
     val priority = int("priority").bindTo { it.priority }
     val register = int("register").bindTo { it.register }
@@ -28,12 +29,11 @@ interface MovementCard : Entity<MovementCard> {
     companion object : Entity.Factory<MovementCard>()
 
     val id: Int
-    var player: Player
     var game: Game
-    var robot: Robot
+    var robot: Robot?
     var movement: Movement
     var priority: Int
-    var register: Int
+    var register: Int?
 }
 
 /**
