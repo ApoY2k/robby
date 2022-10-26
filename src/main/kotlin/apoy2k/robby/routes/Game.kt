@@ -18,9 +18,7 @@ import kotlinx.coroutines.channels.consumeEach
 import kotlinx.coroutines.flow.MutableSharedFlow
 import org.ktorm.database.Database
 import org.ktorm.dsl.eq
-import org.ktorm.entity.filter
 import org.ktorm.entity.find
-import org.ktorm.entity.map
 import org.slf4j.LoggerFactory
 import java.io.File
 import java.time.Clock
@@ -55,14 +53,11 @@ fun Route.game(
                 return@get
             }
 
-            val robots = database.robots.filter { it.gameId eq game.id }.map { it }
-            val fields = database.fields.filter { it.gameId eq game.id }.map { it }
+            val robots = game.robots(database)
+            val fields = game.fields(database)
             val session = call.sessions.get<Session>()
-            val robot = robots.firstOrNull { it.session == session?.id }
-            val cards = when (robot) {
-                null -> listOf()
-                else -> database.cards.filter { it.robot eq robot.id }.map { it }
-            }
+            val currentRobot = robots.firstOrNull { it.sessionId == session?.id }
+            val cards = currentRobot?.cards(database) ?: listOf()
 
             call.respondHtmlTemplate(LayoutTpl()) {
                 content {
@@ -71,9 +66,9 @@ fun Route.game(
                             clock.instant(),
                             game,
                             robots,
-                            fields,
+                            fields.unwrapToBoard(),
                             session,
-                            robot,
+                            currentRobot,
                             cards
                         )
                     ) {}

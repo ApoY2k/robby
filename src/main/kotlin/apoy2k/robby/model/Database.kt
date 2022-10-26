@@ -28,8 +28,6 @@ inline fun <reified T : Enum<T>> BaseTable<*>.enumList(name: String): Column<Col
 
 val Database.games get() = this.sequenceOf(Games)
 
-val Database.players get() = this.sequenceOf(Players)
-
 val Database.fields get() = this.sequenceOf(Fields)
 
 val Database.cards get() = this.sequenceOf(Cards)

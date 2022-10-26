@@ -2,6 +2,7 @@ package apoy2k.robby.engine
 
 import apoy2k.robby.model.Session
 import apoy2k.robby.model.games
+import apoy2k.robby.model.unwrapToBoard
 import apoy2k.robby.templates.GameTpl
 import io.ktor.server.html.*
 import io.ktor.websocket.*
@@ -16,10 +17,12 @@ import org.ktorm.database.Database
 import org.ktorm.dsl.eq
 import org.ktorm.entity.find
 import org.slf4j.LoggerFactory
+import java.time.Clock
 
 data class ViewUpdate(val gameId: Int)
 
 class ViewUpdateRouter(
+    private val clock: Clock,
     private val database: Database,
 ) {
     private val logger = LoggerFactory.getLogger(this.javaClass)
@@ -50,7 +53,15 @@ class ViewUpdateRouter(
                             .appendHTML(false)
                             .html {
                                 body {
-                                    insert(GameTpl(game, httpSession)) {}
+                                    insert(
+                                        GameTpl(
+                                            clock.instant(),
+                                            game,
+                                            game.robots(database),
+                                            game.fields(database).unwrapToBoard(),
+                                            httpSession,
+                                        )
+                                    ) {}
                                 }
                             }.toString()
                         val frame = Frame.Text(gameView)
