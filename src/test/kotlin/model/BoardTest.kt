@@ -1,19 +1,24 @@
 package apoy2k.robby.kotlin.model
 
+import apoy2k.robby.engine.BoardEngine
+import apoy2k.robby.kotlin.DatabaseBackedTest
 import apoy2k.robby.model.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.MethodSource
+import org.ktorm.entity.add
 import java.util.stream.Stream
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 
-class BoardTest {
-    private var board = Board(emptyList())
-    private var emptyBoard = Board(emptyList())
+class BoardTest : DatabaseBackedTest() {
+    var boardEngine: BoardEngine? = null
+
+    private var board = BoardEngine(emptyList())
+    private var emptyBoard = BoardEngine(emptyList())
     private val sess1 = Session("s1")
     private val player1 = Player("p1", Robot(RobotModel.ZIPPY), sess1)
     private val sess2 = Session("s2")
@@ -23,12 +28,16 @@ class BoardTest {
 
     @BeforeEach
     fun setup() {
+        val game = Game {}
+        database.games.add(game)
+        boardEngine = BoardEngine(database, game)
+
         //   0 1 2 3
         // 0
         // 1
         // 2 R L U D
         // 3
-        board = Board(
+        board = BoardEngine(
             listOf(
                 listOf(Field(), Field(), Field(), Field()),
                 listOf(Field(), Field(), Field(), Field()),
@@ -42,7 +51,7 @@ class BoardTest {
             )
         )
 
-        emptyBoard = Board(
+        emptyBoard = BoardEngine(
             listOf(
                 listOf(Field(), Field(), Field(), Field()),
                 listOf(Field(), Field(), Field(), Field()),
@@ -60,13 +69,13 @@ class BoardTest {
         val source = board.fieldAt(1, 0)
         val target = board.fieldAt(2, 1)
 
-        source.robot = player1.robot
+        source.robotId = player1.robot
         board.execute(card)
         board.moveBelts(FieldType.BELT)
 
-        assertNull(source.robot)
-        assertNotNull(target.robot)
-        assertEquals(player1.robot, target.robot)
+        assertNull(source.robotId)
+        assertNotNull(target.robotId)
+        assertEquals(player1.robot, target.robotId)
     }
 
     @Test
@@ -77,13 +86,13 @@ class BoardTest {
         val source = board.fieldAt(1, 1)
         val target = board.fieldAt(2, 0)
 
-        source.robot = player1.robot
+        source.robotId = player1.robot
         board.execute(card)
         board.moveBelts(FieldType.BELT)
 
-        assertNull(source.robot)
-        assertNotNull(target.robot)
-        assertEquals(player1.robot, target.robot)
+        assertNull(source.robotId)
+        assertNotNull(target.robotId)
+        assertEquals(player1.robot, target.robotId)
     }
 
     @Test
@@ -93,12 +102,12 @@ class BoardTest {
 
         val source = board.fieldAt(1, 2)
 
-        source.robot = player1.robot
+        source.robotId = player1.robot
         board.execute(card)
         board.moveBelts(FieldType.BELT)
 
-        assertNotNull(source.robot)
-        assertEquals(player1.robot, source.robot)
+        assertNotNull(source.robotId)
+        assertEquals(player1.robot, source.robotId)
     }
 
     @Test
@@ -109,18 +118,18 @@ class BoardTest {
         val source = board.fieldAt(1, 3)
         val target = board.fieldAt(3, 3)
 
-        source.robot = player1.robot
+        source.robotId = player1.robot
         board.execute(card)
         board.moveBelts(FieldType.BELT)
 
-        assertNull(source.robot)
-        assertNotNull(target.robot)
-        assertEquals(player1.robot, target.robot)
+        assertNull(source.robotId)
+        assertNotNull(target.robotId)
+        assertEquals(player1.robot, target.robotId)
     }
 
     @Test
     fun `belt move of robot is blocked by other robot`() {
-        val board = Board(
+        val board = BoardEngine(
             listOf(
                 listOf(Field(FieldType.BELT, Direction.DOWN)),
                 listOf(Field()),
@@ -132,20 +141,20 @@ class BoardTest {
         val middle = board.fieldAt(1, 0)
         val down = board.fieldAt(2, 0)
 
-        up.robot = player1.robot
-        down.robot = player2.robot
+        up.robotId = player1.robot
+        down.robotId = player2.robot
         board.moveBelts(FieldType.BELT)
 
-        assertNotNull(up.robot)
-        assertNull(middle.robot)
-        assertNotNull(down.robot)
-        assertEquals(player1.robot, up.robot)
-        assertEquals(player2.robot, down.robot)
+        assertNotNull(up.robotId)
+        assertNull(middle.robotId)
+        assertNotNull(down.robotId)
+        assertEquals(player1.robot, up.robotId)
+        assertEquals(player2.robot, down.robotId)
     }
 
     @Test
     fun `curve rotates robot`() {
-        val board = Board(
+        val board = BoardEngine(
             listOf(
                 listOf(Field(FieldType.BELT, Direction.DOWN)),
                 listOf(Field(FieldType.BELT, Direction.DOWN, Direction.RIGHT)),
@@ -155,12 +164,12 @@ class BoardTest {
         val start = board.fieldAt(0, 0)
         val end = board.fieldAt(1, 0)
 
-        start.robot = player1.robot
+        start.robotId = player1.robot
         board.moveBelts(FieldType.BELT)
 
-        assertNull(start.robot)
-        assertNotNull(end.robot)
-        assertEquals(player1.robot, end.robot)
+        assertNull(start.robotId)
+        assertNotNull(end.robotId)
+        assertEquals(player1.robot, end.robotId)
         assertEquals(player1.robot.facing, Direction.RIGHT)
     }
 
@@ -293,14 +302,19 @@ class BoardTest {
 
     @ParameterizedTest
     @MethodSource("provideTestFirstFieldByDirection")
-    fun `find field by direction`(board: Board, startField: Field, direction: Direction, expectedEndField: Field) {
+    fun `find field by direction`(
+        board: BoardEngine,
+        startField: Field,
+        direction: Direction,
+        expectedEndField: Field
+    ) {
         val endField = board.findLastNonBlockedField(startField, direction)
         assertEquals(expectedEndField, endField)
     }
 
     @Test
     fun `laser damages robot`() {
-        val board = Board(
+        val board = BoardEngine(
             listOf(
                 listOf(Field(FieldType.LASER, Direction.DOWN), Field()),
                 listOf(Field(), Field()),
@@ -310,10 +324,10 @@ class BoardTest {
         )
 
         val zippy = Robot(RobotModel.ZIPPY)
-        board.fieldAt(2, 0).robot = zippy
+        board.fieldAt(2, 0).robotId = zippy
 
         val klaus = Robot(RobotModel.KLAUS)
-        board.fieldAt(2, 1).robot = klaus
+        board.fieldAt(2, 1).robotId = klaus
 
         board.fireLasers(FieldType.LASER)
 
@@ -324,7 +338,7 @@ class BoardTest {
     companion object {
         @JvmStatic
         fun provideTestFirstFieldByDirection(): Stream<Arguments> {
-            val board = Board(
+            val board = BoardEngine(
                 listOf(
                     listOf(Field(), Field(FieldType.WALL, Direction.LEFT), Field()),
                     listOf(Field(FieldType.WALL, Direction.DOWN), Field(), Field()),

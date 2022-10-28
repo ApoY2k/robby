@@ -1,5 +1,6 @@
 package apoy2k.robby.routes
 
+import apoy2k.robby.engine.BoardType
 import apoy2k.robby.engine.GameEngine
 import apoy2k.robby.engine.ViewUpdateRouter
 import apoy2k.robby.model.*

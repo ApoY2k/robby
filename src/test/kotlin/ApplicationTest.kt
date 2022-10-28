@@ -1,6 +1,5 @@
 package apoy2k.robby.kotlin
 
-import apoy2k.robby.data.MemoryStorage
 import apoy2k.robby.setup
 import io.ktor.client.request.*
 import io.ktor.http.*
@@ -20,7 +19,6 @@ class ApplicationTest {
     @Test
     fun `request to root`() = testApplication {
         val clock = Clock.fixed(Instant.parse("2022-01-01T00:00:00Z"), ZoneId.of("UTC"))
-        val storage = MemoryStorage()
         val database = Database.connect(
             url = "jdbc:sqlite::memory",
             dialect = SQLiteDialect(),
@@ -28,7 +26,7 @@ class ApplicationTest {
         )
 
         application {
-            setup(clock, storage, database)
+            setup(clock, database)
         }
 
         client.get("/").apply {

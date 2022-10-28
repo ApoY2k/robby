@@ -1,11 +1,13 @@
 package apoy2k.robby.templates
 
-import apoy2k.robby.data.Storage
+import apoy2k.robby.model.Game
 import apoy2k.robby.routes.Location
 import io.ktor.server.html.*
 import kotlinx.html.*
 
-class Lobby(private val storage: Storage) : Template<FlowContent> {
+class Lobby(
+    private val games: List<Game>
+) : Template<FlowContent> {
     override fun FlowContent.apply() {
         div("row") {
             div("col") {
@@ -16,12 +18,12 @@ class Lobby(private val storage: Storage) : Template<FlowContent> {
             }
         }
         div("row") {
-            storage.listGames().forEach {
+            games.forEach {
                 div("col-3") {
-                    a(Location.GAME_VIEW.build(mapOf("id" to it.id)), classes = "card") {
+                    a(Location.GAME_VIEW.build(mapOf("id" to it.id.toString())), classes = "card") {
                         img("Game Preview", "/game/${it.id}/image", "card-img-top")
                         div("card-body") {
-                            h5("card-title") { +it.id }
+                            h5("card-title") { +it.id.toString() }
                         }
                         ul("list-group list-group-flush") {
                             // TODO: show game run info (started/ended)

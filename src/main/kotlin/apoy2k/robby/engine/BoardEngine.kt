@@ -1,13 +1,31 @@
-package apoy2k.robby.model
+package apoy2k.robby.engine
 
 import apoy2k.robby.exceptions.InvalidGameState
+import apoy2k.robby.model.*
+import org.ktorm.database.Database
+import org.ktorm.dsl.*
+import org.ktorm.entity.filter
+import org.ktorm.entity.find
+import org.ktorm.entity.forEach
 import org.slf4j.LoggerFactory
 import kotlin.math.atan2
 
-data class Board(val fields: List<List<Field>>) {
+class BoardEngine(
+    private val database: Database,
+    game: Game,
+) {
+    val board: List<List<Field>>
+
     private val logger = LoggerFactory.getLogger(this.javaClass)
 
     init {
+        board = mutableListOf()
+        game.fields(database).forEach {
+            val row: MutableList<Field> = board.getOrElse(it.positionY) { listOf() }.toMutableList()
+            row[it.positionX] = it
+            board[it.positionY] = row
+        }
+
         // Add laser conditions on all fields in a lasers way (just once on intializing the field)
         applyLaserConditions()
     }
@@ -15,17 +33,17 @@ data class Board(val fields: List<List<Field>>) {
     /**
      * Get the position of a robot on the field
      */
-    fun positionOf(robot: Robot): Position {
-        val field = fields.flatten().first { it.robot == robot }
+    private fun positionOf(robotId: Int): Position {
+        val field = board.flatten().first { it.robotId == robotId }
         return positionOf(field)
     }
 
     /**
      * Get the indices (row/col) of the provided field
      */
-    fun positionOf(field: Field): Position {
-        val row = fields.indexOfFirst { it.contains(field) }
-        return Position(row, fields[row].indexOf(field))
+    private fun positionOf(field: Field): Position {
+        val row = board.indexOfFirst { it.contains(field) }
+        return Position(row, board[row].indexOf(field))
     }
 
     /**
@@ -34,14 +52,13 @@ data class Board(val fields: List<List<Field>>) {
      * ever move the robot one (or zero, depending on the card) step.
      * Repeating movements must be done by the calling operation
      */
-    fun execute(card: MovementCard) {
-        val robot = card.player?.robot ?: throw InvalidGameState("$card has no player or robot")
+    fun execute(card: MovementCard, robot: Robot) {
         logger.debug("Executing $card on $robot")
         robot.rotate(card.movement)
 
-        if (card.hasSteps) {
+        if (card.hasSteps()) {
             val direction = robot.getMovementDirection(card.movement)
-            val positions = calculateRobotMove(robot, direction)
+            val positions = calculateRobotMove(robot.id, direction)
             applyPositions(positions)
         }
     }
@@ -50,14 +67,14 @@ data class Board(val fields: List<List<Field>>) {
      * Calculates the new position of a robot (and others, if applicable via pushing) that result when a robot moves
      * one step in the provided direction **without taking the robots own orientation into account!**
      */
-    private fun calculateRobotMove(robot: Robot, direction: Direction): Map<Position, Robot> {
-        val sourceField = fields.flatten().firstOrNull { it.robot == robot }
-            ?: throw InvalidGameState("Robot [$robot] could not be found on board cells")
+    private fun calculateRobotMove(robotId: Int, direction: Direction): Map<Position, Int> {
+        val sourceField = board.flatten().firstOrNull { it.robotId == robotId }
+            ?: throw InvalidGameState("Robot [$robotId] could not be found on board cells")
         val targetField = getNeighbour(sourceField, direction)
-        val result = mutableMapOf<Position, Robot>()
+        val result = mutableMapOf<Position, Int>()
 
         // Check for robot in the way (on the target field) and push them away, if possible
-        targetField.robot?.let {
+        targetField.robotId?.let {
             // Move the other robot one step in the same direction as the robot currently execuging
             // its movement, regardless of the orientation of the robot being pushed
             val pushToField = getNeighbour(targetField, direction)
@@ -65,7 +82,7 @@ data class Board(val fields: List<List<Field>>) {
             // If the field that the robot would be pushed to also has a robot, it cannot be pushed
             // away by the original robot. Instead, the whole movement is halted and the original
             // robot should not move at all, as only one robot and be pushed away
-            if (pushToField.robot != null) {
+            if (pushToField.robotId != null) {
                 return emptyMap()
             }
 
@@ -73,7 +90,7 @@ data class Board(val fields: List<List<Field>>) {
             result[positionOf(pushToField)] = it
         }
 
-        sourceField.robot?.let {
+        sourceField.robotId?.let {
             result[positionOf(targetField)] = it
         }
 
@@ -83,18 +100,18 @@ data class Board(val fields: List<List<Field>>) {
     /**
      * Apply a map of position->robot entries to the board
      */
-    private fun applyPositions(positions: Map<Position, Robot>) {
-        fields.flatten().forEach { field ->
+    private fun applyPositions(positions: Map<Position, Int>) {
+        board.flatten().forEach { field ->
             // If a robot on a field is referenced in the position map, it must be removed from its "old" field
             // before it can be placed on the new one, defined in the positions map
-            if (positions.containsValue(field.robot)) {
-                field.robot = null
+            if (positions.containsValue(field.robotId)) {
+                field.robotId = null
             }
 
             // If the field position is referenced in the provided position map, place the robot on it
             val position = positionOf(field)
             positions[position]?.let {
-                field.robot = it
+                field.robotId = it
             }
         }
     }
@@ -126,9 +143,9 @@ data class Board(val fields: List<List<Field>>) {
      * the value is coerced into the constraints of the board and the field closes to the
      * given indices is returned
      */
-    fun fieldAt(position: Position): Field {
-        val rowIdx = position.row.coerceIn(0..fields.lastIndex)
-        return fields[rowIdx][position.col.coerceIn(0..fields[rowIdx].lastIndex)]
+    private fun fieldAt(position: Position): Field {
+        val rowIdx = position.row.coerceIn(0..board.lastIndex)
+        return board[rowIdx][position.col.coerceIn(0..board[rowIdx].lastIndex)]
     }
 
     /**
@@ -143,17 +160,15 @@ data class Board(val fields: List<List<Field>>) {
     fun moveBelts(beltType: FieldType) {
         // Collect new positions that result of the belt moves as a list of "to execute" movements
         // Each movement contains the robot that moves and the row/col index of the new field after the movement
-        val newPositions = mutableMapOf<Position, Robot>()
+        val newPositions = mutableMapOf<Position, Int>()
 
         // Collect new orientations for robots, if they get turned by a belt when moved to their new position
-        val orientations = mutableMapOf<Robot, Direction>()
+        val orientations = mutableMapOf<Int, Direction>()
 
-        fields.flatten()
-            .filter { it.type == beltType }
+        board.flatten()
+            .filter { it.type == beltType && it.robotId != null }
             .forEach { field ->
-                val robot = field.robot ?: return@forEach
-
-                val movements = calculateRobotMove(robot, field.outgoingDirection)
+                val movements = calculateRobotMove(field.robotId!!, field.outgoingDirection)
 
                     // Check if two robots would be moved into the same space and if so, don't move either one
                     .filter { movement ->
@@ -185,10 +200,10 @@ data class Board(val fields: List<List<Field>>) {
         // Rotate robots that have been moved by the belt movements
         // (as the newPositions map only contains positions that were the result from valid robot movements
         // from belts, all of these robots might require a rotation)
-        newPositions.forEach { (position, robot) ->
-            val previousPos = positionOf(robot)
+        newPositions.forEach { (position, robotId) ->
+            val previousPos = positionOf(robotId)
             val incomingDirectionError = InvalidGameState(
-                "Cannot determine incoming direction of [$robot] moving from" +
+                "Cannot determine incoming direction of [$robotId] moving from" +
                         " [$previousPos] to [$position]"
             )
 
@@ -201,19 +216,63 @@ data class Board(val fields: List<List<Field>>) {
                 }
                 previousPos.col == position.col -> when {
                     previousPos.row < position.row -> Direction.UP
-                    previousPos.row > position.row -> Direction.DOWN
-                    else -> throw incomingDirectionError
+                    else -> Direction.DOWN
                 }
                 else -> throw incomingDirectionError
             }
 
             val nextField = fieldAt(position)
             val rotationMovement = getTurnDirection(incomingDirection, nextField.outgoingDirection)
-
+            val robot = database.robots.find { it.id eq robotId } ?: return@forEach
             robot.rotate(rotationMovement)
         }
 
         applyPositions(newPositions)
+    }
+
+    /**
+     * Touch checkpoints for robots
+     */
+    fun touchCheckpoints() {
+        // TODO Touching the same checkpoint multiple times should not increase the counter
+        val repairFields = database.fields.filter {
+            it.type eq FieldType.FLAG and it.robotId.isNotNull()
+        }
+        database.batchUpdate(Robots) {
+            repairFields.forEach { field ->
+                item {
+                    set(it.damage, it.passedCheckpoints + 1)
+                    where { it.id eq field.robotId!! and (it.passedCheckpoints lt 3) }
+                }
+            }
+        }
+    }
+
+    /**
+     * Touch repair points for robots
+     */
+    fun touchRepair() {
+        val repairFields = database.fields.filter {
+            it.type eq FieldType.REPAIR and it.robotId.isNotNull()
+        }
+        database.batchUpdate(Robots) {
+            repairFields.forEach { field ->
+                item {
+                    set(it.damage, it.damage - 1)
+                    where { it.id eq field.robotId!! and (it.damage gt 1) }
+                }
+            }
+        }
+    }
+
+    /**
+     * Place new robot on the board
+     */
+    fun placeRobot(robotId: Int) {
+        // TODO Find starter placements for new robots in fields
+        board.flatten()
+            .first { it.robotId == null }
+            .let { it.robotId = robotId }
     }
 
     /**
@@ -239,7 +298,7 @@ data class Board(val fields: List<List<Field>>) {
      * Apply the laser(_2)(_h/_v) condition on all fields that are in the direction of any laser
      * on the board. Must be called directly after the board fields are initialized
      */
-    fun applyLaserConditions() {
+    private fun applyLaserConditions() {
         /**
          * For each laser:
          *  - determine orientation and find next wall (or end of board)
@@ -248,7 +307,7 @@ data class Board(val fields: List<List<Field>>) {
          *  - determine robots between laser and wall
          *  - damage each robot for 1 point
          */
-        fields.flatten()
+        board.flatten()
             .filter { listOf(FieldType.LASER, FieldType.LASER_2).contains(it.type) }
             .forEach { sourceField ->
                 val startPos = positionOf(sourceField)
@@ -309,16 +368,19 @@ data class Board(val fields: List<List<Field>>) {
      * Fire all lasers of the given type, damaging all robots in its line
      */
     fun fireLasers(type: FieldType) {
-        fields.flatten()
+        board.flatten()
             .forEach { field ->
-                val robot = field.robot ?: return@forEach
+                val robot = field.robotId ?: return@forEach
 
                 if (type == FieldType.LASER
                     && (field.type == FieldType.LASER
                             || field.conditions.contains(FieldCondition.LASER_H)
                             || field.conditions.contains(FieldCondition.LASER_V))
                 ) {
-                    robot.damage += 1
+                    database.update(Robots) {
+                        set(Robots.damage, it.damage + 1)
+                        where { it.id eq robot }
+                    }
                 }
 
                 if (type == FieldType.LASER_2
@@ -326,7 +388,10 @@ data class Board(val fields: List<List<Field>>) {
                             || field.conditions.contains(FieldCondition.LASER_2_H)
                             || field.conditions.contains(FieldCondition.LASER_2_V))
                 ) {
-                    robot.damage += 2
+                    database.update(Robots) {
+                        set(Robots.damage, it.damage + 2)
+                        where { it.id eq robot }
+                    }
                 }
             }
     }
@@ -340,7 +405,7 @@ data class Board(val fields: List<List<Field>>) {
 
         return when (direction) {
             Direction.RIGHT -> {
-                for (col in startPos.col + 1 until fields[startPos.row].size) {
+                for (col in startPos.col + 1 until board[startPos.row].size) {
                     val field = fieldAt(Position(startPos.row, col))
                     if (!field.type.isBlocking() || !field.hasHorizontalDirection()) {
                         continue
@@ -359,7 +424,7 @@ data class Board(val fields: List<List<Field>>) {
                     }
                 }
 
-                return fieldAt(Position(startPos.row, fields[startPos.row].size - 1))
+                return fieldAt(Position(startPos.row, board[startPos.row].size - 1))
             }
             Direction.LEFT -> {
                 for (col in startPos.col - 1 downTo 0) {
@@ -384,7 +449,7 @@ data class Board(val fields: List<List<Field>>) {
                 return fieldAt(Position(startPos.row, 0))
             }
             Direction.DOWN -> {
-                for (row in startPos.row + 1 until fields.size) {
+                for (row in startPos.row + 1 until board.size) {
                     val field = fieldAt(Position(row, startPos.col))
                     if (!field.type.isBlocking() || !field.hasVerticalDirection()) {
                         continue
@@ -403,7 +468,7 @@ data class Board(val fields: List<List<Field>>) {
                     }
                 }
 
-                return fieldAt(Position(fields.size - 1, startPos.col))
+                return fieldAt(Position(board.size - 1, startPos.col))
             }
             Direction.UP -> {
                 for (row in startPos.row - 1 downTo 0) {
@@ -431,8 +496,6 @@ data class Board(val fields: List<List<Field>>) {
             else -> startField
         }
     }
-
-    override fun toString() = "Board(${fields.count()}x${fields[0].count()})"
 }
 
 data class Position(val row: Int, val col: Int)

@@ -1,7 +1,5 @@
 package apoy2k.robby
 
-import apoy2k.robby.data.MemoryStorage
-import apoy2k.robby.data.Storage
 import apoy2k.robby.engine.GameEngine
 import apoy2k.robby.engine.RobotEngine
 import apoy2k.robby.engine.ViewUpdate
@@ -44,15 +42,13 @@ fun main() {
             dialect = SQLiteDialect(),
             logger = Slf4jLoggerAdapter(LoggerFactory.getLogger("db")),
         )
-        val storage = MemoryStorage()
 
-        setup(clock, storage, database)
+        setup(clock, database)
     }.start(wait = true)
 }
 
 fun Application.setup(
     clock: Clock,
-    storage: Storage,
     database: Database,
 ) {
     val logger = LoggerFactory.getLogger(this.javaClass)
@@ -96,7 +92,7 @@ fun Application.setup(
     val viewUpdateChannel = MutableSharedFlow<ViewUpdate>()
     val robotEngine = RobotEngine(database)
     val gameEngine = GameEngine(clock, database, robotEngine, viewUpdateChannel)
-    val viewUpdateRouter = ViewUpdateRouter(database)
+    val viewUpdateRouter = ViewUpdateRouter(clock, database)
 
     launch {
         gameEngine.connect(actionChannel)
@@ -111,7 +107,7 @@ fun Application.setup(
             staticRootFolder = File("assets")
             files(".")
         }
-        base(clock, storage)
+        base(clock, database)
         game(clock, database, gameEngine, actionChannel, viewUpdateRouter)
     }
 }

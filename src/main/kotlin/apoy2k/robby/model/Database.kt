@@ -30,6 +30,6 @@ val Database.games get() = this.sequenceOf(Games)
 
 val Database.fields get() = this.sequenceOf(Fields)
 
-val Database.cards get() = this.sequenceOf(Cards)
+val Database.cards get() = this.sequenceOf(MovementCards)
 
 val Database.robots get() = this.sequenceOf(Robots)
