@@ -7,8 +7,8 @@ import java.time.Instant
 fun HtmlBlockTag.renderProfile(
     now: Instant,
     game: Game,
-    cards: List<MovementCard>,
-    robot: Robot,
+    sessionRobot: Robot,
+    robotCards: List<MovementCard>,
 ) {
     div("my-3") {
         if (game.isFinished(now)) {
@@ -17,10 +17,10 @@ fun HtmlBlockTag.renderProfile(
 
         div("row") {
             div("col") {
-                renderRegisterPanel(game, robot, cards)
+                renderRegisterPanel(game, sessionRobot, robotCards)
             }
             div("col-3") {
-                renderInfoPanel(game, robot)
+                renderInfoPanel(game, sessionRobot)
             }
         }
     }
@@ -28,10 +28,10 @@ fun HtmlBlockTag.renderProfile(
 
 fun HtmlBlockTag.renderRegisterPanel(
     game: Game,
-    robot: Robot,
-    cards: List<MovementCard>,
+    sessionRobot: Robot,
+    robotCards: List<MovementCard>,
 ) {
-    if (robot.poweredDown) {
+    if (sessionRobot.poweredDown) {
         div("row") {
             div("col") {
                 p("alert alert-warning") { +"Robot is powered down" }
@@ -39,23 +39,23 @@ fun HtmlBlockTag.renderRegisterPanel(
         }
     } else {
         div("row row-cols-5") {
-            renderRegister(game, cards, robot, 1)
-            renderRegister(game, cards, robot, 2)
-            renderRegister(game, cards, robot, 3)
-            renderRegister(game, cards, robot, 4)
-            renderRegister(game, cards, robot, 5)
+            renderRegister(game, sessionRobot, robotCards, 1)
+            renderRegister(game, sessionRobot, robotCards, 2)
+            renderRegister(game, sessionRobot, robotCards, 3)
+            renderRegister(game, sessionRobot, robotCards, 4)
+            renderRegister(game, sessionRobot, robotCards, 5)
         }
     }
 }
 
 fun HtmlBlockTag.renderRegister(
     game: Game,
-    cards: List<MovementCard>,
-    robot: Robot,
+    sessionRobot: Robot,
+    robotCards: List<MovementCard>,
     register: Int,
 ) {
     val isActive = game.state != GameState.PROGRAMMING_REGISTERS && game.currentRegister == register
-    val locked = robot.ready || robot.isLocked(register)
+    val locked = sessionRobot.ready || sessionRobot.isLocked(register)
 
     div("col pb-3 rounded") {
         if (locked && !isActive) {
@@ -70,10 +70,10 @@ fun HtmlBlockTag.renderRegister(
 
         div("btn-group-vertical w-100") cards@{
             if (locked) {
-                renderCard(register, cards[register], locked = true, selected = true)
+                renderCard(register, robotCards[register], locked = true, selected = true)
             } else {
-                cards.forEach {
-                    val selected = cards[register] == it
+                robotCards.forEach {
+                    val selected = robotCards[register] == it
                     renderCard(register, it, locked = false, selected)
                 }
             }

@@ -18,7 +18,7 @@ fun Field.toCssClass(): String {
         .joinToString("_") { it.lowercase() }
 }
 
-fun HtmlBlockTag.renderField(field: Field) {
+fun HtmlBlockTag.renderField(field: Field, robot: Robot? = null) {
     div("field type-${field.toCssClass()}") {
         field.conditions.forEach { condition ->
             div("condition-${condition.name.lowercase()}") {
@@ -26,7 +26,6 @@ fun HtmlBlockTag.renderField(field: Field) {
             }
         }
 
-        val robot = field.robot
         if (robot == null) {
             +Entities.nbsp
             return@div
@@ -50,7 +49,7 @@ fun HtmlBlockTag.renderRobot(robot: Robot) {
     }
 }
 
-fun HtmlBlockTag.renderBoard(fields: List<List<Field>>) {
+fun HtmlBlockTag.renderBoard(fields: List<List<Field>>, robots: List<Robot>) {
     div("row") {
         div("col") {
             div("board") {
@@ -59,8 +58,8 @@ fun HtmlBlockTag.renderBoard(fields: List<List<Field>>) {
 
                 attributes["style"] = "grid-template-rows: $rowTemplate; grid-template-columns: $colTemplate;"
 
-                fields.flatten().forEach {
-                    renderField(it)
+                fields.flatten().forEach { field ->
+                    renderField(field, robots.firstOrNull { it.id == field.robotId })
                 }
             }
         }

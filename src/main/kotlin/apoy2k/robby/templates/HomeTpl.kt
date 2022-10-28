@@ -1,12 +1,15 @@
 package apoy2k.robby.templates
 
-import apoy2k.robby.data.Storage
+import apoy2k.robby.model.Game
 import apoy2k.robby.model.Session
 import apoy2k.robby.routes.Location
 import io.ktor.server.html.*
 import kotlinx.html.*
 
-class HomeTpl(val storage: Storage, val session: Session?) : Template<FlowContent> {
+class HomeTpl(
+    private val games: List<Game>,
+    private val session: Session?
+) : Template<FlowContent> {
     override fun FlowContent.apply() {
         if (session?.name?.isNotBlank() == true) {
             div("row") {
@@ -17,7 +20,7 @@ class HomeTpl(val storage: Storage, val session: Session?) : Template<FlowConten
                     }
                 }
             }
-            insert(Lobby(storage)) {}
+            insert(Lobby(games)) {}
         } else {
             div("row") {
                 div("col") {

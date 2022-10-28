@@ -11,17 +11,10 @@ class RobotEngine(
 ) {
 
     /**
-     * Assign a set of cards to a player
+     * Return the card for a robot and register
      */
-    fun takeCards(robot: Robot, cards: Iterable<MovementCard>) {
-        database.batchUpdate(Cards) {
-            cards.onEach {
-                item {
-                    set(it.robotId, robot.id)
-                }
-            }
-        }
-    }
+    fun getRegister(robotId: Int, register: Int) = database.cards
+        .find { it.robotId eq robotId and (it.register eq register) }
 
     /**
      * Write a card into a register of a players robot
@@ -30,11 +23,11 @@ class RobotEngine(
         val card = database.cards.find { it.id eq cardId }
             ?: throw IncompleteAction("Card with ID '$cardId' does not exist")
 
-        if (card.game != robot.game) {
+        if (card.gameId != robot.gameId) {
             throw IncompleteAction("$robot and $card do not belong to the same game")
         }
 
-        card.robot = robot
+        card.robotId = robot.id
         card.register = register
         database.cards.update(card)
     }
@@ -73,7 +66,7 @@ class RobotEngine(
             cards.forEach { it.value.register = null }
         }
 
-        database.batchUpdate(Cards) {
+        database.batchUpdate(MovementCards) {
             cards.onEach { entry ->
                 item {
                     set(it.register, entry.value.register)
@@ -83,14 +76,9 @@ class RobotEngine(
     }
 
     /**
-     * Returns true if the robot has movement cards in all registers
-     */
-    fun hasAllRegistersFilled(robot: Robot) = database.cards.count { it.robotId eq robot.id } == 5
-
-    /**
      * Prepare a robot for a new round
      */
-    fun prepareNewRound(game: Game, robot: Robot) {
+    fun prepareNewRound(gameId: Int, robot: Robot) {
         clearRegisters(robot)
         robot.toggleReady()
 
@@ -98,7 +86,7 @@ class RobotEngine(
             robot.togglePowerDown()
             robot.poweredDown = true
         } else {
-            drawCards(game, robot)
+            drawCards(gameId, robot)
 
             with(robot) {
                 if (poweredDown) {
@@ -112,10 +100,15 @@ class RobotEngine(
     /**
      * Draw a new set of cards for a robot
      */
-    fun drawCards(game: Game, robot: Robot) {
-        val drawnCards = game.deck.take(Integer.max(0, 9 - robot.damage))
-        game.deck.removeAll(drawnCards)
-        player.takeCards(drawnCards)
+    fun drawCards(gameId: Int, robot: Robot) {
+        database.cards
+            .filter { it.gameId eq gameId and it.robotId.isNull() }
+            .map { it }
+            .shuffled()
+            .take(Integer.max(0, 9 - robot.damage))
+            .forEach {
+                it.robotId = robot.id
+                database.cards.update(it)
+            }
     }
-
 }

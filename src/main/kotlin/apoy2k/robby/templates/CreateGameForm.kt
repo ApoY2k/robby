@@ -1,6 +1,6 @@
 package apoy2k.robby.templates
 
-import apoy2k.robby.model.BoardType
+import apoy2k.robby.engine.BoardType
 import apoy2k.robby.routes.Location
 import kotlinx.html.*
 

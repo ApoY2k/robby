@@ -16,21 +16,26 @@ enum class Movement {
     BACKWARDS,
 }
 
-object Cards : Table<MovementCard>("cards") {
+object MovementCards : Table<MovementCard>("cards") {
     val id = int("id").primaryKey().bindTo { it.id }
-    val gameId = int("game_id").references(Games) { it.game }
-    val robotId = int("robot_id").references(Robots) { it.robot }
+    val gameId = int("game_id").bindTo { it.gameId }
+    val robotId = int("robot_id").bindTo { it.robotId }
     val movement = enum<Movement>("movement").bindTo { it.movement }
     val priority = int("priority").bindTo { it.priority }
     val register = int("register").bindTo { it.register }
 }
 
 interface MovementCard : Entity<MovementCard> {
-    companion object : Entity.Factory<MovementCard>()
+    companion object : Entity.Factory<MovementCard>() {
+        fun new(movement: Movement, priority: Int) = MovementCard {
+            this.movement = movement
+            this.priority = priority
+        }
+    }
 
-    val id: Int
-    var game: Game
-    var robot: Robot?
+    var id: Int
+    var gameId: Int?
+    var robotId: Int?
     var movement: Movement
     var priority: Int
     var register: Int?

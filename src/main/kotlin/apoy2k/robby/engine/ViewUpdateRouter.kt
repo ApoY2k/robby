@@ -1,8 +1,9 @@
 package apoy2k.robby.engine
 
 import apoy2k.robby.model.Session
+import apoy2k.robby.model.cards
 import apoy2k.robby.model.games
-import apoy2k.robby.model.unwrapToBoard
+import apoy2k.robby.model.robots
 import apoy2k.robby.templates.GameTpl
 import io.ktor.server.html.*
 import io.ktor.websocket.*
@@ -14,8 +15,11 @@ import kotlinx.html.body
 import kotlinx.html.html
 import kotlinx.html.stream.appendHTML
 import org.ktorm.database.Database
+import org.ktorm.dsl.and
 import org.ktorm.dsl.eq
+import org.ktorm.entity.filter
 import org.ktorm.entity.find
+import org.ktorm.entity.map
 import org.slf4j.LoggerFactory
 import java.time.Clock
 
@@ -46,9 +50,20 @@ class ViewUpdateRouter(
 
                 val game = database.games.find { it.id eq update.gameId }
                     ?: return@onEach
+                val boardEngine = BoardEngine(database, game)
 
                 gameSessions
                     .forEach { (httpSession, wsSessions) ->
+                        val currentRobot = database.robots.find {
+                            it.gameId eq game.id and (it.session eq httpSession.id)
+                        }
+                        val robotCards = when (currentRobot) {
+                            null -> listOf()
+                            else -> database.cards.filter {
+                                it.gameId eq game.id and (it.robotId eq currentRobot.id)
+                            }.map { it }
+                        }
+
                         val gameView = StringBuilder()
                             .appendHTML(false)
                             .html {
@@ -57,9 +72,11 @@ class ViewUpdateRouter(
                                         GameTpl(
                                             clock.instant(),
                                             game,
-                                            game.robots(database),
-                                            game.fields(database).unwrapToBoard(),
+                                            game.robots(database).map { it },
+                                            boardEngine.board,
                                             httpSession,
+                                            currentRobot,
+                                            robotCards,
                                         )
                                     ) {}
                                 }

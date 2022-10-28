@@ -12,9 +12,8 @@ class ActionsTest {
     fun `deserialize action`() {
         val game = Game()
         assertEquals(
-            JoinGameAction(RobotModel.ZIPPY.name).also { it.game = game },
+            Action.joinGame(RobotModel.ZIPPY).also { it.game = game },
             Action.deserializeFromSocket(
-                game,
                 "${ActionField.LABEL}=${ActionLabel.JOIN_GAME}&" +
                         "${ActionField.ROBOT_MODEL}=${RobotModel.ZIPPY.name}"
             )
@@ -23,17 +22,15 @@ class ActionsTest {
 
     @Test
     fun `deserialize action with wrong syntax fails`() {
-        val game = Game()
         assertFailsWith(UnknownAction::class) {
-            Action.deserializeFromSocket(game, "${ActionField.LABEL}=${ActionLabel.JOIN_GAME}_player1")
+            Action.deserializeFromSocket("${ActionField.LABEL}=${ActionLabel.JOIN_GAME}_player1")
         }
     }
 
     @Test
     fun `deserialize unknown action fails`() {
-        val game = Game()
         assertFailsWith(UnknownAction::class) {
-            Action.deserializeFromSocket(game, "test")
+            Action.deserializeFromSocket("test")
         }
     }
 }

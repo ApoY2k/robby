@@ -4,7 +4,6 @@ import org.ktorm.database.Database
 import org.ktorm.dsl.eq
 import org.ktorm.entity.Entity
 import org.ktorm.entity.filter
-import org.ktorm.entity.map
 import org.ktorm.schema.Table
 import org.ktorm.schema.enum
 import org.ktorm.schema.int
@@ -33,17 +32,15 @@ object Games : Table<Game>("games") {
 interface Game : Entity<Game> {
     companion object : Entity.Factory<Game>()
 
-    val id: Int
+    var id: Int
     var currentRegister: Int
     var state: GameState
     var startedAt: Instant?
     var finishedAt: Instant?
 
-    fun cards(db: Database) = db.robots.filter { it.gameId eq id }.map { it }
-    fun robots(db: Database) = db.robots.filter { it.gameId eq id }.map { it }
-    fun fields(db: Database) = db.fields.filter { it.gameId eq id }.map { it }
+    fun cards(db: Database) = db.robots.filter { it.gameId eq id }
+    fun robots(db: Database) = db.robots.filter { it.gameId eq id }
+    fun fields(db: Database) = db.fields.filter { it.gameId eq id }
+    fun isFinished(now: Instant) = now.isAfter(this.finishedAt)
+    fun hasStarted(now: Instant) = now.isAfter(this.startedAt)
 }
-
-fun Game.isFinished(now: Instant) = now.isAfter(this.finishedAt)
-
-fun Game.hasStarted(now: Instant) = now.isAfter(this.startedAt)

@@ -16,7 +16,7 @@ enum class RobotModel {
 
 object Robots : Table<Robot>("robots") {
     val id = int("id").primaryKey().bindTo { it.id }
-    val gameId = int("game_id").references(Games) { it.game }
+    val gameId = int("game_id").bindTo { it.gameId }
     val session = varchar("session").bindTo { it.sessionId }
     val name = varchar("name").bindTo { it.name }
     val ready = boolean("ready").bindTo { it.ready }
@@ -30,6 +30,7 @@ object Robots : Table<Robot>("robots") {
 
 interface Robot : Entity<Robot> {
     companion object : Entity.Factory<Robot>() {
+        fun new(model: RobotModel) = new(model, Session("", ""))
         fun new(model: RobotModel, session: Session) = Robot {
             this.model = model
             this.name = session.name
@@ -37,8 +38,8 @@ interface Robot : Entity<Robot> {
         }
     }
 
-    val id: Int
-    var game: Game
+    var id: Int
+    var gameId: Int
     var sessionId: String
     var name: String
     var ready: Boolean
