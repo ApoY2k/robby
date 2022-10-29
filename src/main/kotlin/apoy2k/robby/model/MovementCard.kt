@@ -34,7 +34,7 @@ interface MovementCard : Entity<MovementCard> {
     }
 
     var id: Int
-    var gameId: Int?
+    var gameId: Int
     var robotId: Int?
     var movement: Movement
     var priority: Int

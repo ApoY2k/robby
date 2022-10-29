@@ -68,9 +68,10 @@ class RobotEngine(
         }
 
         database.batchUpdate(MovementCards) {
-            cards.onEach { entry ->
+            cards.values.forEach { card ->
                 item {
-                    set(it.register, entry.value.register)
+                    set(it.register, card.register)
+                    where { it.id eq card.id }
                 }
             }
         }

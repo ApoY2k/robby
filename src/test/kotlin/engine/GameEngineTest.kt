@@ -34,12 +34,6 @@ class GameEngineTest : DatabaseBackedTest() {
         MutableSharedFlow()
     )
 
-    override fun setupBeforeEach() {
-    }
-
-    override fun tearDownAfterEach() {
-    }
-
     @Test
     fun `select card for register`() {
         val game = gameEngine.createNewGame(BoardType.SANDBOX)

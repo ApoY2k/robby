@@ -12,9 +12,6 @@ import java.time.ZoneId
 
 class ApplicationTest : DatabaseBackedTest() {
 
-    override fun setupBeforeEach() {}
-    override fun tearDownAfterEach() {}
-
     @Test
     fun `request to root`() = testApplication {
         val clock = Clock.fixed(Instant.parse("2022-01-01T00:00:00Z"), ZoneId.of("UTC"))
