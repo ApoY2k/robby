@@ -28,7 +28,7 @@ create table if not exists "movementCards" (
 	"id"	integer,
 	"game_id"	integer not null,
 	"robot_id"	integer,
-	"type"	text not null,
+	"movement"	text not null,
 	"priority"	integer not null,
 	"register"	integer,
 	foreign key("game_id") references "games"("id"),

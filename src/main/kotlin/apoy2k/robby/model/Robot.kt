@@ -31,9 +31,15 @@ interface Robot : Entity<Robot> {
     companion object : Entity.Factory<Robot>() {
         fun new(model: RobotModel) = new(model, Session("", ""))
         fun new(model: RobotModel, session: Session) = Robot {
+            this.ready = false
             this.model = model
             this.name = session.name
             this.sessionId = session.id
+            this.facing = Direction.RIGHT
+            this.damage = 0
+            this.powerDownScheduled = false
+            this.poweredDown = false
+            this.passedCheckpoints = 0
         }
     }
 
