@@ -15,15 +15,20 @@ abstract class DatabaseBackedTest {
         logger = Slf4jLoggerAdapter(LoggerFactory.getLogger("db")),
     )
 
-    private val schema = File("database_schema.sql").readText()
+    private val schema = File("database_schema.sql")
+        .readText()
+        .split(";")
+        .filter { it.isNotBlank() }
 
     abstract fun setupBeforeEach()
     abstract fun tearDownAfterEach()
 
     @BeforeEach
     fun setup() {
-        database.useConnection {
-            it.prepareStatement(schema).execute()
+        database.useConnection { connection ->
+            schema.forEach { statement ->
+                connection.prepareStatement(statement).execute()
+            }
         }
         setupBeforeEach()
     }
@@ -32,15 +37,11 @@ abstract class DatabaseBackedTest {
     fun tearDown() {
         tearDownAfterEach()
         database.useConnection {
-            it.prepareStatement(
-                """
-                PRAGMA writable_schema = 1;
-                DELETE FROM sqlite_master WHERE type IN ('table', 'index', 'trigger');
-                PRAGMA writable_schema = 0;
-                VACUUM;
-                PRAGMA INTEGRITY_CHECK;
-            """.trimIndent()
-            )
+            it.prepareStatement("PRAGMA writable_schema = 1").execute()
+            it.prepareStatement("DELETE FROM sqlite_master WHERE type IN ('table', 'index', 'trigger')").execute()
+            it.prepareStatement("PRAGMA writable_schema = 0").execute()
+            it.prepareStatement("VACUUM").execute()
+            it.prepareStatement("PRAGMA INTEGRITY_CHECK").execute()
         }
     }
 }
