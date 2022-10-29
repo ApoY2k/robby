@@ -3,31 +3,46 @@ package apoy2k.robby.engine
 import apoy2k.robby.exceptions.InvalidGameState
 import apoy2k.robby.model.*
 import org.ktorm.database.Database
-import org.ktorm.dsl.*
+import org.ktorm.dsl.eq
 import org.ktorm.entity.filter
-import org.ktorm.entity.find
-import org.ktorm.entity.forEach
+import org.ktorm.entity.map
 import org.slf4j.LoggerFactory
 import kotlin.math.atan2
 
 class BoardEngine(
-    private val database: Database,
-    game: Game,
+    val board: List<List<Field>>,
 ) {
-    val board: List<List<Field>>
-
     private val logger = LoggerFactory.getLogger(this.javaClass)
 
     init {
-        board = mutableListOf()
-        game.fields(database).forEach {
-            val row: MutableList<Field> = board.getOrElse(it.positionY) { listOf() }.toMutableList()
-            row[it.positionX] = it
-            board[it.positionY] = row
-        }
-
         // Add laser conditions on all fields in a lasers way (just once on intializing the field)
         applyLaserConditions()
+    }
+
+    companion object {
+
+        /**
+         * Build a board engine instance for a specific game
+         */
+        fun build(gameId: Int, database: Database): BoardEngine {
+            val fields = database.fields.filter { it.id eq gameId }.map { it }
+            return BoardEngine(fieldListToMatrix(fields))
+        }
+
+        /**
+         * Converts a list of fields to a field matrix, using the x/y coordinates to insert the fields
+         * into the matrix
+         */
+        fun fieldListToMatrix(fields: List<Field>): List<List<Field>> {
+            val board = mutableListOf<MutableList<Field>>()
+            fields
+                .forEach {
+                    val row: MutableList<Field> = board.getOrElse(it.positionY) { listOf() }.toMutableList()
+                    row[it.positionX] = it
+                    board[it.positionY] = row
+                }
+            return board
+        }
     }
 
     /**
@@ -157,7 +172,7 @@ class BoardEngine(
     /**
      * Move all belts of the given type *one* tick
      */
-    fun moveBelts(beltType: FieldType) {
+    fun moveBelts(beltType: FieldType, robots: List<Robot>) {
         // Collect new positions that result of the belt moves as a list of "to execute" movements
         // Each movement contains the robot that moves and the row/col index of the new field after the movement
         val newPositions = mutableMapOf<Position, Int>()
@@ -214,16 +229,18 @@ class BoardEngine(
                     previousPos.col > position.col -> Direction.RIGHT
                     else -> throw incomingDirectionError
                 }
+
                 previousPos.col == position.col -> when {
                     previousPos.row < position.row -> Direction.UP
                     else -> Direction.DOWN
                 }
+
                 else -> throw incomingDirectionError
             }
 
             val nextField = fieldAt(position)
             val rotationMovement = getTurnDirection(incomingDirection, nextField.outgoingDirection)
-            val robot = database.robots.find { it.id eq robotId } ?: return@forEach
+            val robot = robots.find { it.id == robotId } ?: return@forEach
             robot.rotate(rotationMovement)
         }
 
@@ -233,36 +250,35 @@ class BoardEngine(
     /**
      * Touch checkpoints for robots
      */
-    fun touchCheckpoints() {
+    fun touchCheckpoints(robots: List<Robot>) {
         // TODO Touching the same checkpoint multiple times should not increase the counter
-        val repairFields = database.fields.filter {
-            it.type eq FieldType.FLAG and it.robotId.isNotNull()
-        }
-        database.batchUpdate(Robots) {
-            repairFields.forEach { field ->
-                item {
-                    set(it.damage, it.passedCheckpoints + 1)
-                    where { it.id eq field.robotId!! and (it.passedCheckpoints lt 3) }
-                }
+        board.flatten()
+            .filter { field ->
+                field.type == FieldType.FLAG
+                        && robots.any { robot -> field.robotId == robot.id }
             }
-        }
+            .forEach { field ->
+                val robot = robots.first { it.id == field.robotId }
+                robot.passedCheckpoints += 1
+            }
     }
 
     /**
      * Touch repair points for robots
      */
-    fun touchRepair() {
-        val repairFields = database.fields.filter {
-            it.type eq FieldType.REPAIR and it.robotId.isNotNull()
-        }
-        database.batchUpdate(Robots) {
-            repairFields.forEach { field ->
-                item {
-                    set(it.damage, it.damage - 1)
-                    where { it.id eq field.robotId!! and (it.damage gt 1) }
-                }
+    fun touchRepair(robots: List<Robot>) {
+        board.flatten()
+            .filter { field ->
+                field.type == FieldType.FLAG
+                        && robots.any { robot -> field.robotId == robot.id }
             }
-        }
+            .forEach { field ->
+                val robot = robots.first { it.id == field.robotId }
+                robot.damage = Integer.max(0, robot.damage - 1)
+            }
+    }
+
+    fun touchModifications() {
     }
 
     /**
@@ -323,18 +339,22 @@ class BoardEngine(
                         true -> fieldAt(Position(wallPosition.row, wallPosition.col + 1))
                         false -> nextWall
                     }
+
                     Direction.UP -> when (nextWall.hasDirection(Direction.DOWN)) {
                         true -> fieldAt(Position(wallPosition.row + 1, wallPosition.col))
                         false -> nextWall
                     }
+
                     Direction.DOWN -> when (nextWall.hasDirection(Direction.UP)) {
                         true -> fieldAt(Position(wallPosition.row - 1, wallPosition.col))
                         false -> nextWall
                     }
+
                     Direction.RIGHT -> when (nextWall.hasDirection(Direction.LEFT)) {
                         true -> fieldAt(Position(wallPosition.row, wallPosition.col - 1))
                         false -> nextWall
                     }
+
                     Direction.NONE -> nextWall
                 }
 
@@ -367,20 +387,17 @@ class BoardEngine(
     /**
      * Fire all lasers of the given type, damaging all robots in its line
      */
-    fun fireLasers(type: FieldType) {
+    fun fireLasers(type: FieldType, robots: List<Robot>) {
         board.flatten()
             .forEach { field ->
-                val robot = field.robotId ?: return@forEach
+                val robot = robots.firstOrNull { field.robotId == it.id } ?: return@forEach
 
                 if (type == FieldType.LASER
                     && (field.type == FieldType.LASER
                             || field.conditions.contains(FieldCondition.LASER_H)
                             || field.conditions.contains(FieldCondition.LASER_V))
                 ) {
-                    database.update(Robots) {
-                        set(Robots.damage, it.damage + 1)
-                        where { it.id eq robot }
-                    }
+                    robot.damage = Integer.min(10, robot.damage + 1)
                 }
 
                 if (type == FieldType.LASER_2
@@ -388,10 +405,7 @@ class BoardEngine(
                             || field.conditions.contains(FieldCondition.LASER_2_H)
                             || field.conditions.contains(FieldCondition.LASER_2_V))
                 ) {
-                    database.update(Robots) {
-                        set(Robots.damage, it.damage + 2)
-                        where { it.id eq robot }
-                    }
+                    robot.damage = Integer.min(10, robot.damage + 2)
                 }
             }
     }
@@ -426,6 +440,7 @@ class BoardEngine(
 
                 return fieldAt(Position(startPos.row, board[startPos.row].size - 1))
             }
+
             Direction.LEFT -> {
                 for (col in startPos.col - 1 downTo 0) {
                     val field = fieldAt(Position(startPos.row, col))
@@ -448,6 +463,7 @@ class BoardEngine(
 
                 return fieldAt(Position(startPos.row, 0))
             }
+
             Direction.DOWN -> {
                 for (row in startPos.row + 1 until board.size) {
                     val field = fieldAt(Position(row, startPos.col))
@@ -470,6 +486,7 @@ class BoardEngine(
 
                 return fieldAt(Position(board.size - 1, startPos.col))
             }
+
             Direction.UP -> {
                 for (row in startPos.row - 1 downTo 0) {
                     val field = fieldAt(Position(row, startPos.col))

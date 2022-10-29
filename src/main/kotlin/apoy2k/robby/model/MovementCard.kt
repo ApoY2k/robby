@@ -16,7 +16,7 @@ enum class Movement {
     BACKWARDS,
 }
 
-object MovementCards : Table<MovementCard>("cards") {
+object MovementCards : Table<MovementCard>("movementCards") {
     val id = int("id").primaryKey().bindTo { it.id }
     val gameId = int("game_id").bindTo { it.gameId }
     val robotId = int("robot_id").bindTo { it.robotId }

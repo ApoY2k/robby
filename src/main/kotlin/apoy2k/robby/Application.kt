@@ -107,7 +107,7 @@ fun Application.setup(
             staticRootFolder = File("assets")
             files(".")
         }
-        base(clock, database)
+        base(database)
         game(clock, database, gameEngine, actionChannel, viewUpdateRouter)
     }
 }

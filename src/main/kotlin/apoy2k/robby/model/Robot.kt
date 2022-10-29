@@ -4,7 +4,6 @@ import org.ktorm.database.Database
 import org.ktorm.dsl.eq
 import org.ktorm.entity.Entity
 import org.ktorm.entity.filter
-import org.ktorm.entity.map
 import org.ktorm.schema.*
 
 enum class RobotModel {
@@ -40,7 +39,7 @@ interface Robot : Entity<Robot> {
 
     var id: Int
     var gameId: Int
-    var sessionId: String
+    var sessionId: String?
     var name: String
     var ready: Boolean
     var model: RobotModel
@@ -50,87 +49,87 @@ interface Robot : Entity<Robot> {
     var poweredDown: Boolean
     var passedCheckpoints: Int
 
-    fun cards(db: Database) = db.cards.filter { it.robotId eq id }.map { it }
-}
+    fun cards(db: Database) = db.cards.filter { it.robotId eq id }
 
-/**
- * Toggle power down for the round
- */
-fun Robot.togglePowerDown() {
-    powerDownScheduled = !powerDownScheduled
-}
-
-/**
- * Toggle ready state
- */
-fun Robot.toggleReady() {
-    ready = !ready
-}
-
-/**
- * Check if a register is locked
- */
-fun Robot.isLocked(register: Int): Boolean =
-    damage >= 5 && register == 5
-            || damage >= 6 && register == 4
-            || damage >= 7 && register == 3
-            || damage >= 8 && register == 2
-            || damage >= 9
-
-/**
- * Apply a rotational movement on this robot, if the given movement requires it.
- * Non-rotating movements are ignored
- */
-fun Robot.rotate(movement: Movement) {
-    if (movement == Movement.TURN_RIGHT) {
-        facing = when (facing) {
-            Direction.UP -> Direction.RIGHT
-            Direction.DOWN -> Direction.LEFT
-            Direction.LEFT -> Direction.UP
-            Direction.RIGHT -> Direction.DOWN
-            else -> Direction.NONE
-        }
+    /**
+     * Toggle power down for the round
+     */
+    fun togglePowerDown() {
+        powerDownScheduled = !powerDownScheduled
     }
 
-    if (movement == Movement.TURN_LEFT) {
-        facing = when (facing) {
-            Direction.UP -> Direction.LEFT
-            Direction.DOWN -> Direction.RIGHT
-            Direction.LEFT -> Direction.DOWN
-            Direction.RIGHT -> Direction.UP
-            else -> Direction.NONE
-        }
+    /**
+     * Toggle ready state
+     */
+    fun toggleReady() {
+        ready = !ready
     }
 
-    if (movement == Movement.TURN_180) {
-        facing = when (facing) {
-            Direction.UP -> Direction.DOWN
-            Direction.DOWN -> Direction.UP
-            Direction.LEFT -> Direction.RIGHT
-            Direction.RIGHT -> Direction.LEFT
-            else -> Direction.NONE
+    /**
+     * Check if a register is locked
+     */
+    fun isLocked(register: Int): Boolean =
+        damage >= 5 && register == 5
+                || damage >= 6 && register == 4
+                || damage >= 7 && register == 3
+                || damage >= 8 && register == 2
+                || damage >= 9
+
+    /**
+     * Apply a rotational movement on this robot, if the given movement requires it.
+     * Non-rotating movements are ignored
+     */
+    fun rotate(movement: Movement) {
+        if (movement == Movement.TURN_RIGHT) {
+            facing = when (facing) {
+                Direction.UP -> Direction.RIGHT
+                Direction.DOWN -> Direction.LEFT
+                Direction.LEFT -> Direction.UP
+                Direction.RIGHT -> Direction.DOWN
+                else -> Direction.NONE
+            }
         }
+
+        if (movement == Movement.TURN_LEFT) {
+            facing = when (facing) {
+                Direction.UP -> Direction.LEFT
+                Direction.DOWN -> Direction.RIGHT
+                Direction.LEFT -> Direction.DOWN
+                Direction.RIGHT -> Direction.UP
+                else -> Direction.NONE
+            }
+        }
+
+        if (movement == Movement.TURN_180) {
+            facing = when (facing) {
+                Direction.UP -> Direction.DOWN
+                Direction.DOWN -> Direction.UP
+                Direction.LEFT -> Direction.RIGHT
+                Direction.RIGHT -> Direction.LEFT
+                else -> Direction.NONE
+            }
+        }
+
+        // Any other movement don't rotate the robot and can be ignored
     }
 
-    // Any other movement don't rotate the robot and can be ignored
-}
-
-/**
- * Get the direction in which to move this robot, based on where it's facing and a movement to apply
- */
-fun Robot.getMovementDirection(movement: Movement): Direction {
-    // If the movement should be backwards, simply invert the current orientation the robot is facing
-    if (setOf(Movement.BACKWARDS).contains(movement)) {
-        return when (facing) {
-            Direction.UP -> Direction.DOWN
-            Direction.DOWN -> Direction.UP
-            Direction.LEFT -> Direction.RIGHT
-            Direction.RIGHT -> Direction.LEFT
-            else -> Direction.NONE
+    /**
+     * Get the direction in which to move this robot, based on where it's facing and a movement to apply
+     */
+    fun getMovementDirection(movement: Movement): Direction {
+        // If the movement should be backwards, simply invert the current orientation the robot is facing
+        if (setOf(Movement.BACKWARDS).contains(movement)) {
+            return when (facing) {
+                Direction.UP -> Direction.DOWN
+                Direction.DOWN -> Direction.UP
+                Direction.LEFT -> Direction.RIGHT
+                Direction.RIGHT -> Direction.LEFT
+                else -> Direction.NONE
+            }
         }
-    }
 
-    // Any other movement do result in an actual movement. For those cases, return the direction the robot
-    // is facing, so it will move (or stay) in that direction
-    return facing
+        // Any other movement do result in an actual movement. For those cases, return the direction the robot
+        // is facing, so it will move (or stay) in that direction
+        return facing
+    }
 }

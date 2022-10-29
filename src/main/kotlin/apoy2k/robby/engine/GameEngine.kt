@@ -1,7 +1,6 @@
 package apoy2k.robby.engine
 
 import apoy2k.robby.exceptions.IncompleteAction
-import apoy2k.robby.exceptions.InvalidGameState
 import apoy2k.robby.model.*
 import apoy2k.robby.model.predef.board.generateChopShopBoard
 import apoy2k.robby.model.predef.board.generateDemoBoard
@@ -51,17 +50,17 @@ class GameEngine(
                 return@onEach
             }
 
-            val board = BoardEngine(database, game)
-
             try {
                 logger.debug("Received $action")
+
+                val boardEngine = BoardEngine.build(game.id, database)
 
                 // Perform the action and run automatic registers and actions
                 // with ViewUpdates in a separate coroutine so the channel isn't blocked
                 launch {
-                    perform(action, board)
+                    perform(action, boardEngine)
                     updates.emit(ViewUpdate(game.id))
-                    runEngine(game, board)
+                    runEngine(game, boardEngine)
                 }
             } catch (err: Throwable) {
                 logger.error("Error executing $action: $err", err)
@@ -72,7 +71,7 @@ class GameEngine(
     /**
      * Advances the game state by executing a single action, without sending ViewUpdates
      */
-    fun perform(action: Action, board: BoardEngine) {
+    fun perform(action: Action, boardEngine: BoardEngine) {
         // All actions require a session, so if an action without a session is noticed, just drop it with
         // an empty result view update set
         val session = action.session ?: throw IncompleteAction("No session attached to $action")
@@ -80,13 +79,14 @@ class GameEngine(
 
         if (action.label == ActionLabel.JOIN_GAME) {
             val model = action.getString(ActionField.ROBOT_MODEL) ?: throw IncompleteAction("No robot model specified")
-            addPlayer(game.id, board, session.name, RobotModel.valueOf(model), session)
+            val robot = addRobot(game.id, RobotModel.valueOf(model), session)
+            boardEngine.placeRobot(robot.id)
             return
         }
 
-        val robot = database.robots.find { it.session eq session.id }
+        val robot = database.robots.find { it.gameId eq game.id and (it.session eq session.id) }
         if (robot == null) {
-            logger.warn("No player found for $session")
+            logger.warn("No Robot found for $session in $game")
             return
         }
 
@@ -126,26 +126,11 @@ class GameEngine(
 
         return database.useTransaction {
             database.games.add(game)
-
-            val dbFields = fields
-                .mapIndexed { row, rowFields ->
-                    rowFields.mapIndexed { col, field ->
-                        field.also {
-                            it.gameId = game.id
-                            it.positionX = col
-                            it.positionY = row
-                        }
-                    }
-                }
-                .flatten()
-
-            dbFields.forEach { database.fields.add(it) }
-
+            database.createFieldsForGame(fields, game.id)
             generateStandardDeck().forEach {
                 it.gameId = game.id
                 database.cards.add(it)
             }
-
             game
         }
     }
@@ -153,7 +138,7 @@ class GameEngine(
     /**
      * Run engine on game state, sends view updates accordingly
      */
-    private suspend fun runEngine(game: Game, board: BoardEngine) {
+    private suspend fun runEngine(game: Game, boardEngine: BoardEngine) {
         val robots = game.robots(database).map { it }
 
         // Check conditions for running automatic registers are fulfilled
@@ -171,20 +156,20 @@ class GameEngine(
         }
 
         // Send view updates between registers so players see the new state after "preparing" the execution of movements
-        runRegister(game, board, 1)
-        runAutomaticSteps(game, board)
+        runRegister(game, boardEngine, 1)
+        runAutomaticSteps(game, boardEngine)
 
-        runRegister(game, board, 2)
-        runAutomaticSteps(game, board)
+        runRegister(game, boardEngine, 2)
+        runAutomaticSteps(game, boardEngine)
 
-        runRegister(game, board, 3)
-        runAutomaticSteps(game, board)
+        runRegister(game, boardEngine, 3)
+        runAutomaticSteps(game, boardEngine)
 
-        runRegister(game, board, 4)
-        runAutomaticSteps(game, board)
+        runRegister(game, boardEngine, 4)
+        runAutomaticSteps(game, boardEngine)
 
-        runRegister(game, board, 5)
-        runAutomaticSteps(game, board)
+        runRegister(game, boardEngine, 5)
+        runAutomaticSteps(game, boardEngine)
 
         // Check for game end condition. If it is met, end the game
         if (robots.any { it.passedCheckpoints >= 3 }) {
@@ -225,7 +210,7 @@ class GameEngine(
      * Sends view updates after every movement.
      * Movements of more than 1 step are executed individually, with updates sent between every step
      */
-    private suspend fun runRegister(game: Game, board: BoardEngine, register: Int) {
+    private suspend fun runRegister(game: Game, boardEngine: BoardEngine, register: Int) {
         game.state = GameState.EXECUTING_REGISTERS
         game.currentRegister = register
         updates.emit(ViewUpdate(game.id))
@@ -243,7 +228,7 @@ class GameEngine(
                     }
 
                     for (step in 1..steps) {
-                        board.execute(card, robot)
+                        boardEngine.execute(card, robot)
                         updates.emit(ViewUpdate(game.id))
                         delay(GAME_ENGINE_STEP_DELAY)
                     }
@@ -255,38 +240,47 @@ class GameEngine(
 
     private suspend fun runMoveBoardElements(game: Game, boardEngine: BoardEngine) {
         game.state = GameState.MOVE_BARD_ELEMENTS_2
-        boardEngine.moveBelts(FieldType.BELT_2)
+        val robots = game.robots(database).map { it }
+        boardEngine.moveBelts(FieldType.BELT_2, robots)
         updates.emit(ViewUpdate(game.id))
         delay(GAME_ENGINE_STEP_DELAY)
 
         game.state = GameState.MOVE_BARD_ELEMENTS_1
-        boardEngine.moveBelts(FieldType.BELT)
+        boardEngine.moveBelts(FieldType.BELT, robots)
+        robots.forEach { database.robots.update(it) }
         updates.emit(ViewUpdate(game.id))
         delay(GAME_ENGINE_STEP_DELAY)
     }
 
     private suspend fun runFireLasers(game: Game, boardEngine: BoardEngine) {
         game.state = GameState.FIRE_LASERS_2
-        boardEngine.fireLasers(FieldType.LASER_2)
+        val robots = game.robots(database).map { it }
+        boardEngine.fireLasers(FieldType.LASER_2, robots)
         updates.emit(ViewUpdate(game.id))
         delay(GAME_ENGINE_STEP_DELAY)
 
         game.state = GameState.FIRE_LASERS_1
-        boardEngine.fireLasers(FieldType.LASER)
+        boardEngine.fireLasers(FieldType.LASER, robots)
+        robots.forEach { database.robots.update(it) }
         updates.emit(ViewUpdate(game.id))
         delay(GAME_ENGINE_STEP_DELAY)
     }
 
     private suspend fun runCheckpoints(game: Game, boardEngine: BoardEngine) {
         game.state = GameState.CHECKPOINTS
-        boardEngine.touchCheckpoints()
+        val robots = game.robots(database).map { it }
+        boardEngine.touchCheckpoints(robots)
+        robots.forEach { database.robots.update(it) }
         updates.emit(ViewUpdate(game.id))
         delay(GAME_ENGINE_STEP_DELAY)
     }
 
     private suspend fun runRepairPowerups(game: Game, boardEngine: BoardEngine) {
         game.state = GameState.REPAIR_POWERUPS
-        boardEngine.touchRepair()
+        val robots = game.robots(database).map { it }
+        boardEngine.touchRepair(robots)
+        boardEngine.touchModifications()
+        robots.forEach { database.robots.update(it) }
         updates.emit(ViewUpdate(game.id))
         delay(GAME_ENGINE_STEP_DELAY)
     }
@@ -295,16 +289,9 @@ class GameEngine(
         database.robots.removeIf { it.id eq robotId }
     }
 
-    private fun addPlayer(gameId: Int, boardEngine: BoardEngine, name: String, model: RobotModel, session: Session) {
-        if (name.isBlank()) throw IncompleteAction("No name provided")
-        if (database.robots.any { it.session eq session.id }) throw InvalidGameState("$session already joined")
-
-        val robot = Robot.new(model, session).also {
-            it.gameId = gameId
-        }
-
-        database.robots.add(robot)
+    private fun addRobot(gameId: Int, model: RobotModel, session: Session): Robot {
+        val robot = robotEngine.createNewRobot(gameId, session, model)
         robotEngine.drawCards(gameId, robot)
-        boardEngine.placeRobot(robot.id)
+        return robot
     }
 }

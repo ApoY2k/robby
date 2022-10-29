@@ -1,22 +1,19 @@
-package apoy2k.robby.kotlin.model
+package apoy2k.robby.kotlin.engine
 
 import apoy2k.robby.engine.RobotEngine
 import apoy2k.robby.kotlin.DatabaseBackedTest
 import apoy2k.robby.model.*
-import org.junit.jupiter.api.AfterEach
-import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.ktorm.dsl.deleteAll
 import org.ktorm.entity.add
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
 
-class RobotTest : DatabaseBackedTest() {
+class RobotEngineTest : DatabaseBackedTest() {
     var robot = Robot.new(RobotModel.ZIPPY)
     var robotEngine = RobotEngine(database)
 
-    @BeforeEach
-    fun setup() {
+    override fun setupBeforeEach() {
         database.cards.add(MovementCard.new(Movement.STRAIGHT, 1))
         database.cards.add(MovementCard.new(Movement.STRAIGHT, 1))
         database.cards.add(MovementCard.new(Movement.STRAIGHT, 1))
@@ -30,8 +27,7 @@ class RobotTest : DatabaseBackedTest() {
         robotEngine.selectCard(robot, 1, 5)
     }
 
-    @AfterEach
-    fun tearDown() {
+    override fun tearDownAfterEach() {
         database.deleteAll(MovementCards)
         database.deleteAll(Robots)
     }
