@@ -1,56 +1,51 @@
-BEGIN TRANSACTION;
-DROP TABLE IF EXISTS "movementCards";
-CREATE TABLE IF NOT EXISTS "movementCards" (
-	"id"	INTEGER,
-	"game_id"	INTEGER NOT NULL,
-	"robot_id"	INTEGER,
-	"type"	TEXT NOT NULL,
-	"priority"	INTEGER NOT NULL,
-	"register"	INTEGER,
-	FOREIGN KEY("player_id") REFERENCES "players"("id"),
-	FOREIGN KEY("game_id") REFERENCES "games"("id"),
-	PRIMARY KEY("id" AUTOINCREMENT)
+drop table if exists "games";
+create table if not exists "games" (
+	"id"	integer,
+	"currentRegister"	integer not null,
+	"state"	text not null,
+	"startedAt"	integer,
+	"finishedAt"	integer,
+	primary key("id" AUTOINCREMENT)
 );
-DROP TABLE IF EXISTS "robots";
-CREATE TABLE IF NOT EXISTS "robots" (
-	"id"	INTEGER,
-	"game_id"	INTEGER NOT NULL,
-	"session"	TEXT,
-	"name"	TEXT NOT NULL,
-	"ready"	INTEGER NOT NULL,
-	"model"	TEXT NOT NULL,
-	"facing"	TEXT NOT NULL,
-	"damage"	INTEGER NOT NULL,
-	"poweredDown"	INTEGER NOT NULL,
-	"powerDownScheduled"	INTEGER NOT NULL,
-	"passedCheckpoints"	INTEGER NOT NULL,
-	FOREIGN KEY("game_id") REFERENCES "games"("id"),
-	FOREIGN KEY("player_id") REFERENCES "players"("id"),
-	FOREIGN KEY("field_id") REFERENCES "fields"("id"),
-	PRIMARY KEY("id" AUTOINCREMENT)
+drop table if exists "robots";
+create table if not exists "robots" (
+	"id"	integer,
+	"game_id"	integer not null,
+	"session"	text,
+	"name"	text not null,
+	"ready"	integer not null,
+	"model"	text not null,
+	"facing"	text not null,
+	"damage"	integer not null,
+	"poweredDown"	integer not null,
+	"powerDownScheduled"	integer not null,
+	"passedCheckpoints"	integer not null,
+	foreign key("game_id") references "games"("id"),
+	primary key("id" AUTOINCREMENT)
 );
-DROP TABLE IF EXISTS "fields";
-CREATE TABLE IF NOT EXISTS "fields" (
-	"id"	INTEGER,
-	"game_id"	INTEGER NOT NULL,
-	"robot_id"	INTEGER,
-	"type"	INTEGER NOT NULL,
-	"conditions"	INTEGER NOT NULL,
-	"positionX"	INTEGER NOT NULL,
-	"positionY"	INTEGER NOT NULL,
-	"outgoingDirection"	TEXT NOT NULL,
-	"incomingDirections"	TEXT NOT NULL,
-	FOREIGN KEY("game_id") REFERENCES "games"("id"),
-	FOREIGN KEY("robot_id") REFERENCES "robots"("id"),
-	PRIMARY KEY("id" AUTOINCREMENT)
+drop table if exists "movementCards";
+create table if not exists "movementCards" (
+	"id"	integer,
+	"game_id"	integer not null,
+	"robot_id"	integer,
+	"type"	text not null,
+	"priority"	integer not null,
+	"register"	integer,
+	foreign key("game_id") references "games"("id"),
+	primary key("id" AUTOINCREMENT)
 );
-DROP TABLE IF EXISTS "games";
-CREATE TABLE IF NOT EXISTS "games" (
-	"id"	INTEGER,
-	"currentRegister"	INTEGER NOT NULL,
-	"state"	TEXT NOT NULL,
-	"startedAt"	INTEGER,
-	"finishedAt"	INTEGER,
-	PRIMARY KEY("id" AUTOINCREMENT)
+drop table if exists "fields";
+create table if not exists "fields" (
+	"id"	integer,
+	"game_id"	integer not null,
+	"robot_id"	integer,
+	"type"	integer not null,
+	"conditions"	integer not null,
+	"positionX"	integer not null,
+	"positionY"	integer not null,
+	"outgoingDirection"	text not null,
+	"incomingDirections"	text not null,
+	foreign key("game_id") references "games"("id"),
+	foreign key("robot_id") references "robots"("id"),
+	primary key("id" AUTOINCREMENT)
 );
-COMMIT;

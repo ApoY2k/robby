@@ -12,11 +12,8 @@ import java.time.ZoneId
 
 class ApplicationTest : DatabaseBackedTest() {
 
-    override fun setupBeforeEach() {
-    }
-
-    override fun tearDownAfterEach() {
-    }
+    override fun setupBeforeEach() {}
+    override fun tearDownAfterEach() {}
 
     @Test
     fun `request to root`() = testApplication {
