@@ -1,9 +1,12 @@
 package apoy2k.robby.routes
 
+import apoy2k.robby.engine.BoardEngine
 import apoy2k.robby.engine.BoardType
 import apoy2k.robby.engine.GameEngine
 import apoy2k.robby.engine.ViewUpdateRouter
-import apoy2k.robby.model.*
+import apoy2k.robby.model.Action
+import apoy2k.robby.model.Session
+import apoy2k.robby.model.games
 import apoy2k.robby.templates.GameTpl
 import apoy2k.robby.templates.LayoutTpl
 import io.ktor.http.*
@@ -20,6 +23,7 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import org.ktorm.database.Database
 import org.ktorm.dsl.eq
 import org.ktorm.entity.find
+import org.ktorm.entity.map
 import org.slf4j.LoggerFactory
 import java.io.File
 import java.time.Clock
@@ -54,11 +58,18 @@ fun Route.game(
                 return@get
             }
 
-            val robots = game.robots(database)
-            val fields = game.fields(database)
+            val fields = BoardEngine.fieldListToMatrix(game.fields(database).map { it })
+            val robots = game.robots(database).map { it }
+
             val session = call.sessions.get<Session>()
-            val currentRobot = robots.firstOrNull { it.sessionId == session?.id }
-            val cards = currentRobot?.cards(database) ?: listOf()
+            val currentRobot = when (session != null) {
+                true -> robots.find { it.sessionId == session.id }
+                else -> null
+            }
+            val cards = when (currentRobot != null) {
+                true -> currentRobot.cards(database).map { it }
+                else -> listOf()
+            }
 
             call.respondHtmlTemplate(LayoutTpl()) {
                 content {
@@ -67,7 +78,7 @@ fun Route.game(
                             clock.instant(),
                             game,
                             robots,
-                            fields.unwrapToBoard(),
+                            fields,
                             session,
                             currentRobot,
                             cards

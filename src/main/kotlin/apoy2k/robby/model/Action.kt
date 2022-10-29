@@ -49,6 +49,9 @@ data class Action(
         fun deserializeFromSocket(serializedAction: String): Action {
             val query = URLEncodedUtils.parse(serializedAction, Charset.defaultCharset())
             val label = query.firstOrNull { it.name == ActionField.LABEL.name }?.value.orEmpty()
+
+            // Remove label from query, so it's not duplicated in the action fields
+            query.removeIf { it.name == ActionField.LABEL.name }
             return Action(
                 ActionLabel.valueOf(label),
                 query

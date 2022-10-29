@@ -1,6 +1,7 @@
 package apoy2k.robby.engine
 
 import apoy2k.robby.exceptions.IncompleteAction
+import apoy2k.robby.exceptions.InvalidGameState
 import apoy2k.robby.model.*
 import org.ktorm.database.Database
 import org.ktorm.dsl.*
@@ -110,5 +111,29 @@ class RobotEngine(
                 it.robotId = robot.id
                 database.cards.update(it)
             }
+    }
+
+    /**
+     * Get all cards drawn by a specific robot
+     */
+    fun getDrawnCards(robotId: Int): List<MovementCard> = database.cards
+        .filter { it.robotId eq robotId }
+        .map { it }
+
+    /**
+     * Createa new robot in a game for a session
+     */
+    fun createNewRobot(gameId: Int, session: Session, model: RobotModel): Robot {
+        if (session.name.isBlank()) throw IncompleteAction("No name provided")
+        if (database.robots.any { it.gameId eq gameId and (it.session eq session.id) })
+            throw InvalidGameState("$session already has a Robot in this game")
+
+        val robot = Robot.new(model, session).also {
+            it.gameId = gameId
+        }
+
+        database.robots.add(robot)
+
+        return robot
     }
 }
