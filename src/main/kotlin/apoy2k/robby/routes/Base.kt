@@ -7,20 +7,16 @@ import apoy2k.robby.templates.LayoutTpl
 import apoy2k.robby.templates.renderBoard
 import io.ktor.server.application.*
 import io.ktor.server.html.*
-import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.ktor.server.sessions.*
 import kotlinx.html.*
 import org.ktorm.database.Database
 import org.ktorm.entity.map
-import org.slf4j.LoggerFactory
 
 fun Route.base(
     database: Database,
 ) {
-    val logger = LoggerFactory.getLogger("${this.javaClass.name}.base")
-
     get(Location.ROOT.path) {
         val games = database.games.map { it }
         call.respondHtmlTemplate(LayoutTpl()) {
@@ -30,24 +26,6 @@ fun Route.base(
         }
     }
 
-    post(Location.SET_USERNAME.path) {
-        val form = call.receiveParameters()
-        val name = form["username"] ?: ""
-        if (name.isBlank()) {
-            throw Exception("Username must not be blank")
-        }
-
-        val session = call.sessions.get<Session>()
-        logger.debug("Saving username [$name] for $session")
-        call.sessions.set(
-            session?.copy(
-                name = name,
-                isLoggedIn = true
-            )
-        )
-        call.respondRedirect(Location.ROOT.path)
-    }
-
     get(Location.BOARDS_ROOT.path) {
         call.respondHtmlTemplate(LayoutTpl()) {
             content {
@@ -55,19 +33,13 @@ fun Route.base(
                     div("col") {
                         ul {
                             li {
-                                a(Location.BOARDS_VIEW.build(mapOf("id" to "chop-shop"))) {
-                                    +"Chop Shop"
-                                }
+                                a(Location.BOARDS_VIEW.build(mapOf("id" to "chop-shop"))) { +"Chop Shop" }
                             }
                             li {
-                                a(Location.BOARDS_VIEW.build(mapOf("id" to "laser-test"))) {
-                                    +"Laser Render"
-                                }
+                                a(Location.BOARDS_VIEW.build(mapOf("id" to "laser-test"))) { +"Laser Render" }
                             }
                             li {
-                                a(Location.BOARDS_VIEW.build(mapOf("id" to "robot-states"))) {
-                                    +"Robot States"
-                                }
+                                a(Location.BOARDS_VIEW.build(mapOf("id" to "robot-states"))) { +"Robot States" }
                             }
                         }
                     }

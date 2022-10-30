@@ -2,7 +2,7 @@ package apoy2k.robby.routes
 
 enum class Location(val path: String) {
     ROOT("/"),
-    SET_USERNAME("/auth/set-username"),
+    AUTH("/auth"),
     GAME_ROOT("/game"),
     GAME_VIEW("${GAME_ROOT.path}/{id}"),
     GAME_WEBSOCKET("${GAME_ROOT.path}/{id}/ws"),

@@ -2,46 +2,29 @@ package apoy2k.robby.templates
 
 import apoy2k.robby.model.Game
 import apoy2k.robby.model.Session
-import apoy2k.robby.routes.Location
 import io.ktor.server.html.*
-import kotlinx.html.*
+import kotlinx.html.FlowContent
+import kotlinx.html.b
+import kotlinx.html.div
+import kotlinx.html.p
 
 class HomeTpl(
     private val games: List<Game>,
     private val session: Session?
 ) : Template<FlowContent> {
     override fun FlowContent.apply() {
-        if (session?.name?.isNotBlank() == true) {
-            div("row") {
-                div("col") {
+        div("row") {
+            div("col") {
+                if (session?.isLoggedIn == true) {
                     p {
                         +"Welcome back "
                         b { +session.name }
                     }
-                }
-            }
-            insert(Lobby(games)) {}
-        } else {
-            div("row") {
-                div("col") {
+                } else {
                     p { +"Welcome to robby, stranger!" }
-                    p { +"Choose a username to use while playing and then join a game or create a new one" }
-                }
-            }
-            val action = Location.SET_USERNAME.build()
-            form(action, method = FormMethod.post) {
-                div("row") {
-                    div("col") {
-                        div("input-group") {
-                            span("input-group-text") { +"Username" }
-                            input(InputType.text, name = "username", classes = "form-control")
-                        }
-                    }
-                    div("col") {
-                        button(classes = "btn btn-primary") { +"Join" }
-                    }
                 }
             }
         }
+        insert(Lobby(session, games)) {}
     }
 }

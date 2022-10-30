@@ -1,11 +1,13 @@
 package apoy2k.robby.templates
 
 import apoy2k.robby.model.Game
+import apoy2k.robby.model.Session
 import apoy2k.robby.routes.Location
 import io.ktor.server.html.*
 import kotlinx.html.*
 
 class Lobby(
+    private val session: Session?,
     private val games: List<Game>
 ) : Template<FlowContent> {
     override fun FlowContent.apply() {
@@ -13,8 +15,10 @@ class Lobby(
             div("col") {
                 h2 { +"Available games" }
             }
-            div("col-2") {
-                renderCreateGameButton()
+            if (session?.isLoggedIn == true) {
+                div("col-2") {
+                    renderCreateGameButton()
+                }
             }
         }
         div("row") {

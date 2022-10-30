@@ -19,6 +19,16 @@ fun HtmlBlockTag.renderJoinForm(
                         return@card
                     }
 
+                    if (game.hasStarted(now)) {
+                        p("alert alert-info m-0") { +"Game has started. Specating only" }
+                        return@card
+                    }
+
+                    if (session?.isLoggedIn == false) {
+                        p("alert alert-info m-0") { +"You are not logged in. Spectating only" }
+                        return@card
+                    }
+
                     form("form row") {
                         if (robots.any { it.sessionId == session?.id }) {
                             if (game.state == GameState.PROGRAMMING_REGISTERS) {
@@ -27,11 +37,6 @@ fun HtmlBlockTag.renderJoinForm(
                             } else {
                                 p("alert alert-info m-0") { +"Engine is running..." }
                             }
-                            return@form
-                        }
-
-                        if (game.hasStarted(now)) {
-                            p("alert alert-info m-0") { +"Game has started. Specating only" }
                             return@form
                         }
 
