@@ -72,7 +72,7 @@ class GameEngine(
      * Advances the game state by executing a single action, without sending ViewUpdates
      */
     fun perform(action: Action, boardEngine: BoardEngine) {
-        // All actions require a session, so if an action without a session is noticed, just drop it with
+        // All actions require a session and game, so if an action without a session is noticed, just drop it with
         // an empty result view update set
         val session = action.session ?: throw IncompleteAction("No session attached to $action")
         val game = action.game ?: throw IncompleteAction("No game attached to $action")
@@ -182,6 +182,7 @@ class GameEngine(
             }
         }
 
+        database.games.update(game)
         updates.emit(ViewUpdate(game.id))
     }
 
@@ -213,6 +214,7 @@ class GameEngine(
     private suspend fun runRegister(game: Game, boardEngine: BoardEngine, register: Int) {
         game.state = GameState.EXECUTING_REGISTERS
         game.currentRegister = register
+        database.games.update(game)
         updates.emit(ViewUpdate(game.id))
 
         try {
@@ -229,6 +231,7 @@ class GameEngine(
 
                     for (step in 1..steps) {
                         boardEngine.execute(card, robot)
+                        database.robots.update(robot)
                         updates.emit(ViewUpdate(game.id))
                         delay(GAME_ENGINE_STEP_DELAY)
                     }

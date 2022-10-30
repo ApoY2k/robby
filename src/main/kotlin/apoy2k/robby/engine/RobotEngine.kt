@@ -103,15 +103,20 @@ class RobotEngine(
      * Draw a new set of cards for a robot
      */
     fun drawCards(gameId: Int, robot: Robot) {
-        database.cards
+        val cards = database.cards
             .filter { it.gameId eq gameId and it.robotId.isNull() }
             .map { it }
             .shuffled()
             .take(Integer.max(0, 9 - robot.damage))
-            .forEach {
-                it.robotId = robot.id
-                database.cards.update(it)
+
+        database.batchUpdate(MovementCards) {
+            cards.forEach { card ->
+                item {
+                    set(it.robotId, robot.id)
+                    where { it.id eq card.id }
+                }
             }
+        }
     }
 
     /**
