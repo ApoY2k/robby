@@ -3,7 +3,6 @@ package apoy2k.robby.model
 import org.apache.http.NameValuePair
 import org.apache.http.client.utils.URLEncodedUtils
 import org.apache.http.message.BasicNameValuePair
-import java.io.Serializable
 import java.nio.charset.Charset
 
 enum class ActionLabel {
@@ -27,17 +26,16 @@ enum class ActionField {
 data class Action(
     val label: ActionLabel,
     private val parameters: List<NameValuePair> = emptyList()
-) : Serializable {
+) {
+
     /**
      * Session that issued the action (null if server action)
      */
-    @Transient
     var session: Session? = null
 
     /**
      * Game that this action was created for
      */
-    @Transient
     var game: Game? = null
 
     companion object {

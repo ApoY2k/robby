@@ -2,6 +2,7 @@ package apoy2k.robby.templates
 
 import apoy2k.robby.model.Game
 import apoy2k.robby.model.GameState
+import apoy2k.robby.model.isFinished
 import kotlinx.html.HtmlBlockTag
 import kotlinx.html.UL
 import kotlinx.html.li

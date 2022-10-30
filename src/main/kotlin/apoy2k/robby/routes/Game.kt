@@ -4,9 +4,7 @@ import apoy2k.robby.engine.BoardEngine
 import apoy2k.robby.engine.BoardType
 import apoy2k.robby.engine.GameEngine
 import apoy2k.robby.engine.ViewUpdateRouter
-import apoy2k.robby.model.Action
-import apoy2k.robby.model.Session
-import apoy2k.robby.model.games
+import apoy2k.robby.model.*
 import apoy2k.robby.templates.GameTpl
 import apoy2k.robby.templates.LayoutTpl
 import io.ktor.http.*
@@ -22,6 +20,7 @@ import kotlinx.coroutines.channels.consumeEach
 import kotlinx.coroutines.flow.MutableSharedFlow
 import org.ktorm.database.Database
 import org.ktorm.dsl.eq
+import org.ktorm.entity.filter
 import org.ktorm.entity.find
 import org.ktorm.entity.map
 import org.slf4j.LoggerFactory
@@ -58,8 +57,9 @@ fun Route.game(
                 return@get
             }
 
-            val fields = BoardEngine.fieldListToMatrix(game.fields(database).map { it })
-            val robots = game.robots(database).map { it }
+            val fields = database.fields.filter { it.gameId eq gameId }.map { it }
+            val board = BoardEngine.fieldListToMatrix(fields)
+            val robots = database.robots.filter { it.gameId eq gameId }.map { it }
 
             val session = call.sessions.get<Session>()
             val currentRobot = when (session != null) {
@@ -67,7 +67,7 @@ fun Route.game(
                 else -> null
             }
             val cards = when (currentRobot != null) {
-                true -> currentRobot.cards(database).map { it }
+                true -> database.cards.filter { it.robotId eq currentRobot.id }.map { it }
                 else -> listOf()
             }
 
@@ -78,7 +78,7 @@ fun Route.game(
                             clock.instant(),
                             game,
                             robots,
-                            fields,
+                            board,
                             session,
                             currentRobot,
                             cards
@@ -89,25 +89,13 @@ fun Route.game(
         }
     }
 
-    webSocket("/ws") {
+    webSocket(Location.GAME_WEBSOCKET.path) {
         val session = call.sessions.get<Session>()
-        if (session == null) {
-            logger.error("No session associated with WebSocket connection")
-            call.respond(HttpStatusCode.Forbidden)
-            return@webSocket
-        }
-
+            ?: throw Exception("No session for websocket found")
         val gameId = call.parameters["id"]?.toInt()
-        if (gameId == null) {
-            call.respond(HttpStatusCode.BadRequest)
-            return@webSocket
-        }
-
+            ?: throw Exception("No game id found")
         val game = database.games.find { it.id eq gameId }
-        if (game == null) {
-            logger.error("No game found")
-            return@webSocket
-        }
+            ?: throw Exception("No game with id $gameId found, aborting websocket session")
 
         viewUpdateRouter.addSession(gameId, session, this)
 

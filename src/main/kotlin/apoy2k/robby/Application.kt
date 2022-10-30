@@ -6,6 +6,7 @@ import apoy2k.robby.engine.ViewUpdate
 import apoy2k.robby.engine.ViewUpdateRouter
 import apoy2k.robby.model.Action
 import apoy2k.robby.model.Session
+import apoy2k.robby.routes.Location
 import apoy2k.robby.routes.base
 import apoy2k.robby.routes.game
 import io.ktor.http.*
@@ -17,6 +18,7 @@ import io.ktor.server.netty.*
 import io.ktor.server.plugins.callloging.*
 import io.ktor.server.plugins.contentnegotiation.*
 import io.ktor.server.plugins.statuspages.*
+import io.ktor.server.request.*
 import io.ktor.server.resources.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
@@ -78,6 +80,14 @@ fun Application.setup(
         val session = call.sessions.get<Session>()
         if (session == null) {
             call.sessions.set(Session(RandomStringUtils.randomAlphanumeric(5)))
+        } else {
+            if (!session.isLoggedIn
+                && !call.request.path().contains("assets")
+                && !call.request.path().contains("auth")
+                && call.request.path() != Location.ROOT.path
+            ) {
+                call.respondRedirect(Location.ROOT.path)
+            }
         }
     }
 

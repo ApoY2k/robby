@@ -1,9 +1,6 @@
 package apoy2k.robby.model
 
-import org.ktorm.database.Database
-import org.ktorm.dsl.eq
 import org.ktorm.entity.Entity
-import org.ktorm.entity.filter
 import org.ktorm.schema.*
 
 enum class RobotModel {
@@ -29,7 +26,7 @@ object Robots : Table<Robot>("robots") {
 
 interface Robot : Entity<Robot> {
     companion object : Entity.Factory<Robot>() {
-        fun new(model: RobotModel) = new(model, Session("", ""))
+        fun new(model: RobotModel) = new(model, Session("", false, ""))
         fun new(model: RobotModel, session: Session) = Robot {
             this.ready = false
             this.model = model
@@ -54,8 +51,6 @@ interface Robot : Entity<Robot> {
     var powerDownScheduled: Boolean
     var poweredDown: Boolean
     var passedCheckpoints: Int
-
-    fun cards(db: Database) = db.cards.filter { it.robotId eq id }
 
     /**
      * Toggle power down for the round

@@ -21,7 +21,7 @@ fun Route.base(
 ) {
     val logger = LoggerFactory.getLogger("${this.javaClass.name}.base")
 
-    get("/") {
+    get(Location.ROOT.path) {
         val games = database.games.map { it }
         call.respondHtmlTemplate(LayoutTpl()) {
             content {
@@ -33,10 +33,19 @@ fun Route.base(
     post(Location.SET_USERNAME.path) {
         val form = call.receiveParameters()
         val name = form["username"] ?: ""
+        if (name.isBlank()) {
+            throw Exception("Username must not be blank")
+        }
+
         val session = call.sessions.get<Session>()
         logger.debug("Saving username [$name] for $session")
-        call.sessions.set(session?.copy(name = name))
-        call.respondRedirect("/")
+        call.sessions.set(
+            session?.copy(
+                name = name,
+                isLoggedIn = true
+            )
+        )
+        call.respondRedirect(Location.ROOT.path)
     }
 
     get(Location.BOARDS_ROOT.path) {

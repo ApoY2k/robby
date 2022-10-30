@@ -13,7 +13,7 @@ class GameTpl(
     private val now: Instant,
     private val game: Game,
     private val robots: List<Robot>,
-    private val fields: List<List<Field>>,
+    private val board: List<List<Field>>,
     private val session: Session?,
     private val sessionRobot: Robot?,
     private val robotCards: List<MovementCard>,
@@ -24,7 +24,7 @@ class GameTpl(
 
             div("row") {
                 div("col") {
-                    renderBoard(fields, robots)
+                    renderBoard(board, robots)
                 }
 
                 div("col-3") {

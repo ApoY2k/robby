@@ -7,6 +7,7 @@ import apoy2k.robby.engine.ViewUpdate
 import apoy2k.robby.model.Action
 import apoy2k.robby.model.RobotModel
 import apoy2k.robby.model.Session
+import apoy2k.robby.model.robots
 import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -15,6 +16,7 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import org.ktorm.database.Database
+import org.ktorm.dsl.and
 import org.ktorm.dsl.eq
 import org.ktorm.entity.find
 import org.ktorm.logging.Slf4jLoggerAdapter
@@ -69,8 +71,10 @@ fun main() {
         // Leave some time for the engine to process
         delay(1000)
 
-        val robot1 = game1.robots(database).find { it.session eq s1.id } ?: fail("Robot1 not found")
-        val robot2 = game2.robots(database).find { it.session eq s2.id } ?: fail("Robot2 not found")
+        val robot1 = database.robots.find { it.gameId eq game1.id and (it.session eq s1.id) }
+            ?: fail("Robot1 not found")
+        val robot2 = database.robots.find { it.gameId eq game1.id and (it.session eq s1.id) }
+            ?: fail("Robot2 not found")
 
         val game1cards = robotEngine.getDrawnCards(robot1.id)
         val game2cards = robotEngine.getDrawnCards(robot2.id)

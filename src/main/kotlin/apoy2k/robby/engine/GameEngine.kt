@@ -45,7 +45,7 @@ class GameEngine(
                 return@onEach
             }
 
-            if (clock.instant().isAfter(game.finishedAt)) {
+            if (game.isFinished(clock.instant())) {
                 logger.warn("$game is already finished! Ignorning $action")
                 return@onEach
             }
@@ -114,7 +114,7 @@ class GameEngine(
         val game = Game {
             state = GameState.PROGRAMMING_REGISTERS
             currentRegister = 1
-            startedAt = clock.instant()
+            startedAt = null
             finishedAt = null
         }
 
@@ -139,7 +139,7 @@ class GameEngine(
      * Run engine on game state, sends view updates accordingly
      */
     private suspend fun runEngine(game: Game, boardEngine: BoardEngine) {
-        val robots = game.robots(database).map { it }
+        val robots = database.robots.filter { it.gameId eq game.id }.map { it }
 
         // Check conditions for running automatic registers are fulfilled
         if (robots.isEmpty() || robots.any { !it.ready }) {
@@ -243,7 +243,7 @@ class GameEngine(
 
     private suspend fun runMoveBoardElements(game: Game, boardEngine: BoardEngine) {
         game.state = GameState.MOVE_BARD_ELEMENTS_2
-        val robots = game.robots(database).map { it }
+        val robots = database.robots.filter { it.gameId eq game.id }.map { it }
         boardEngine.moveBelts(FieldType.BELT_2, robots)
         updates.emit(ViewUpdate(game.id))
         delay(GAME_ENGINE_STEP_DELAY)
@@ -257,7 +257,7 @@ class GameEngine(
 
     private suspend fun runFireLasers(game: Game, boardEngine: BoardEngine) {
         game.state = GameState.FIRE_LASERS_2
-        val robots = game.robots(database).map { it }
+        val robots = database.robots.filter { it.gameId eq game.id }.map { it }
         boardEngine.fireLasers(FieldType.LASER_2, robots)
         updates.emit(ViewUpdate(game.id))
         delay(GAME_ENGINE_STEP_DELAY)
@@ -271,7 +271,7 @@ class GameEngine(
 
     private suspend fun runCheckpoints(game: Game, boardEngine: BoardEngine) {
         game.state = GameState.CHECKPOINTS
-        val robots = game.robots(database).map { it }
+        val robots = database.robots.filter { it.gameId eq game.id }.map { it }
         boardEngine.touchCheckpoints(robots)
         robots.forEach { database.robots.update(it) }
         updates.emit(ViewUpdate(game.id))
@@ -280,7 +280,7 @@ class GameEngine(
 
     private suspend fun runRepairPowerups(game: Game, boardEngine: BoardEngine) {
         game.state = GameState.REPAIR_POWERUPS
-        val robots = game.robots(database).map { it }
+        val robots = database.robots.filter { it.gameId eq game.id }.map { it }
         boardEngine.touchRepair(robots)
         boardEngine.touchModifications()
         robots.forEach { database.robots.update(it) }

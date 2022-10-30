@@ -49,16 +49,16 @@ fun HtmlBlockTag.renderRobot(robot: Robot) {
     }
 }
 
-fun HtmlBlockTag.renderBoard(fields: List<List<Field>>, robots: List<Robot>) {
+fun HtmlBlockTag.renderBoard(board: List<List<Field>>, robots: List<Robot>) {
     div("row") {
         div("col") {
             div("board") {
-                val rowTemplate = "60px ".repeat(fields.count())
-                val colTemplate = "60px ".repeat(fields[0].count())
+                val rowTemplate = "60px ".repeat(board.count())
+                val colTemplate = "60px ".repeat(board[0].count())
 
                 attributes["style"] = "grid-template-rows: $rowTemplate; grid-template-columns: $colTemplate;"
 
-                fields.flatten().forEach { field ->
+                board.flatten().forEach { field ->
                     renderField(field, robots.firstOrNull { it.id == field.robotId })
                 }
             }

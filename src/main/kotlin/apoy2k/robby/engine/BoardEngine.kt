@@ -48,7 +48,7 @@ class BoardEngine(
                 .forEach {
                     val row: MutableList<Field> = board.getOrElse(it.positionY) { listOf() }.toMutableList()
                     row.add(it.positionX, it)
-                    board.add(it.positionY, row)
+                    board.add(it.positionY, row) // This wrongly duplicates fields in rows
                 }
             return board
         }

@@ -1,9 +1,6 @@
 package apoy2k.robby.model
 
-import org.ktorm.database.Database
-import org.ktorm.dsl.eq
 import org.ktorm.entity.Entity
-import org.ktorm.entity.filter
 import org.ktorm.schema.Table
 import org.ktorm.schema.enum
 import org.ktorm.schema.int
@@ -37,10 +34,20 @@ interface Game : Entity<Game> {
     var state: GameState
     var startedAt: Instant?
     var finishedAt: Instant?
+}
 
-    fun cards(db: Database) = db.robots.filter { it.gameId eq id }
-    fun robots(db: Database) = db.robots.filter { it.gameId eq id }
-    fun fields(db: Database) = db.fields.filter { it.gameId eq id }
-    fun isFinished(now: Instant) = now.isAfter(this.finishedAt)
-    fun hasStarted(now: Instant) = now.isAfter(this.startedAt)
+/**
+ * true, if the game has finished after the given instant or no finish date is set
+ */
+fun Game.isFinished(now: Instant) = when (finishedAt) {
+    null -> false
+    else -> now.isAfter(finishedAt)
+}
+
+/**
+ * true, if the game has started after the given instant or no start is set
+ */
+fun Game.hasStarted(now: Instant) = when (startedAt) {
+    null -> false
+    else -> now.isAfter(startedAt)
 }

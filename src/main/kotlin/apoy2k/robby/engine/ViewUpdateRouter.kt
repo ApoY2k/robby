@@ -1,7 +1,6 @@
 package apoy2k.robby.engine
 
-import apoy2k.robby.model.Session
-import apoy2k.robby.model.games
+import apoy2k.robby.model.*
 import apoy2k.robby.templates.GameTpl
 import io.ktor.server.html.*
 import io.ktor.websocket.*
@@ -14,6 +13,7 @@ import kotlinx.html.html
 import kotlinx.html.stream.appendHTML
 import org.ktorm.database.Database
 import org.ktorm.dsl.eq
+import org.ktorm.entity.filter
 import org.ktorm.entity.find
 import org.ktorm.entity.map
 import org.slf4j.LoggerFactory
@@ -45,14 +45,15 @@ class ViewUpdateRouter(
                 }
 
                 val game = database.games.find { it.id eq update.gameId } ?: return@onEach
-                val fields = BoardEngine.fieldListToMatrix(game.fields(database).map { it })
-                val robots = game.robots(database).map { it }
+                val fields = database.fields.filter { it.gameId eq game.id }.map { it }
+                val board = BoardEngine.fieldListToMatrix(fields)
+                val robots = database.robots.filter { it.gameId eq game.id }.map { it }
 
                 gameSessions
                     .forEach { (httpSession, wsSessions) ->
                         val currentRobot = robots.find { it.sessionId == httpSession.id }
                         val cards = when (currentRobot != null) {
-                            true -> currentRobot.cards(database).map { it }
+                            true -> database.cards.filter { it.gameId eq game.id }.map { it }
                             else -> listOf()
                         }
 
@@ -65,7 +66,7 @@ class ViewUpdateRouter(
                                             clock.instant(),
                                             game,
                                             robots,
-                                            fields,
+                                            board,
                                             httpSession,
                                             currentRobot,
                                             cards,
