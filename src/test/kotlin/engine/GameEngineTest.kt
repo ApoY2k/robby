@@ -41,6 +41,7 @@ class GameEngineTest : DatabaseBackedTest() {
         val s1 = Session("s1", "s1")
         gameEngine.perform(Action.joinGame(RobotModel.ZIPPY).also {
             it.session = s1
+            it.game = game
         }, boardEngine)
 
         val robot = database.robots.find { it.gameId eq game.id and (it.session eq s1.id) }
@@ -54,7 +55,7 @@ class GameEngineTest : DatabaseBackedTest() {
 
         val registerCard = robotEngine.getRegister(robot.id, 1)
         assertNotNull(registerCard)
-        assertEquals(card, registerCard)
+        assertEquals(card.id, registerCard.id)
     }
 
     @Test
@@ -84,7 +85,7 @@ class GameEngineTest : DatabaseBackedTest() {
         val register2 = robotEngine.getRegister(robot.id, 2)
         assertNull(register1)
         assertNotNull(register2)
-        assertEquals(card, register2)
+        assertEquals(card.id, register2.id)
     }
 
     @Test

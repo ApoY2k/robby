@@ -11,10 +11,17 @@ import kotlin.math.atan2
 
 class BoardEngine(
     val board: List<List<Field>>,
+    assignIds: Boolean = false
 ) {
     private val logger = LoggerFactory.getLogger(this.javaClass)
 
     init {
+        if (assignIds) {
+            board.flatten().forEachIndexed { idx, field ->
+                field.id = idx
+            }
+        }
+
         // Add laser conditions on all fields in a lasers way (just once on intializing the field)
         applyLaserConditions()
     }
@@ -24,8 +31,9 @@ class BoardEngine(
         /**
          * Build a board engine instance for a specific game
          */
+        @JvmStatic
         fun build(gameId: Int, database: Database): BoardEngine {
-            val fields = database.fields.filter { it.id eq gameId }.map { it }
+            val fields = database.fields.filter { it.gameId eq gameId }.map { it }
             return BoardEngine(fieldListToMatrix(fields))
         }
 
@@ -33,13 +41,14 @@ class BoardEngine(
          * Converts a list of fields to a field matrix, using the x/y coordinates to insert the fields
          * into the matrix
          */
+        @JvmStatic
         fun fieldListToMatrix(fields: List<Field>): List<List<Field>> {
             val board = mutableListOf<MutableList<Field>>()
             fields
                 .forEach {
                     val row: MutableList<Field> = board.getOrElse(it.positionY) { listOf() }.toMutableList()
-                    row[it.positionX] = it
-                    board[it.positionY] = row
+                    row.add(it.positionX, it)
+                    board.add(it.positionY, row)
                 }
             return board
         }

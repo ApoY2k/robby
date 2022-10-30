@@ -2,6 +2,7 @@ package apoy2k.robby.kotlin.engine
 
 import apoy2k.robby.engine.BoardEngine
 import apoy2k.robby.model.*
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
@@ -28,7 +29,7 @@ class BoardEngineTest {
                 Field.new(FieldType.BELT, Direction.DOWN)
             ),
             listOf(Field.new(), Field.new(), Field.new(), Field.new())
-        )
+        ), assignIds = true
     )
 
     private val emptyBoardEngine = BoardEngine(
@@ -37,12 +38,18 @@ class BoardEngineTest {
             listOf(Field.new(), Field.new(), Field.new(), Field.new()),
             listOf(Field.new(), Field.new(), Field.new(), Field.new()),
             listOf(Field.new(), Field.new(), Field.new(), Field.new())
-        )
+        ), assignIds = true
     )
 
     private val robot1 = Robot.new(RobotModel.ZIPPY, Session("s1", "s1")).also { it.id = 1 }
     private val robot2 = Robot.new(RobotModel.ZIPPY, Session("s2", "s2")).also { it.id = 2 }
     private val robot3 = Robot.new(RobotModel.ZIPPY, Session("s3", "s3")).also { it.id = 3 }
+
+    @BeforeEach
+    fun setup() {
+        resetBoard(boardEngine)
+        resetBoard(emptyBoardEngine)
+    }
 
     @Test
     fun `belt right moves robot`() {
@@ -141,14 +148,14 @@ class BoardEngineTest {
             listOf(
                 listOf(Field.new(FieldType.BELT, Direction.DOWN)),
                 listOf(Field.new(FieldType.BELT, Direction.DOWN, Direction.RIGHT)),
-            )
+            ), assignIds = true
         )
 
         val start = board.fieldAt(0, 0)
         val end = board.fieldAt(1, 0)
 
         start.robotId = robot1.id
-        boardEngine.moveBelts(FieldType.BELT, listOf(robot1))
+        board.moveBelts(FieldType.BELT, listOf(robot1))
 
         assertNull(start.robotId)
         assertNotNull(end.robotId)
@@ -291,7 +298,7 @@ class BoardEngineTest {
         direction: Direction,
         expectedEndField: Field
     ) {
-        val endField = boardEngine.findLastNonBlockedField(startField, direction)
+        val endField = board.findLastNonBlockedField(startField, direction)
         assertEquals(expectedEndField, endField)
     }
 
@@ -303,22 +310,30 @@ class BoardEngineTest {
                 listOf(Field.new(), Field.new()),
                 listOf(Field.new(), Field.new()),
                 listOf(Field.new(), Field.new()),
-            )
+            ), assignIds = true
         )
 
-        val zippy = Robot.new(RobotModel.ZIPPY)
+        val zippy = Robot.new(RobotModel.ZIPPY).also { it.id = 1 }
         board.fieldAt(2, 0).robotId = zippy.id
 
-        val klaus = Robot.new(RobotModel.KLAUS)
+        val klaus = Robot.new(RobotModel.KLAUS).also { it.id = 2 }
         board.fieldAt(2, 1).robotId = klaus.id
 
-        board.fireLasers(FieldType.LASER, listOf(robot1, robot2))
+        board.fireLasers(FieldType.LASER, listOf(zippy, klaus))
 
         assertEquals(1, zippy.damage)
         assertEquals(0, klaus.damage)
     }
 
     companion object {
+        @JvmStatic
+        fun resetBoard(board: BoardEngine) {
+            board.board.flatten().forEach {
+                it.robotId = null
+                it.conditions = mutableListOf()
+            }
+        }
+
         @JvmStatic
         fun provideTestFirstFieldByDirection(): Stream<Arguments> {
             val board = BoardEngine(
@@ -327,7 +342,7 @@ class BoardEngineTest {
                     listOf(Field.new(FieldType.WALL, Direction.DOWN), Field.new(), Field.new()),
                     listOf(Field.new(), Field.new(), Field.new(FieldType.WALL, Direction.RIGHT)),
                     listOf(Field.new(), Field.new(FieldType.WALL, Direction.UP), Field.new()),
-                )
+                ), assignIds = true
             )
 
             return Stream.of(

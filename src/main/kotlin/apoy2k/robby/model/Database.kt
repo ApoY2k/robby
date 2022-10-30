@@ -20,7 +20,9 @@ class EnumListType<T : Enum<T>>(
 
     override fun doGetResult(rs: ResultSet, index: Int): Collection<T> {
         val data = rs.getString(index).orEmpty().split(",")
-        return data.map { value -> enumClass.enumConstants.first { it.name == value } }
+        return data
+            .filter { it.isNotBlank() }
+            .map { value -> enumClass.enumConstants.first { it.name == value } }
     }
 }
 
