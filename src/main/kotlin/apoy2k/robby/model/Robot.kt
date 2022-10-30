@@ -35,7 +35,7 @@ interface Robot : Entity<Robot> {
             this.model = model
             this.name = session.name
             this.sessionId = session.id
-            this.facing = Direction.RIGHT
+            this.facing = Direction.DOWN
             this.damage = 0
             this.powerDownScheduled = false
             this.poweredDown = false

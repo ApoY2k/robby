@@ -45,6 +45,7 @@ interface Field : Entity<Field> {
     companion object : Entity.Factory<Field>() {
         fun new(type: FieldType = FieldType.NONE, vararg directions: Direction) = Field {
             this.type = type
+            this.conditions = mutableListOf()
             this.outgoingDirection = directions.firstOrNull() ?: Direction.NONE
             this.incomingDirections = directions.drop(1)
         }
