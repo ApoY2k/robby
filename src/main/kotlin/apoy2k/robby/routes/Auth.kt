@@ -15,7 +15,9 @@ fun Route.auth() {
     val logger = LoggerFactory.getLogger("${this.javaClass.name}.base")
 
     get(Location.AUTH.path) {
-        call.respondHtmlTemplate(LayoutTpl()) {
+        val session = call.sessions.get<Session>()
+
+        call.respondHtmlTemplate(LayoutTpl(session)) {
             content {
                 div("row") {
                     div("col") {

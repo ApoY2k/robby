@@ -2,11 +2,9 @@ package apoy2k.robby.templates
 
 import apoy2k.robby.model.Game
 import apoy2k.robby.model.Session
+import apoy2k.robby.routes.Location
 import io.ktor.server.html.*
-import kotlinx.html.FlowContent
-import kotlinx.html.b
-import kotlinx.html.div
-import kotlinx.html.p
+import kotlinx.html.*
 
 class HomeTpl(
     private val games: List<Game>,
@@ -19,9 +17,14 @@ class HomeTpl(
                     p {
                         +"Welcome back "
                         b { +session.name }
+                        +"!"
                     }
                 } else {
                     p { +"Welcome to robby, stranger!" }
+                    p {
+                        a(Location.AUTH.path) { +"Login" }
+                        +" to start playing!"
+                    }
                 }
             }
         }

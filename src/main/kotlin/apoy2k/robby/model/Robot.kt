@@ -26,7 +26,7 @@ object Robots : Table<Robot>("robots") {
 
 interface Robot : Entity<Robot> {
     companion object : Entity.Factory<Robot>() {
-        fun new(model: RobotModel) = new(model, Session("", false, ""))
+        fun new(model: RobotModel) = new(model, Session("", ""))
         fun new(model: RobotModel, session: Session) = Robot {
             this.ready = false
             this.model = model

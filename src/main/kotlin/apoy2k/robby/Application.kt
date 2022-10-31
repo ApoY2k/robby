@@ -36,7 +36,7 @@ import java.time.Clock
 import kotlin.collections.set
 
 fun main() {
-    embeddedServer(Netty, port = 8080, host = "0.0.0.0", watchPaths = listOf("classes")) {
+    embeddedServer(Netty, port = 8080, host = "0.0.0.0") {
         val clock = Clock.systemDefaultZone()
         val database = Database.connect(
             url = "jdbc:sqlite:${envStr(Environment.DATABASE_PATH)}",

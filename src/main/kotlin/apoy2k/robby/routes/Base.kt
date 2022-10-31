@@ -18,8 +18,10 @@ fun Route.base(
     database: Database,
 ) {
     get(Location.ROOT.path) {
+        val session = call.sessions.get<Session>()
         val games = database.games.map { it }
-        call.respondHtmlTemplate(LayoutTpl()) {
+
+        call.respondHtmlTemplate(LayoutTpl(session)) {
             content {
                 insert(HomeTpl(games, call.sessions.get())) {}
             }
@@ -27,7 +29,9 @@ fun Route.base(
     }
 
     get(Location.BOARDS_ROOT.path) {
-        call.respondHtmlTemplate(LayoutTpl()) {
+        val session = call.sessions.get<Session>()
+
+        call.respondHtmlTemplate(LayoutTpl(session)) {
             content {
                 div("row") {
                     div("col") {
@@ -49,6 +53,7 @@ fun Route.base(
     }
 
     get(Location.BOARDS_VIEW.path) {
+        val session = call.sessions.get<Session>()
         val robots = mutableListOf<Robot>()
         val board = when (call.parameters["id"]) {
             "chop-shop" -> generateChopShopBoard()
@@ -90,7 +95,7 @@ fun Route.base(
             return@get
         }
 
-        call.respondHtmlTemplate(LayoutTpl()) {
+        call.respondHtmlTemplate(LayoutTpl(session)) {
             content {
                 h2 {
                     +"Board Preview"

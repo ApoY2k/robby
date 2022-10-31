@@ -1,9 +1,13 @@
 package apoy2k.robby.templates
 
+import apoy2k.robby.model.Session
+import apoy2k.robby.routes.Location
 import io.ktor.server.html.*
 import kotlinx.html.*
 
-class LayoutTpl : Template<HTML> {
+class LayoutTpl(
+    private val session: Session?
+) : Template<HTML> {
     val content = Placeholder<FlowContent>()
     override fun HTML.apply() {
         attributes["lang"] = "en"
@@ -21,17 +25,31 @@ class LayoutTpl : Template<HTML> {
             link(rel = "stylesheet", href = "/assets/css/main.css")
         }
         body {
-            div("container") {
-                div("row") {
-                    div("col") {
-                        h1 { +"robby" }
+            nav("navbar navbar-expand-sm navbar-dark bg-dark mb-3") {
+                div("container") {
+                    a(Location.ROOT.path, classes = "navbar-brand") { +"🤖 robby" }
+                    div("collapse navbar-collapse justify-content-between") {
+                        ul("navbar-nav") {
+                            li("nav-item") {
+                                a(Location.ROOT.path, classes = "nav-link") { +"Games" }
+                            }
+                        }
+                        ul("navbar-nav") {
+                            li("nav-item") {
+                                if (session?.isLoggedIn == true) {
+                                    span("navbar-text") { +session.name }
+                                } else {
+                                    a(Location.AUTH.path, classes = "nav-link") { +"Login" }
+                                }
+                            }
+                        }
                     }
                 }
             }
-            div("container") {
+            main("container") {
                 insert(content)
             }
-            div("container") {
+            footer("container") {
                 div("row mt-3") {
                     div("col") {
                         hr {}

@@ -71,7 +71,7 @@ fun Route.game(
                 else -> listOf()
             }
 
-            call.respondHtmlTemplate(LayoutTpl()) {
+            call.respondHtmlTemplate(LayoutTpl(session)) {
                 content {
                     insert(
                         GameTpl(
