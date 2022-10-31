@@ -93,10 +93,10 @@ class RobotEngine(
      */
     fun prepareNewRound(gameId: Int, robot: Robot) {
         clearRegisters(robot)
-        robot.toggleReady()
+        toggleReady(robot)
 
         if (robot.powerDownScheduled) {
-            robot.togglePowerDown()
+            togglePowerDown(robot)
             robot.poweredDown = true
         } else {
             drawCards(gameId, robot)
@@ -120,13 +120,20 @@ class RobotEngine(
             .shuffled()
             .take(Integer.max(0, 9 - robot.damage))
 
-        database.batchUpdate(MovementCards) {
-            cards.forEach { card ->
-                item {
-                    set(it.robotId, robot.id)
-                    where { it.id eq card.id }
+        database.useTransaction { tx ->
+            database.update(MovementCards) {
+                set(it.robotId, null)
+                where { it.robotId eq robot.id }
+            }
+            database.batchUpdate(MovementCards) {
+                cards.forEach { card ->
+                    item {
+                        set(it.robotId, robot.id)
+                        where { it.id eq card.id }
+                    }
                 }
             }
+            tx.commit()
         }
     }
 
@@ -152,5 +159,25 @@ class RobotEngine(
         database.robots.add(robot)
 
         return robot
+    }
+
+    /**
+     * Toggle the ready state on a robot
+     */
+    fun toggleReady(robot: Robot) {
+        database.update(Robots) {
+            set(it.ready, !it.ready)
+            where { it.id eq robot.id }
+        }
+    }
+
+    /**
+     * Toggle the powerdown scheduled state on a robot
+     */
+    fun togglePowerDown(robot: Robot) {
+        database.update(Robots) {
+            set(it.powerDownScheduled, !it.powerDownScheduled)
+            where { it.id eq robot.id }
+        }
     }
 }

@@ -53,20 +53,6 @@ interface Robot : Entity<Robot> {
     var passedCheckpoints: Int
 
     /**
-     * Toggle power down for the round
-     */
-    fun togglePowerDown() {
-        powerDownScheduled = !powerDownScheduled
-    }
-
-    /**
-     * Toggle ready state
-     */
-    fun toggleReady() {
-        ready = !ready
-    }
-
-    /**
      * Check if a register is locked
      */
     fun isLocked(register: Int): Boolean =

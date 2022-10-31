@@ -13,8 +13,10 @@ import io.ktor.server.sessions.*
 import kotlinx.html.*
 import org.ktorm.database.Database
 import org.ktorm.entity.map
+import java.time.Clock
 
 fun Route.base(
+    clock: Clock,
     database: Database,
 ) {
     get(Location.ROOT.path) {
@@ -23,7 +25,7 @@ fun Route.base(
 
         call.respondHtmlTemplate(LayoutTpl(session)) {
             content {
-                insert(HomeTpl(games, session)) {}
+                insert(HomeTpl(clock.instant(), games, session)) {}
             }
         }
     }

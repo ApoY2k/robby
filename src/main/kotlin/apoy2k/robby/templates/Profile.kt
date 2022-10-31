@@ -70,7 +70,8 @@ fun HtmlBlockTag.renderRegister(
 
         div("btn-group-vertical w-100") cards@{
             if (locked) {
-                renderCard(register, robotCards[register], locked = true, selected = true)
+                val card = robotCards.first { it.register == register }
+                renderCard(register, card, locked = true, selected = true)
             } else {
                 robotCards.forEach {
                     val selected = it.register == register

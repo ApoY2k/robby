@@ -46,9 +46,11 @@ class BoardEngine(
             val board = mutableListOf<MutableList<Field>>()
             fields
                 .forEach {
-                    val row: MutableList<Field> = board.getOrElse(it.positionY) { listOf() }.toMutableList()
-                    row.add(it.positionX, it)
-                    board.add(it.positionY, row) // This wrongly duplicates fields in rows
+                    val row = board.getOrNull(it.positionY)
+                    if (row == null) {
+                        board.add(it.positionY, mutableListOf())
+                    }
+                    board[it.positionY].add(it.positionX, it)
                 }
             return board
         }
@@ -75,16 +77,20 @@ class BoardEngine(
      * Note that even if the MovementCard specifies a movement of 2 or 3, this method will only
      * ever move the robot one (or zero, depending on the card) step.
      * Repeating movements must be done by the calling operation
+     *
+     * @return List of entities to update after execution
      */
-    fun execute(card: MovementCard, robot: Robot) {
+    fun execute(card: MovementCard, robot: Robot): List<Field> {
         logger.debug("Executing $card on $robot")
         robot.rotate(card.movement)
 
         if (card.hasSteps()) {
             val direction = robot.getMovementDirection(card.movement)
             val positions = calculateRobotMove(robot.id, direction)
-            applyPositions(positions)
+            return applyPositions(positions)
         }
+
+        return emptyList()
     }
 
     /**
@@ -124,20 +130,24 @@ class BoardEngine(
     /**
      * Apply a map of position->robot entries to the board
      */
-    private fun applyPositions(positions: Map<Position, Int>) {
+    private fun applyPositions(positions: Map<Position, Int>): List<Field> {
+        val result = mutableListOf<Field>()
         board.flatten().forEach { field ->
             // If a robot on a field is referenced in the position map, it must be removed from its "old" field
             // before it can be placed on the new one, defined in the positions map
             if (positions.containsValue(field.robotId)) {
                 field.robotId = null
+                result.add(field)
             }
 
             // If the field position is referenced in the provided position map, place the robot on it
             val position = positionOf(field)
             positions[position]?.let {
                 field.robotId = it
+                result.add(field)
             }
         }
+        return result
     }
 
     /**
@@ -293,11 +303,11 @@ class BoardEngine(
     /**
      * Place new robot on the board
      */
-    fun placeRobot(robotId: Int) {
-        // TODO Find starter placements for new robots in fields
-        board.flatten()
+    fun placeRobot(robotId: Int): Field {
+        // TODO Use "start fields" to place robots
+        return board.flatten()
             .first { it.robotId == null }
-            .let { it.robotId = robotId }
+            .also { it.robotId = robotId }
     }
 
     /**

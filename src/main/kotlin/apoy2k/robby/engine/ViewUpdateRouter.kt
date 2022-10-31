@@ -16,6 +16,7 @@ import org.ktorm.dsl.eq
 import org.ktorm.entity.filter
 import org.ktorm.entity.find
 import org.ktorm.entity.map
+import org.ktorm.entity.sortedByDescending
 import org.slf4j.LoggerFactory
 import java.time.Clock
 
@@ -53,7 +54,11 @@ class ViewUpdateRouter(
                     .forEach { (httpSession, wsSessions) ->
                         val currentRobot = robots.find { it.sessionId == httpSession.id }
                         val cards = when (currentRobot != null) {
-                            true -> database.cards.filter { it.robotId eq currentRobot.id }.map { it }
+                            true -> database.cards
+                                .filter { it.robotId eq currentRobot.id }
+                                .sortedByDescending { it.priority }
+                                .map { it }
+
                             else -> listOf()
                         }
 

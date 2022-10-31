@@ -80,7 +80,8 @@ class GameEngine(
         if (action.label == ActionLabel.JOIN_GAME) {
             val model = action.getString(ActionField.ROBOT_MODEL) ?: throw IncompleteAction("No robot model specified")
             val robot = addRobot(game.id, RobotModel.valueOf(model), session)
-            boardEngine.placeRobot(robot.id)
+            val field = boardEngine.placeRobot(robot.id)
+            database.fields.update(field)
             return
         }
 
@@ -92,8 +93,8 @@ class GameEngine(
 
         when (action.label) {
             ActionLabel.LEAVE_GAME -> removeRobot(robot.id)
-            ActionLabel.TOGGLE_READY -> robot.toggleReady()
-            ActionLabel.TOGGLE_POWERDOWN -> robot.togglePowerDown()
+            ActionLabel.TOGGLE_READY -> robotEngine.toggleReady(robot)
+            ActionLabel.TOGGLE_POWERDOWN -> robotEngine.togglePowerDown(robot)
 
             ActionLabel.SELECT_CARD -> {
                 val cardId = action.getInt(ActionField.CARD_ID) ?: throw IncompleteAction("No cardId defined")
@@ -143,10 +144,12 @@ class GameEngine(
             return
         }
 
-        val robots = database.robots.filter { it.gameId eq game.id }.map { it }
+        val allReady = database.robots
+            .filter { it.gameId eq game.id }
+            .all { it.ready eq true }
 
         // Check conditions for running automatic registers are fulfilled
-        if (robots.isEmpty() || robots.any { !it.ready }) {
+        if (!allReady) {
             return
         }
 
@@ -173,6 +176,7 @@ class GameEngine(
         runAutomaticSteps(game, boardEngine)
 
         // Check for game end condition. If it is met, end the game
+        val robots = database.robots.filter { it.gameId eq game.id }.map { it }
         if (robots.any { it.passedCheckpoints >= 3 }) {
             game.finishedAt = clock.instant()
         } else {
@@ -180,6 +184,7 @@ class GameEngine(
             game.state = GameState.PROGRAMMING_REGISTERS
             robots.forEach {
                 robotEngine.prepareNewRound(game.id, it)
+                database.robots.update(it)
             }
         }
 
@@ -203,7 +208,7 @@ class GameEngine(
     private fun getRegister(gameId: Int, register: Int): List<MovementCard> {
         return database.cards
             .filter { (it.gameId eq gameId) and (it.register eq register) }
-            .sortedBy { it.priority }
+            .sortedByDescending { it.priority }
             .map { it }
     }
 
@@ -218,12 +223,13 @@ class GameEngine(
         game.currentRegister = register
         database.games.update(game)
         updates.emit(ViewUpdate(game.id))
+        delay(GAME_ENGINE_STEP_DELAY)
 
         try {
             getRegister(game.id, register)
                 .forEach { card ->
-                    val robot = database.robots.find { it.id eq card.id }
-                        ?: return@forEach
+                    val robotId = card.robotId ?: return@forEach
+                    val robot = database.robots.find { it.id eq robotId } ?: return@forEach
 
                     val steps = when (card.movement) {
                         Movement.STRAIGHT_2 -> 2
@@ -233,6 +239,7 @@ class GameEngine(
 
                     for (step in 1..steps) {
                         boardEngine.execute(card, robot)
+                            .forEach { database.fields.update(it) }
                         database.robots.update(robot)
                         updates.emit(ViewUpdate(game.id))
                         delay(GAME_ENGINE_STEP_DELAY)
@@ -245,26 +252,39 @@ class GameEngine(
 
     private suspend fun runMoveBoardElements(game: Game, boardEngine: BoardEngine) {
         game.state = GameState.MOVE_BARD_ELEMENTS_2
+        database.games.update(game)
+
         val robots = database.robots.filter { it.gameId eq game.id }.map { it }
         boardEngine.moveBelts(FieldType.BELT_2, robots)
+        robots.forEach { database.robots.update(it) }
+
         updates.emit(ViewUpdate(game.id))
         delay(GAME_ENGINE_STEP_DELAY)
 
         game.state = GameState.MOVE_BARD_ELEMENTS_1
+        database.games.update(game)
+
         boardEngine.moveBelts(FieldType.BELT, robots)
         robots.forEach { database.robots.update(it) }
+
         updates.emit(ViewUpdate(game.id))
         delay(GAME_ENGINE_STEP_DELAY)
     }
 
     private suspend fun runFireLasers(game: Game, boardEngine: BoardEngine) {
         game.state = GameState.FIRE_LASERS_2
+        database.games.update(game)
+
         val robots = database.robots.filter { it.gameId eq game.id }.map { it }
         boardEngine.fireLasers(FieldType.LASER_2, robots)
+        robots.forEach { database.robots.update(it) }
+
         updates.emit(ViewUpdate(game.id))
         delay(GAME_ENGINE_STEP_DELAY)
 
         game.state = GameState.FIRE_LASERS_1
+        database.games.update(game)
+
         boardEngine.fireLasers(FieldType.LASER, robots)
         robots.forEach { database.robots.update(it) }
         updates.emit(ViewUpdate(game.id))
@@ -273,19 +293,26 @@ class GameEngine(
 
     private suspend fun runCheckpoints(game: Game, boardEngine: BoardEngine) {
         game.state = GameState.CHECKPOINTS
+        database.games.update(game)
+
         val robots = database.robots.filter { it.gameId eq game.id }.map { it }
         boardEngine.touchCheckpoints(robots)
         robots.forEach { database.robots.update(it) }
+
         updates.emit(ViewUpdate(game.id))
         delay(GAME_ENGINE_STEP_DELAY)
     }
 
     private suspend fun runRepairPowerups(game: Game, boardEngine: BoardEngine) {
         game.state = GameState.REPAIR_POWERUPS
+        database.games.update(game)
+
         val robots = database.robots.filter { it.gameId eq game.id }.map { it }
         boardEngine.touchRepair(robots)
+        robots.forEach { database.robots.update(it) }
         boardEngine.touchModifications()
         robots.forEach { database.robots.update(it) }
+
         updates.emit(ViewUpdate(game.id))
         delay(GAME_ENGINE_STEP_DELAY)
     }

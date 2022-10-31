@@ -5,8 +5,10 @@ import apoy2k.robby.model.Session
 import apoy2k.robby.routes.Location
 import io.ktor.server.html.*
 import kotlinx.html.*
+import java.time.Instant
 
 class HomeTpl(
+    private val now: Instant,
     private val games: List<Game>,
     private val session: Session?
 ) : Template<FlowContent> {
@@ -28,6 +30,6 @@ class HomeTpl(
                 }
             }
         }
-        insert(Lobby(session, games)) {}
+        insert(Lobby(now, session, games)) {}
     }
 }
