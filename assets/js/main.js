@@ -5,7 +5,7 @@ const connect = () => {
 
         // Replace the inner HTML of an element with the inner HTML of the body of an HTML string
         const dom = new DOMParser().parseFromString(event.data, "text/html");
-        const newElement = dom.querySelector("body").firstElementChild;
+        const newElement = dom.querySelector("div#gameview");
 
         addActionEventListeners(newElement);
 

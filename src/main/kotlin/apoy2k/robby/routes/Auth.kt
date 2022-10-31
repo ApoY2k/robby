@@ -52,10 +52,7 @@ fun Route.auth() {
         val session = call.sessions.get<Session>()
         logger.debug("Saving username [$name] for $session")
         call.sessions.set(
-            session?.copy(
-                name = name,
-                isLoggedIn = true
-            )
+            session?.copy(name = name)
         )
         call.respondRedirect(Location.ROOT.path)
     }

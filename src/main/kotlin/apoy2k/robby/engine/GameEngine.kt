@@ -139,6 +139,10 @@ class GameEngine(
      * Run engine on game state, sends view updates accordingly
      */
     private suspend fun runEngine(game: Game, boardEngine: BoardEngine) {
+        if (game.isFinished(clock.instant())) {
+            return
+        }
+
         val robots = database.robots.filter { it.gameId eq game.id }.map { it }
 
         // Check conditions for running automatic registers are fulfilled
@@ -146,12 +150,9 @@ class GameEngine(
             return
         }
 
-        if (game.isFinished(clock.instant())) {
-            return
-        }
-
         val now = clock.instant()
         if (!game.hasStarted(now)) {
+            logger.info("Starting first round of $game")
             game.startedAt = now
         }
 
@@ -212,6 +213,7 @@ class GameEngine(
      * Movements of more than 1 step are executed individually, with updates sent between every step
      */
     private suspend fun runRegister(game: Game, boardEngine: BoardEngine, register: Int) {
+        logger.info("Running register $register of $game")
         game.state = GameState.EXECUTING_REGISTERS
         game.currentRegister = register
         database.games.update(game)

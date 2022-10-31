@@ -23,7 +23,7 @@ fun Route.base(
 
         call.respondHtmlTemplate(LayoutTpl(session)) {
             content {
-                insert(HomeTpl(games, call.sessions.get())) {}
+                insert(HomeTpl(games, session)) {}
             }
         }
     }

@@ -81,8 +81,13 @@ data class Action(
     /**
      * Format this action as a URL Encoded string of name/value pairs, so it can be sent over the websocket
      */
-    fun serializeForSocket() =
-        URLEncodedUtils.format(parameters.filter { !it.value.isNullOrBlank() }, Charset.defaultCharset())
+    fun serializeForSocket(): String {
+        val data = mutableListOf<NameValuePair>(
+            BasicNameValuePair(ActionField.LABEL.name, label.name)
+        )
+        data.addAll(parameters)
+        return URLEncodedUtils.format(data.filter { !it.value.isNullOrBlank() }, Charset.defaultCharset())
+    }
 
     fun getString(field: ActionField, fallback: String? = null) =
         parameters.firstOrNull { it.name == field.name }?.value ?: fallback

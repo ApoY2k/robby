@@ -73,7 +73,7 @@ fun HtmlBlockTag.renderRegister(
                 renderCard(register, robotCards[register], locked = true, selected = true)
             } else {
                 robotCards.forEach {
-                    val selected = robotCards[register] == it
+                    val selected = it.register == register
                     renderCard(register, it, locked = false, selected)
                 }
             }

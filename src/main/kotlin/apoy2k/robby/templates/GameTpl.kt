@@ -2,10 +2,7 @@ package apoy2k.robby.templates
 
 import apoy2k.robby.model.*
 import io.ktor.server.html.*
-import kotlinx.html.FlowContent
-import kotlinx.html.div
-import kotlinx.html.script
-import kotlinx.html.unsafe
+import kotlinx.html.*
 import java.time.Instant
 import kotlin.collections.set
 
@@ -19,6 +16,11 @@ class GameTpl(
     private val robotCards: List<MovementCard>,
 ) : Template<FlowContent> {
     override fun FlowContent.apply() {
+        div("row") {
+            div("col") {
+                h1 { +"Game #${game.id}" }
+            }
+        }
         div {
             attributes["id"] = "gameview"
 

@@ -6,10 +6,12 @@ import apoy2k.robby.model.*
 import org.ktorm.database.Database
 import org.ktorm.dsl.*
 import org.ktorm.entity.*
+import org.slf4j.LoggerFactory
 
 class RobotEngine(
     private val database: Database,
 ) {
+    private val logger = LoggerFactory.getLogger(this.javaClass)
 
     /**
      * Return the card for a robot and register
@@ -28,9 +30,18 @@ class RobotEngine(
             throw IncompleteAction("$robot and $card do not belong to the same game")
         }
 
+        logger.info("Selecting card $cardId for $robot to register $register")
+
         card.robotId = robot.id
         card.register = register
-        database.cards.update(card)
+        database.useTransaction { tx ->
+            database.update(MovementCards) {
+                set(it.register, null)
+                where { it.robotId eq robot.id and (it.register eq register) }
+            }
+            database.cards.update(card)
+            tx.commit()
+        }
     }
 
     /**
