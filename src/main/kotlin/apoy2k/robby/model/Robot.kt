@@ -13,7 +13,7 @@ enum class RobotModel {
 object Robots : Table<Robot>("robots") {
     val id = int("id").primaryKey().bindTo { it.id }
     val gameId = int("game_id").bindTo { it.gameId }
-    val session = varchar("session").bindTo { it.sessionId }
+    val userId = int("user_id").bindTo { it.userId }
     val name = varchar("name").bindTo { it.name }
     val ready = boolean("ready").bindTo { it.ready }
     val model = enum<RobotModel>("model").bindTo { it.model }
@@ -26,12 +26,15 @@ object Robots : Table<Robot>("robots") {
 
 interface Robot : Entity<Robot> {
     companion object : Entity.Factory<Robot>() {
-        fun new(model: RobotModel) = new(model, Session("", ""))
-        fun new(model: RobotModel, session: Session) = Robot {
+        @JvmStatic
+        fun new(model: RobotModel) = new(model, "")
+
+        @JvmStatic
+        fun new(model: RobotModel, name: String, userId: Int? = null) = Robot {
             this.ready = false
             this.model = model
-            this.name = session.name
-            this.sessionId = session.id
+            this.name = name
+            this.userId = userId
             this.facing = Direction.DOWN
             this.damage = 0
             this.powerDownScheduled = false
@@ -42,7 +45,7 @@ interface Robot : Entity<Robot> {
 
     var id: Int
     var gameId: Int
-    var sessionId: String?
+    var userId: Int?
     var name: String
     var ready: Boolean
     var model: RobotModel

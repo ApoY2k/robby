@@ -11,7 +11,7 @@ class GameTpl(
     private val game: Game,
     private val robots: List<Robot>,
     private val board: List<List<Field>>,
-    private val session: Session?,
+    private val user: User?,
     private val sessionRobot: Robot?,
     private val robotCards: List<MovementCard>,
 ) : Template<FlowContent> {
@@ -30,8 +30,8 @@ class GameTpl(
                 }
 
                 div("col-3") {
-                    renderJoinForm(now, game, robots, session)
-                    renderPlayers(robots, session)
+                    renderJoinForm(now, game, robots, user)
+                    renderPlayers(robots, user)
                     renderGameState(now, game)
                 }
             }

@@ -41,9 +41,9 @@ class BoardEngineTest {
         ), assignIds = true
     )
 
-    private val robot1 = Robot.new(RobotModel.ZIPPY, Session("s1", "s1")).also { it.id = 1 }
-    private val robot2 = Robot.new(RobotModel.ZIPPY, Session("s2", "s2")).also { it.id = 2 }
-    private val robot3 = Robot.new(RobotModel.ZIPPY, Session("s3", "s3")).also { it.id = 3 }
+    private val robot1 = Robot.new(RobotModel.ZIPPY, "1", 1).also { it.id = 1 }
+    private val robot2 = Robot.new(RobotModel.ZIPPY, "2", 2).also { it.id = 2 }
+    private val robot3 = Robot.new(RobotModel.ZIPPY, "3", 3).also { it.id = 3 }
 
     @BeforeEach
     fun setup() {

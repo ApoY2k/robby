@@ -12,6 +12,8 @@ import io.ktor.server.routing.*
 import io.ktor.server.sessions.*
 import kotlinx.html.*
 import org.ktorm.database.Database
+import org.ktorm.dsl.eq
+import org.ktorm.entity.find
 import org.ktorm.entity.map
 import java.time.Clock
 
@@ -21,19 +23,21 @@ fun Route.base(
 ) {
     get(Location.ROOT.path) {
         val session = call.sessions.get<Session>()
+        val user = database.users.find { it.id eq (session?.userId ?: -1) }
         val games = database.games.map { it }
 
-        call.respondHtmlTemplate(LayoutTpl(session)) {
+        call.respondHtmlTemplate(LayoutTpl(user)) {
             content {
-                insert(HomeTpl(clock.instant(), games, session)) {}
+                insert(HomeTpl(clock.instant(), games, user)) {}
             }
         }
     }
 
     get(Location.BOARDS_ROOT.path) {
         val session = call.sessions.get<Session>()
+        val user = database.users.find { it.id eq (session?.userId ?: -1) }
 
-        call.respondHtmlTemplate(LayoutTpl(session)) {
+        call.respondHtmlTemplate(LayoutTpl(user)) {
             content {
                 div("row") {
                     div("col") {
@@ -56,6 +60,7 @@ fun Route.base(
 
     get(Location.BOARDS_VIEW.path) {
         val session = call.sessions.get<Session>()
+        val user = database.users.find { it.id eq (session?.userId ?: -1) }
         val robots = mutableListOf<Robot>()
         val board = when (call.parameters["id"]) {
             "chop-shop" -> generateChopShopBoard()
@@ -97,7 +102,7 @@ fun Route.base(
             return@get
         }
 
-        call.respondHtmlTemplate(LayoutTpl(session)) {
+        call.respondHtmlTemplate(LayoutTpl(user)) {
             content {
                 h2 {
                     +"Board Preview"

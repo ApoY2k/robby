@@ -5,6 +5,7 @@ import apoy2k.robby.engine.RobotEngine
 import apoy2k.robby.engine.ViewUpdate
 import apoy2k.robby.engine.ViewUpdateRouter
 import apoy2k.robby.model.Action
+import apoy2k.robby.model.DbSessionStorage
 import apoy2k.robby.model.Session
 import apoy2k.robby.routes.auth
 import apoy2k.robby.routes.base
@@ -25,7 +26,6 @@ import io.ktor.server.sessions.*
 import io.ktor.server.websocket.*
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.launch
-import org.apache.commons.lang3.RandomStringUtils
 import org.ktorm.database.Database
 import org.ktorm.logging.Slf4jLoggerAdapter
 import org.ktorm.support.sqlite.SQLiteDialect
@@ -41,7 +41,7 @@ fun main() {
         val database = Database.connect(
             url = "jdbc:sqlite:${envStr(Environment.DATABASE_PATH)}",
             dialect = SQLiteDialect(),
-            logger = Slf4jLoggerAdapter(LoggerFactory.getLogger("db")),
+            logger = Slf4jLoggerAdapter(LoggerFactory.getLogger("org.ktorm.database")),
         )
 
         setup(clock, database)
@@ -55,7 +55,7 @@ fun Application.setup(
     val logger = LoggerFactory.getLogger(this.javaClass)
 
     install(CallLogging) {
-        level = Level.DEBUG
+        level = Level.TRACE
     }
 
     install(ContentNegotiation) {
@@ -63,14 +63,12 @@ fun Application.setup(
         }
     }
 
-    install(WebSockets) {
-    }
+    install(WebSockets) {}
 
-    install(Resources) {
-    }
+    install(Resources) {}
 
     install(Sessions) {
-        cookie<Session>("SESSION", SessionStorageMemory()) {
+        cookie<Session>("SESSION", DbSessionStorage(database)) {
             cookie.extensions["SameSite"] = "lax"
         }
     }
@@ -78,7 +76,7 @@ fun Application.setup(
     intercept(ApplicationCallPipeline.Call) {
         val session = call.sessions.get<Session>()
         if (session == null) {
-            call.sessions.set(Session(RandomStringUtils.randomAlphanumeric(5)))
+            call.sessions.set(Session())
         }
     }
 
@@ -109,7 +107,7 @@ fun Application.setup(
             files(".")
         }
         base(clock, database)
-        auth()
+        auth(database)
         game(clock, database, gameEngine, actionChannel, viewUpdateRouter)
     }
 }

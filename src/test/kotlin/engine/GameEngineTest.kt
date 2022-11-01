@@ -7,14 +7,12 @@ import apoy2k.robby.engine.RobotEngine
 import apoy2k.robby.exceptions.IncompleteAction
 import apoy2k.robby.exceptions.InvalidGameState
 import apoy2k.robby.kotlin.DatabaseBackedTest
-import apoy2k.robby.model.Action
-import apoy2k.robby.model.RobotModel
-import apoy2k.robby.model.Session
-import apoy2k.robby.model.robots
+import apoy2k.robby.model.*
 import kotlinx.coroutines.flow.MutableSharedFlow
 import org.junit.jupiter.api.Test
 import org.ktorm.dsl.and
 import org.ktorm.dsl.eq
+import org.ktorm.entity.add
 import org.ktorm.entity.count
 import org.ktorm.entity.find
 import java.time.Clock
@@ -38,13 +36,14 @@ class GameEngineTest : DatabaseBackedTest() {
     fun `select card for register`() {
         val game = gameEngine.createNewGame(BoardType.SANDBOX)
         val boardEngine = BoardEngine.build(game.id, database)
-        val s1 = Session("s1", "s1")
+        database.users.add(User.new("1", "1"))
+        val s1 = Session(1)
         gameEngine.perform(Action.joinGame(RobotModel.ZIPPY).also {
             it.session = s1
             it.game = game
         }, boardEngine)
 
-        val robot = database.robots.find { it.gameId eq game.id and (it.session eq s1.id) }
+        val robot = database.robots.find { it.gameId eq game.id and (it.userId eq (s1.userId ?: -1)) }
         assertNotNull(robot)
 
         val card = robotEngine.getDrawnCards(robot.id)[0]
@@ -62,13 +61,14 @@ class GameEngineTest : DatabaseBackedTest() {
     fun `card selection override from different register`() {
         val game = gameEngine.createNewGame(BoardType.SANDBOX)
         val boardEngine = BoardEngine.build(game.id, database)
-        val s1 = Session("s1", "s1")
+        database.users.add(User.new("1", "1"))
+        val s1 = Session(1)
         gameEngine.perform(Action.joinGame(RobotModel.ZIPPY).also {
             it.session = s1
             it.game = game
         }, boardEngine)
 
-        val robot = database.robots.find { it.gameId eq game.id and (it.session eq s1.id) }
+        val robot = database.robots.find { it.gameId eq game.id and (it.userId eq (s1.userId ?: -1)) }
         assertNotNull(robot)
 
         val card = robotEngine.getDrawnCards(robot.id)[0]
@@ -92,7 +92,8 @@ class GameEngineTest : DatabaseBackedTest() {
     fun `join parallel games`() {
         val game1 = gameEngine.createNewGame(BoardType.SANDBOX)
         val game2 = gameEngine.createNewGame(BoardType.SANDBOX)
-        val session = Session("s1", "s1")
+        database.users.add(User.new("1", "1"))
+        val session = Session(1)
 
         val join1 = Action.joinGame(RobotModel.GEROG).also {
             it.game = game1
@@ -107,13 +108,13 @@ class GameEngineTest : DatabaseBackedTest() {
         val boardEngine2 = BoardEngine.build(game2.id, database)
         gameEngine.perform(join1, boardEngine1)
         gameEngine.perform(join2, boardEngine2)
-        val robot1 = database.robots.find { it.gameId eq game1.id and (it.session eq session.id) }
-        val robot2 = database.robots.find { it.gameId eq game2.id and (it.session eq session.id) }
+        val robot1 = database.robots.find { it.gameId eq game1.id and (it.userId eq (session.userId ?: -1)) }
+        val robot2 = database.robots.find { it.gameId eq game2.id and (it.userId eq (session.userId ?: -1)) }
 
         assertEquals(1, database.robots.count { it.gameId eq game1.id })
         assertEquals(1, database.robots.count { it.gameId eq game2.id })
-        assertNotNull(database.robots.find { it.gameId eq game1.id and (it.session eq session.id) })
-        assertNotNull(database.robots.find { it.gameId eq game2.id and (it.session eq session.id) })
+        assertNotNull(database.robots.find { it.gameId eq game1.id and (it.userId eq (session.userId ?: -1)) })
+        assertNotNull(database.robots.find { it.gameId eq game2.id and (it.userId eq (session.userId ?: -1)) })
         assertEquals(robot1?.id, boardEngine1.fieldAt(0, 0).robotId)
         assertEquals(robot2?.id, boardEngine2.fieldAt(0, 0).robotId)
         assertNull(boardEngine1.fieldAt(0, 1).robotId)
@@ -124,7 +125,8 @@ class GameEngineTest : DatabaseBackedTest() {
     fun `join game`() {
         val game = gameEngine.createNewGame(BoardType.SANDBOX)
         val boardEngine = BoardEngine.build(game.id, database)
-        val s1 = Session("s1", "s1")
+        database.users.add(User.new("1", "1"))
+        val s1 = Session(1)
 
         gameEngine.perform(Action.joinGame(RobotModel.ZIPPY).also {
             it.session = s1
@@ -140,7 +142,7 @@ class GameEngineTest : DatabaseBackedTest() {
 
         assertFailsWith(IncompleteAction::class) {
             gameEngine.perform(Action.joinGame(RobotModel.ZIPPY).also {
-                it.session = Session("s3")
+                it.session = Session(1)
                 it.game = game
             }, boardEngine)
         }
@@ -150,8 +152,10 @@ class GameEngineTest : DatabaseBackedTest() {
     fun `multiple players join same game`() {
         val game = gameEngine.createNewGame(BoardType.SANDBOX)
         val boardEngine = BoardEngine.build(game.id, database)
-        val s1 = Session("s1", "s1")
-        val s2 = Session("s2", "player2")
+        database.users.add(User.new("1", "1"))
+        database.users.add(User.new("2", "2"))
+        val s1 = Session(1)
+        val s2 = Session(2)
 
         gameEngine.perform(Action.joinGame(RobotModel.ZIPPY).also {
             it.session = s1
@@ -168,7 +172,8 @@ class GameEngineTest : DatabaseBackedTest() {
     fun `join same game twice`() {
         val game = gameEngine.createNewGame(BoardType.SANDBOX)
         val boardEngine = BoardEngine.build(game.id, database)
-        val s1 = Session("s1", "s1")
+        database.users.add(User.new("1", "1"))
+        val s1 = Session(1)
 
         assertFailsWith(InvalidGameState::class) {
             gameEngine.perform(Action.joinGame(RobotModel.ZIPPY).also {
@@ -186,7 +191,8 @@ class GameEngineTest : DatabaseBackedTest() {
     fun `leave game`() {
         val game = gameEngine.createNewGame(BoardType.SANDBOX)
         val boardEngine = BoardEngine.build(game.id, database)
-        val s1 = Session("s1", "s1")
+        database.users.add(User.new("1", "1"))
+        val s1 = Session(1)
 
         gameEngine.perform(Action.joinGame(RobotModel.ZIPPY).also {
             it.session = s1
@@ -203,8 +209,10 @@ class GameEngineTest : DatabaseBackedTest() {
     fun `leave game with multiple players`() {
         val game = gameEngine.createNewGame(BoardType.SANDBOX)
         val boardEngine = BoardEngine.build(game.id, database)
-        val s1 = Session("s1", "s1")
-        val s2 = Session("s2", "player2")
+        database.users.add(User.new("1", "1"))
+        database.users.add(User.new("2", "2"))
+        val s1 = Session(1)
+        val s2 = Session(2)
 
         gameEngine.perform(Action.joinGame(RobotModel.ZIPPY).also {
             it.session = s1

@@ -1,12 +1,12 @@
 package apoy2k.robby.templates
 
-import apoy2k.robby.model.Session
+import apoy2k.robby.model.User
 import apoy2k.robby.routes.Location
 import io.ktor.server.html.*
 import kotlinx.html.*
 
 class LayoutTpl(
-    private val session: Session?
+    private val user: User?
 ) : Template<HTML> {
     val content = Placeholder<FlowContent>()
     override fun HTML.apply() {
@@ -36,8 +36,8 @@ class LayoutTpl(
                         }
                         ul("navbar-nav") {
                             li("nav-item") {
-                                if (session?.isLoggedIn == true) {
-                                    span("navbar-text") { +session.name }
+                                if (user != null) {
+                                    span("navbar-text") { +user.name }
                                 } else {
                                     a(Location.AUTH.path, classes = "nav-link") { +"Login" }
                                 }

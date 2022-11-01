@@ -27,6 +27,7 @@ object MovementCards : Table<MovementCard>("movementCards") {
 
 interface MovementCard : Entity<MovementCard> {
     companion object : Entity.Factory<MovementCard>() {
+        @JvmStatic
         fun new(movement: Movement, priority: Int) = MovementCard {
             this.movement = movement
             this.priority = priority

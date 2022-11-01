@@ -63,8 +63,9 @@ fun Route.game(
             val robots = database.robots.filter { it.gameId eq gameId }.map { it }
 
             val session = call.sessions.get<Session>()
-            val currentRobot = when (session != null) {
-                true -> robots.find { it.sessionId == session.id }
+            val user = database.users.find { it.id eq (session?.userId ?: -1) }
+            val currentRobot = when (session?.userId != null) {
+                true -> robots.find { it.userId == session?.userId }
                 else -> null
             }
             val cards = when (currentRobot != null) {
@@ -76,7 +77,7 @@ fun Route.game(
                 else -> listOf()
             }
 
-            call.respondHtmlTemplate(LayoutTpl(session)) {
+            call.respondHtmlTemplate(LayoutTpl(user)) {
                 content {
                     insert(
                         GameTpl(
@@ -84,7 +85,7 @@ fun Route.game(
                             game,
                             robots,
                             board,
-                            session,
+                            user,
                             currentRobot,
                             cards
                         )

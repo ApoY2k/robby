@@ -5,7 +5,7 @@ import apoy2k.robby.routes.Location
 import kotlinx.html.*
 
 fun HtmlBlockTag.renderCreateGameButton() {
-    button(classes = "btn btn-primary") {
+    button(classes = "btn btn-primary w-100") {
         attributes["data-bs-toggle"] = "modal"
         attributes["data-bs-target"] = "#create-game-modal"
         +"Start new game"

@@ -1,7 +1,7 @@
 package apoy2k.robby.templates
 
 import apoy2k.robby.model.Game
-import apoy2k.robby.model.Session
+import apoy2k.robby.model.User
 import apoy2k.robby.model.hasStarted
 import apoy2k.robby.model.isFinished
 import apoy2k.robby.routes.Location
@@ -11,7 +11,7 @@ import java.time.Instant
 
 class Lobby(
     private val now: Instant,
-    private val session: Session?,
+    private val user: User?,
     private val games: List<Game>
 ) : Template<FlowContent> {
     override fun FlowContent.apply() {
@@ -19,7 +19,7 @@ class Lobby(
             div("col") {
                 h2 { +"Available games" }
             }
-            if (session?.isLoggedIn == true) {
+            if (user != null) {
                 div("col-2") {
                     renderCreateGameButton()
                 }

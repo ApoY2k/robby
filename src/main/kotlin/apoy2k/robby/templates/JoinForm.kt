@@ -8,7 +8,7 @@ fun HtmlBlockTag.renderJoinForm(
     now: Instant,
     game: Game,
     robots: List<Robot>,
-    session: Session?,
+    user: User?,
 ) {
     div("row mb-3") {
         div("col") {
@@ -24,13 +24,13 @@ fun HtmlBlockTag.renderJoinForm(
                         return@card
                     }
 
-                    if (session?.isLoggedIn == false) {
+                    if (user == null) {
                         p("alert alert-info m-0") { +"You are not logged in. Spectating only" }
                         return@card
                     }
 
                     form("form row") {
-                        if (robots.any { it.sessionId == session?.id }) {
+                        if (robots.any { it.userId == user.id }) {
                             if (game.state == GameState.PROGRAMMING_REGISTERS) {
                                 attributes["data-action"] = Action.leaveGame().serializeForSocket()
                                 button(classes = "btn btn-primary", type = ButtonType.submit) { +"Leave game" }

@@ -30,13 +30,11 @@ inline fun <reified T : Enum<T>> BaseTable<*>.enumList(name: String): Column<Col
     registerColumn(name, EnumListType(T::class.java))
 
 val Database.games get() = this.sequenceOf(Games)
-
 val Database.fields get() = this.sequenceOf(Fields)
-
 val Database.cards get() = this.sequenceOf(MovementCards)
-
 val Database.robots get() = this.sequenceOf(Robots)
-
+val Database.sessions get() = this.sequenceOf(Sessions)
+val Database.users get() = this.sequenceOf(Users)
 
 /**
  * Use the given matrix of fields and assign them to the given game, saving them in the database

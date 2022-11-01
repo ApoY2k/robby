@@ -44,6 +44,7 @@ data class Action(
          * Convert a serialized, url encoded query string to a typed action instance.
          * Counterpart for the `serializeForSocket` method.
          */
+        @JvmStatic
         fun deserializeFromSocket(serializedAction: String): Action {
             val query = URLEncodedUtils.parse(serializedAction, Charset.defaultCharset())
             val label = query.firstOrNull { it.name == ActionField.LABEL.name }?.value.orEmpty()

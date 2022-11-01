@@ -75,17 +75,19 @@ class GameEngine(
         // All actions require a session and game, so if an action without a session is noticed, just drop it with
         // an empty result view update set
         val session = action.session ?: throw IncompleteAction("No session attached to $action")
+        val user = database.users.find { it.id eq (session.userId ?: -1) }
+            ?: throw IncompleteAction("No user found for $session")
         val game = action.game ?: throw IncompleteAction("No game attached to $action")
 
         if (action.label == ActionLabel.JOIN_GAME) {
             val model = action.getString(ActionField.ROBOT_MODEL) ?: throw IncompleteAction("No robot model specified")
-            val robot = addRobot(game.id, RobotModel.valueOf(model), session)
+            val robot = addRobot(game.id, user.name, user.id, RobotModel.valueOf(model))
             val field = boardEngine.placeRobot(robot.id)
             database.fields.update(field)
             return
         }
 
-        val robot = database.robots.find { it.gameId eq game.id and (it.session eq session.id) }
+        val robot = database.robots.find { it.gameId eq game.id and (it.userId eq user.id) }
         if (robot == null) {
             logger.warn("No Robot found for $session in $game")
             return
@@ -321,8 +323,8 @@ class GameEngine(
         database.robots.removeIf { it.id eq robotId }
     }
 
-    private fun addRobot(gameId: Int, model: RobotModel, session: Session): Robot {
-        val robot = robotEngine.createNewRobot(gameId, session, model)
+    private fun addRobot(gameId: Int, name: String, userId: Int, model: RobotModel): Robot {
+        val robot = robotEngine.createNewRobot(gameId, name, userId, model)
         robotEngine.drawCards(gameId, robot)
         return robot
     }

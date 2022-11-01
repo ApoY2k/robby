@@ -52,7 +52,8 @@ class ViewUpdateRouter(
 
                 gameSessions
                     .forEach { (httpSession, wsSessions) ->
-                        val currentRobot = robots.find { it.sessionId == httpSession.id }
+                        val user = database.users.find { it.id eq (httpSession.userId ?: -1) }
+                        val currentRobot = robots.find { user != null && it.userId == user.id }
                         val cards = when (currentRobot != null) {
                             true -> database.cards
                                 .filter { it.robotId eq currentRobot.id }
@@ -72,7 +73,7 @@ class ViewUpdateRouter(
                                             game,
                                             robots,
                                             board,
-                                            httpSession,
+                                            user,
                                             currentRobot,
                                             cards,
                                         )

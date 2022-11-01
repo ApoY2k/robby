@@ -1,7 +1,7 @@
 package apoy2k.robby.templates
 
 import apoy2k.robby.model.Game
-import apoy2k.robby.model.Session
+import apoy2k.robby.model.User
 import apoy2k.robby.routes.Location
 import io.ktor.server.html.*
 import kotlinx.html.*
@@ -10,15 +10,15 @@ import java.time.Instant
 class HomeTpl(
     private val now: Instant,
     private val games: List<Game>,
-    private val session: Session?
+    private val user: User?,
 ) : Template<FlowContent> {
     override fun FlowContent.apply() {
         div("row") {
             div("col") {
-                if (session?.isLoggedIn == true) {
+                if (user != null) {
                     p {
                         +"Welcome back "
-                        b { +session.name }
+                        b { +user.name }
                         +"!"
                     }
                 } else {
@@ -30,6 +30,6 @@ class HomeTpl(
                 }
             }
         }
-        insert(Lobby(now, session, games)) {}
+        insert(Lobby(now, user, games)) {}
     }
 }

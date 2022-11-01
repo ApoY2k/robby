@@ -39,8 +39,8 @@ fun main() {
     val robotEngine = RobotEngine(database)
     val gameEngine = GameEngine(clock, database, robotEngine, viewUpdateChannel)
 
-    val s1 = Session("s1", "s1")
-    val s2 = Session("s2", "s2")
+    val s1 = Session(1)
+    val s2 = Session(2)
 
     val game1 = gameEngine.createNewGame(BoardType.SANDBOX)
     val game2 = gameEngine.createNewGame(BoardType.SANDBOX)
@@ -71,9 +71,9 @@ fun main() {
         // Leave some time for the engine to process
         delay(1000)
 
-        val robot1 = database.robots.find { it.gameId eq game1.id and (it.session eq s1.id) }
+        val robot1 = database.robots.find { it.gameId eq game1.id and (it.userId eq (s1.userId ?: -1)) }
             ?: fail("Robot1 not found")
-        val robot2 = database.robots.find { it.gameId eq game1.id and (it.session eq s1.id) }
+        val robot2 = database.robots.find { it.gameId eq game1.id and (it.userId eq (s2.userId ?: -1)) }
             ?: fail("Robot2 not found")
 
         val game1cards = robotEngine.getDrawnCards(robot1.id)

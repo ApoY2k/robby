@@ -43,6 +43,7 @@ object Fields : Table<Field>("fields") {
 
 interface Field : Entity<Field> {
     companion object : Entity.Factory<Field>() {
+        @JvmStatic
         fun new(type: FieldType = FieldType.NONE, vararg directions: Direction) = Field {
             this.type = type
             this.conditions = mutableListOf()
