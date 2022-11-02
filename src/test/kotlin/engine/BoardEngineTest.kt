@@ -23,10 +23,10 @@ class BoardEngineTest {
             listOf(Field.new(), Field.new(), Field.new(), Field.new()),
             listOf(Field.new(), Field.new(), Field.new(), Field.new()),
             listOf(
-                Field.new(FieldType.BELT, Direction.RIGHT),
-                Field.new(FieldType.BELT, Direction.LEFT),
-                Field.new(FieldType.BELT, Direction.UP),
-                Field.new(FieldType.BELT, Direction.DOWN)
+                Field.new(FieldElement.BELT, Direction.RIGHT),
+                Field.new(FieldElement.BELT, Direction.LEFT),
+                Field.new(FieldElement.BELT, Direction.UP),
+                Field.new(FieldElement.BELT, Direction.DOWN)
             ),
             listOf(Field.new(), Field.new(), Field.new(), Field.new())
         ), assignIds = true
@@ -61,7 +61,7 @@ class BoardEngineTest {
 
         source.robotId = robot1.id
         boardEngine.execute(card, robot1)
-        boardEngine.moveBelts(FieldType.BELT, listOf(robot1))
+        boardEngine.moveBelts(FieldElement.BELT, listOf(robot1))
 
         assertNull(source.robotId)
         assertNotNull(target.robotId)
@@ -78,7 +78,7 @@ class BoardEngineTest {
 
         source.robotId = robot1.id
         boardEngine.execute(card, robot1)
-        boardEngine.moveBelts(FieldType.BELT, listOf(robot1))
+        boardEngine.moveBelts(FieldElement.BELT, listOf(robot1))
 
         assertNull(source.robotId)
         assertNotNull(target.robotId)
@@ -94,7 +94,7 @@ class BoardEngineTest {
 
         source.robotId = robot1.id
         boardEngine.execute(card, robot1)
-        boardEngine.moveBelts(FieldType.BELT, listOf(robot1))
+        boardEngine.moveBelts(FieldElement.BELT, listOf(robot1))
 
         assertNotNull(source.robotId)
         assertEquals(robot1.id, source.robotId)
@@ -110,7 +110,7 @@ class BoardEngineTest {
 
         source.robotId = robot1.id
         boardEngine.execute(card, robot1)
-        boardEngine.moveBelts(FieldType.BELT, listOf(robot1))
+        boardEngine.moveBelts(FieldElement.BELT, listOf(robot1))
 
         assertNull(source.robotId)
         assertNotNull(target.robotId)
@@ -121,9 +121,9 @@ class BoardEngineTest {
     fun `belt move of robot is blocked by other robot`() {
         val board = BoardEngine(
             listOf(
-                listOf(Field.new(FieldType.BELT, Direction.DOWN)),
+                listOf(Field.new(FieldElement.BELT, Direction.DOWN)),
                 listOf(Field.new()),
-                listOf(Field.new(FieldType.BELT, Direction.UP)),
+                listOf(Field.new(FieldElement.BELT, Direction.UP)),
             )
         )
 
@@ -133,7 +133,7 @@ class BoardEngineTest {
 
         up.robotId = robot1.id
         down.robotId = robot2.id
-        board.moveBelts(FieldType.BELT, listOf(robot1, robot2))
+        board.moveBelts(FieldElement.BELT, listOf(robot1, robot2))
 
         assertNotNull(up.robotId)
         assertNull(middle.robotId)
@@ -146,8 +146,8 @@ class BoardEngineTest {
     fun `curve rotates robot`() {
         val board = BoardEngine(
             listOf(
-                listOf(Field.new(FieldType.BELT, Direction.DOWN)),
-                listOf(Field.new(FieldType.BELT, Direction.DOWN, Direction.RIGHT)),
+                listOf(Field.new(FieldElement.BELT, Direction.DOWN)),
+                listOf(Field.new(FieldElement.BELT, Direction.DOWN, Direction.RIGHT)),
             ), assignIds = true
         )
 
@@ -155,7 +155,7 @@ class BoardEngineTest {
         val end = board.fieldAt(1, 0)
 
         start.robotId = robot1.id
-        board.moveBelts(FieldType.BELT, listOf(robot1))
+        board.moveBelts(FieldElement.BELT, listOf(robot1))
 
         assertNull(start.robotId)
         assertNotNull(end.robotId)
@@ -306,7 +306,7 @@ class BoardEngineTest {
     fun `laser damages robot`() {
         val board = BoardEngine(
             listOf(
-                listOf(Field.new(FieldType.LASER, Direction.DOWN), Field.new()),
+                listOf(Field.new(FieldElement.LASER, Direction.DOWN), Field.new()),
                 listOf(Field.new(), Field.new()),
                 listOf(Field.new(), Field.new()),
                 listOf(Field.new(), Field.new()),
@@ -319,7 +319,7 @@ class BoardEngineTest {
         val klaus = Robot.new(RobotModel.KLAUS).also { it.id = 2 }
         board.fieldAt(2, 1).robotId = klaus.id
 
-        board.fireLasers(FieldType.LASER, listOf(zippy, klaus))
+        board.fireLasers(FieldElement.LASER, listOf(zippy, klaus))
 
         assertEquals(1, zippy.damage)
         assertEquals(0, klaus.damage)
@@ -330,7 +330,6 @@ class BoardEngineTest {
         fun resetBoard(board: BoardEngine) {
             board.board.flatten().forEach {
                 it.robotId = null
-                it.conditions = mutableListOf()
             }
         }
 
@@ -338,10 +337,10 @@ class BoardEngineTest {
         fun provideTestFirstFieldByDirection(): Stream<Arguments> {
             val board = BoardEngine(
                 listOf(
-                    listOf(Field.new(), Field.new(FieldType.WALL, Direction.LEFT), Field.new()),
-                    listOf(Field.new(FieldType.WALL, Direction.DOWN), Field.new(), Field.new()),
-                    listOf(Field.new(), Field.new(), Field.new(FieldType.WALL, Direction.RIGHT)),
-                    listOf(Field.new(), Field.new(FieldType.WALL, Direction.UP), Field.new()),
+                    listOf(Field.new(), Field.new(FieldElement.WALL, Direction.LEFT), Field.new()),
+                    listOf(Field.new(FieldElement.WALL, Direction.DOWN), Field.new(), Field.new()),
+                    listOf(Field.new(), Field.new(), Field.new(FieldElement.WALL, Direction.RIGHT)),
+                    listOf(Field.new(), Field.new(FieldElement.WALL, Direction.UP), Field.new()),
                 ), assignIds = true
             )
 

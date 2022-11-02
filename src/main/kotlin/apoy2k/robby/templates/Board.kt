@@ -13,15 +13,15 @@ fun Field.toCssClass(): String {
         .filter { it != Direction.NONE }
         .joinToString("") { it.name.take(1) }
 
-    return listOf(this.type.name, directions)
+    return this.elements.map { it.name }.plus(directions)
         .filter { it.isNotBlank() }
         .joinToString("_") { it.lowercase() }
 }
 
 fun HtmlBlockTag.renderField(field: Field, robot: Robot? = null) {
     div("field type-${field.toCssClass()}") {
-        field.conditions.forEach { condition ->
-            div("condition-${condition.name.lowercase()}") {
+        field.elements.forEach { element ->
+            div("condition-${element.name.lowercase()}") {
                 +Entities.nbsp
             }
         }

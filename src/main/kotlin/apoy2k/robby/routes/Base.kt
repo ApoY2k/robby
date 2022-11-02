@@ -65,10 +65,10 @@ fun Route.base(
         val board = when (call.parameters["id"]) {
             "chop-shop" -> generateChopShopBoard()
             "laser-test" -> listOf(
-                listOf(Field.new(), Field.new(FieldType.WALL, Direction.LEFT), Field.new()),
-                listOf(Field.new(FieldType.WALL, Direction.DOWN), Field.new(), Field.new()),
-                listOf(Field.new(), Field.new(), Field.new(FieldType.WALL, Direction.RIGHT)),
-                listOf(Field.new(), Field.new(FieldType.WALL, Direction.UP), Field.new()),
+                listOf(Field.new(FieldElement.START), Field.new(FieldElement.WALL, Direction.LEFT), Field.new()),
+                listOf(Field.new(FieldElement.WALL, Direction.DOWN), Field.new(), Field.new()),
+                listOf(Field.new(), Field.new(), Field.new(FieldElement.WALL, Direction.RIGHT)),
+                listOf(Field.new(), Field.new(FieldElement.WALL, Direction.UP), Field.new()),
             )
 
             "robot-states" -> {

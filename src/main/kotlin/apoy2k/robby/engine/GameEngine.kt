@@ -257,7 +257,7 @@ class GameEngine(
         database.games.update(game)
 
         val robots = database.robots.filter { it.gameId eq game.id }.map { it }
-        boardEngine.moveBelts(FieldType.BELT_2, robots)
+        boardEngine.moveBelts(FieldElement.BELT_2, robots)
         robots.forEach { database.robots.update(it) }
 
         updates.emit(ViewUpdate(game.id))
@@ -266,7 +266,7 @@ class GameEngine(
         game.state = GameState.MOVE_BARD_ELEMENTS_1
         database.games.update(game)
 
-        boardEngine.moveBelts(FieldType.BELT, robots)
+        boardEngine.moveBelts(FieldElement.BELT, robots)
         robots.forEach { database.robots.update(it) }
 
         updates.emit(ViewUpdate(game.id))
@@ -278,7 +278,7 @@ class GameEngine(
         database.games.update(game)
 
         val robots = database.robots.filter { it.gameId eq game.id }.map { it }
-        boardEngine.fireLasers(FieldType.LASER_2, robots)
+        boardEngine.fireLasers(FieldElement.LASER_2, robots)
         robots.forEach { database.robots.update(it) }
 
         updates.emit(ViewUpdate(game.id))
@@ -287,7 +287,7 @@ class GameEngine(
         game.state = GameState.FIRE_LASERS_1
         database.games.update(game)
 
-        boardEngine.fireLasers(FieldType.LASER, robots)
+        boardEngine.fireLasers(FieldElement.LASER, robots)
         robots.forEach { database.robots.update(it) }
         updates.emit(ViewUpdate(game.id))
         delay(GAME_ENGINE_STEP_DELAY)
@@ -312,7 +312,7 @@ class GameEngine(
         val robots = database.robots.filter { it.gameId eq game.id }.map { it }
         boardEngine.touchRepair(robots)
         robots.forEach { database.robots.update(it) }
-        boardEngine.touchModifications()
+        boardEngine.touchModifications(robots)
         robots.forEach { database.robots.update(it) }
 
         updates.emit(ViewUpdate(game.id))

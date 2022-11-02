@@ -57,22 +57,27 @@ class RobotEngine(
         if (respectDamageLock) {
             if (robot.damage <= 8) {
                 cards[1]?.register = null
+                cards[1]?.robotId = null
             }
 
             if (robot.damage <= 7) {
                 cards[2]?.register = null
+                cards[2]?.robotId = null
             }
 
             if (robot.damage <= 6) {
                 cards[3]?.register = null
+                cards[3]?.robotId = null
             }
 
             if (robot.damage <= 5) {
                 cards[4]?.register = null
+                cards[4]?.robotId = null
             }
 
             if (robot.damage <= 4) {
                 cards[5]?.register = null
+                cards[5]?.robotId = null
             }
         } else {
             cards.forEach { it.value.register = null }
@@ -82,6 +87,7 @@ class RobotEngine(
             cards.values.forEach { card ->
                 item {
                     set(it.register, card.register)
+                    set(it.robotId, card.robotId)
                     where { it.id eq card.id }
                 }
             }
@@ -92,8 +98,8 @@ class RobotEngine(
      * Prepare a robot for a new round
      */
     fun prepareNewRound(gameId: Int, robot: Robot) {
-        clearRegisters(robot)
         toggleReady(robot)
+        clearRegisters(robot)
 
         if (robot.powerDownScheduled) {
             togglePowerDown(robot)
@@ -123,7 +129,7 @@ class RobotEngine(
         database.useTransaction { tx ->
             database.update(MovementCards) {
                 set(it.robotId, null)
-                where { it.robotId eq robot.id }
+                where { it.robotId eq robot.id and it.register.isNull() }
             }
             database.batchUpdate(MovementCards) {
                 cards.forEach { card ->
@@ -165,19 +171,15 @@ class RobotEngine(
      * Toggle the ready state on a robot
      */
     fun toggleReady(robot: Robot) {
-        database.update(Robots) {
-            set(it.ready, !it.ready)
-            where { it.id eq robot.id }
-        }
+        robot.ready = !robot.ready
+        database.robots.update(robot)
     }
 
     /**
      * Toggle the powerdown scheduled state on a robot
      */
     fun togglePowerDown(robot: Robot) {
-        database.update(Robots) {
-            set(it.powerDownScheduled, !it.powerDownScheduled)
-            where { it.id eq robot.id }
-        }
+        robot.powerDownScheduled = !robot.powerDownScheduled
+        database.robots.update(robot)
     }
 }

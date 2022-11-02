@@ -183,15 +183,14 @@ class BoardEngine(
     }
 
     /**
-     * Returns a field at the given row/col index.
-     * @see fieldAt
+     * Returns a field at the given row/col index
      */
     fun fieldAt(row: Int, col: Int) = fieldAt(Position(row, col))
 
     /**
      * Move all belts of the given type *one* tick
      */
-    fun moveBelts(beltType: FieldType, robots: List<Robot>) {
+    fun moveBelts(beltType: FieldElement, robots: List<Robot>) {
         // Collect new positions that result of the belt moves as a list of "to execute" movements
         // Each movement contains the robot that moves and the row/col index of the new field after the movement
         val newPositions = mutableMapOf<Position, Int>()
@@ -200,7 +199,7 @@ class BoardEngine(
         val orientations = mutableMapOf<Int, Direction>()
 
         board.flatten()
-            .filter { it.type == beltType && it.robotId != null }
+            .filter { it.elements.contains(beltType) && it.robotId != null }
             .forEach { field ->
                 val movements = calculateRobotMove(field.robotId!!, field.outgoingDirection)
 
@@ -273,7 +272,7 @@ class BoardEngine(
         // TODO Touching the same checkpoint multiple times should not increase the counter
         board.flatten()
             .filter { field ->
-                field.type == FieldType.FLAG
+                field.elements.contains(FieldElement.FLAG)
                         && robots.any { robot -> field.robotId == robot.id }
             }
             .forEach { field ->
@@ -288,7 +287,7 @@ class BoardEngine(
     fun touchRepair(robots: List<Robot>) {
         board.flatten()
             .filter { field ->
-                field.type == FieldType.FLAG
+                field.elements.contains(FieldElement.REPAIR)
                         && robots.any { robot -> field.robotId == robot.id }
             }
             .forEach { field ->
@@ -297,16 +296,26 @@ class BoardEngine(
             }
     }
 
-    fun touchModifications() {
+    /**
+     * Touch modification points for robots
+     */
+    fun touchModifications(robots: List<Robot>) {
+        board.flatten()
+            .filter { field ->
+                field.elements.contains(FieldElement.REPAIR_MOD)
+                        && robots.any { robot -> field.robotId == robot.id }
+            }
+            .forEach {
+                // TODO: Implement modifications
+            }
     }
 
     /**
      * Place new robot on the board
      */
     fun placeRobot(robotId: Int): Field {
-        // TODO Use "start fields" to place robots
         return board.flatten()
-            .first { it.robotId == null }
+            .first { it.elements.contains(FieldElement.START) && it.robotId == null }
             .also { it.robotId = robotId }
     }
 
@@ -343,7 +352,7 @@ class BoardEngine(
          *  - damage each robot for 1 point
          */
         board.flatten()
-            .filter { listOf(FieldType.LASER, FieldType.LASER_2).contains(it.type) }
+            .filter { it.elements.contains(FieldElement.LASER) || it.elements.contains(FieldElement.LASER_2) }
             .forEach { sourceField ->
                 val startPos = positionOf(sourceField)
                 val direction = sourceField.outgoingDirection
@@ -397,8 +406,8 @@ class BoardEngine(
                 // Then apply the laser condition of the source laser field to all fields in the
                 // direction of the source laser to build the "firing line" of the laser on the board
                 fields.forEach apply@{ inLineField ->
-                    val condition = sourceField.getInLineLaserFieldsCondition() ?: return@apply
-                    inLineField.conditions.add(condition)
+                    val element = sourceField.getInLineLaserFieldElements() ?: return@apply
+                    inLineField.elements.add(element)
                 }
             }
     }
@@ -406,23 +415,23 @@ class BoardEngine(
     /**
      * Fire all lasers of the given type, damaging all robots in its line
      */
-    fun fireLasers(type: FieldType, robots: List<Robot>) {
+    fun fireLasers(type: FieldElement, robots: List<Robot>) {
         board.flatten()
             .forEach { field ->
                 val robot = robots.firstOrNull { field.robotId == it.id } ?: return@forEach
 
-                if (type == FieldType.LASER
-                    && (field.type == FieldType.LASER
-                            || field.conditions.contains(FieldCondition.LASER_H)
-                            || field.conditions.contains(FieldCondition.LASER_V))
+                if (type == FieldElement.LASER
+                    && (field.elements.contains(FieldElement.LASER)
+                            || field.elements.contains(FieldElement.LASER_H)
+                            || field.elements.contains(FieldElement.LASER_V))
                 ) {
                     robot.damage = Integer.min(10, robot.damage + 1)
                 }
 
-                if (type == FieldType.LASER_2
-                    && (field.type == FieldType.LASER_2
-                            || field.conditions.contains(FieldCondition.LASER_2_H)
-                            || field.conditions.contains(FieldCondition.LASER_2_V))
+                if (type == FieldElement.LASER_2
+                    && (field.elements.contains(FieldElement.LASER_2)
+                            || field.elements.contains(FieldElement.LASER_2_H)
+                            || field.elements.contains(FieldElement.LASER_2_V))
                 ) {
                     robot.damage = Integer.min(10, robot.damage + 2)
                 }
@@ -440,11 +449,11 @@ class BoardEngine(
             Direction.RIGHT -> {
                 for (col in startPos.col + 1 until board[startPos.row].size) {
                     val field = fieldAt(Position(startPos.row, col))
-                    if (!field.type.isBlocking() || !field.hasHorizontalDirection()) {
+                    if (!field.hasBlockingELement() || !field.hasHorizontalDirection()) {
                         continue
                     }
 
-                    if (field.type == FieldType.WALL) {
+                    if (field.elements.contains(FieldElement.WALL)) {
                         return when (field.hasDirection(Direction.LEFT)) {
                             true -> fieldAt(Position(startPos.row, col - 1))
                             else -> field
@@ -463,11 +472,11 @@ class BoardEngine(
             Direction.LEFT -> {
                 for (col in startPos.col - 1 downTo 0) {
                     val field = fieldAt(Position(startPos.row, col))
-                    if (!field.type.isBlocking() || !field.hasHorizontalDirection()) {
+                    if (!field.hasBlockingELement() || !field.hasHorizontalDirection()) {
                         continue
                     }
 
-                    if (field.type == FieldType.WALL) {
+                    if (field.elements.contains(FieldElement.WALL)) {
                         return when (field.hasDirection(Direction.RIGHT)) {
                             true -> fieldAt(Position(startPos.row, col + 1))
                             else -> field
@@ -486,11 +495,11 @@ class BoardEngine(
             Direction.DOWN -> {
                 for (row in startPos.row + 1 until board.size) {
                     val field = fieldAt(Position(row, startPos.col))
-                    if (!field.type.isBlocking() || !field.hasVerticalDirection()) {
+                    if (!field.hasBlockingELement() || !field.hasVerticalDirection()) {
                         continue
                     }
 
-                    if (field.type == FieldType.WALL) {
+                    if (field.elements.contains(FieldElement.WALL)) {
                         return when (field.hasDirection(Direction.UP)) {
                             true -> fieldAt(Position(row - 1, startPos.col))
                             else -> field
@@ -509,11 +518,11 @@ class BoardEngine(
             Direction.UP -> {
                 for (row in startPos.row - 1 downTo 0) {
                     val field = fieldAt(Position(row, startPos.col))
-                    if (!field.type.isBlocking() || !field.hasVerticalDirection()) {
+                    if (!field.hasBlockingELement() || !field.hasVerticalDirection()) {
                         continue
                     }
 
-                    if (field.type == FieldType.WALL) {
+                    if (field.elements.contains(FieldElement.WALL)) {
                         return when (field.hasDirection(Direction.DOWN)) {
                             true -> fieldAt(Position(row + 1, startPos.col))
                             else -> field

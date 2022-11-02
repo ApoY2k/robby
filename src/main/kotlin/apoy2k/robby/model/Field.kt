@@ -5,8 +5,7 @@ import org.ktorm.schema.Table
 import org.ktorm.schema.enum
 import org.ktorm.schema.int
 
-enum class FieldType {
-    NONE,
+enum class FieldElement {
     HOLE,
     WALL,
     BELT,
@@ -17,24 +16,21 @@ enum class FieldType {
     PUSHER,
     FLAG,
     REPAIR,
-    REPAIR_MOD;
-
-    fun isBlocking() = this == WALL || this == LASER || this == LASER_2 || this == PUSHER
-}
-
-enum class FieldCondition {
+    REPAIR_MOD,
+    START,
     LASER_H,
     LASER_V,
     LASER_2_H,
-    LASER_2_V,
+    LASER_2_V;
+
+    fun isBlocking() = this == WALL || this == LASER || this == LASER_2 || this == PUSHER
 }
 
 object Fields : Table<Field>("fields") {
     val id = int("id").primaryKey().bindTo { it.id }
     val gameId = int("game_id").bindTo { it.gameId }
     val robotId = int("robot_id").bindTo { it.robotId }
-    val type = enum<FieldType>("type").bindTo { it.type }
-    val conditions = enumList<FieldCondition>("conditions").bindTo { it.conditions }
+    val elements = enumList<FieldElement>("elements").bindTo { it.elements }
     val positionX = int("positionX").bindTo { it.positionX }
     val positionY = int("positionY").bindTo { it.positionY }
     val incomingDirections = enumList<Direction>("incomingDirections").bindTo { it.incomingDirections }
@@ -43,10 +39,20 @@ object Fields : Table<Field>("fields") {
 
 interface Field : Entity<Field> {
     companion object : Entity.Factory<Field>() {
+
         @JvmStatic
-        fun new(type: FieldType = FieldType.NONE, vararg directions: Direction) = Field {
-            this.type = type
-            this.conditions = mutableListOf()
+        fun new(element: FieldElement? = null, vararg directions: Direction) = Field {
+            this.elements = when (element) {
+                null -> mutableListOf()
+                else -> mutableListOf(element)
+            }
+            this.outgoingDirection = directions.firstOrNull() ?: Direction.NONE
+            this.incomingDirections = directions.drop(1)
+        }
+
+        @JvmStatic
+        fun new(elements: List<FieldElement>, vararg directions: Direction) = Field {
+            this.elements = elements.toMutableList()
             this.outgoingDirection = directions.firstOrNull() ?: Direction.NONE
             this.incomingDirections = directions.drop(1)
         }
@@ -55,14 +61,9 @@ interface Field : Entity<Field> {
     var id: Int
     var gameId: Int
     var robotId: Int?
-    var type: FieldType
+    var elements: MutableList<FieldElement>
     var positionX: Int
     var positionY: Int
-
-    /**
-     * Conditions that apply to the field, "on top" of its inherent type
-     */
-    var conditions: MutableList<FieldCondition>
 
     /**
      * For belt fields: Directions where other belts move onto this belt from
@@ -101,19 +102,28 @@ interface Field : Entity<Field> {
      * Returns the FieldCondition to apply to any fields that might be in line of this lasser type
      * on the board when applying laser conditions
      */
-    fun getInLineLaserFieldsCondition() = when (type) {
-        FieldType.LASER -> when (outgoingDirection) {
-            Direction.DOWN, Direction.UP -> FieldCondition.LASER_V
-            Direction.LEFT, Direction.RIGHT -> FieldCondition.LASER_H
-            else -> null
+    fun getInLineLaserFieldElements(): FieldElement? {
+        if (elements.contains(FieldElement.LASER)) {
+            return when (outgoingDirection) {
+                Direction.DOWN, Direction.UP -> FieldElement.LASER_V
+                Direction.LEFT, Direction.RIGHT -> FieldElement.LASER_H
+                else -> null
+            }
         }
 
-        FieldType.LASER_2 -> when (outgoingDirection) {
-            Direction.DOWN, Direction.UP -> FieldCondition.LASER_2_V
-            Direction.LEFT, Direction.RIGHT -> FieldCondition.LASER_2_H
-            else -> null
+        if (elements.contains(FieldElement.LASER_2)) {
+            return when (outgoingDirection) {
+                Direction.DOWN, Direction.UP -> FieldElement.LASER_2_V
+                Direction.LEFT, Direction.RIGHT -> FieldElement.LASER_2_H
+                else -> null
+            }
         }
 
-        else -> null
+        return null
     }
+
+    /**
+     * true, if this field contains any blocking elements
+     */
+    fun hasBlockingELement() = elements.any { it.isBlocking() }
 }

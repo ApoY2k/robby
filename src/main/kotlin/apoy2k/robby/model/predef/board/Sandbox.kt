@@ -2,22 +2,22 @@ package apoy2k.robby.model.predef.board
 
 import apoy2k.robby.model.Direction
 import apoy2k.robby.model.Field
-import apoy2k.robby.model.FieldType
+import apoy2k.robby.model.FieldElement
 
 fun generateSandboxBoard() = listOf(
     listOf(
-        Field.new(FieldType.LASER, Direction.RIGHT),
+        Field.new(listOf(FieldElement.START, FieldElement.LASER), Direction.RIGHT),
         Field.new(),
         Field.new(),
     ),
     listOf(
-        Field.new(FieldType.BELT, Direction.LEFT),
-        Field.new(FieldType.ROTATE),
-        Field.new(FieldType.BELT, Direction.DOWN),
+        Field.new(listOf(FieldElement.START, FieldElement.BELT), Direction.LEFT),
+        Field.new(FieldElement.ROTATE),
+        Field.new(FieldElement.BELT, Direction.DOWN),
     ),
     listOf(
-        Field.new(FieldType.FLAG),
-        Field.new(FieldType.FLAG),
-        Field.new(FieldType.FLAG),
+        Field.new(listOf(FieldElement.START, FieldElement.FLAG)),
+        Field.new(FieldElement.FLAG),
+        Field.new(FieldElement.FLAG),
     ),
 )
