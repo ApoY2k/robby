@@ -54,30 +54,28 @@ class RobotEngine(
             .filter { it.robotId eq robot.id and it.register.isNotNull() }
             .associateBy { it.register }
 
+        // Remove cards from registers that are not locked, as by the register locking rules
+        // by setting the register for each card to null, "freeing" them from it
+
         if (respectDamageLock) {
             if (robot.damage <= 8) {
                 cards[1]?.register = null
-                cards[1]?.robotId = null
             }
 
             if (robot.damage <= 7) {
                 cards[2]?.register = null
-                cards[2]?.robotId = null
             }
 
             if (robot.damage <= 6) {
                 cards[3]?.register = null
-                cards[3]?.robotId = null
             }
 
             if (robot.damage <= 5) {
                 cards[4]?.register = null
-                cards[4]?.robotId = null
             }
 
             if (robot.damage <= 4) {
                 cards[5]?.register = null
-                cards[5]?.robotId = null
             }
         } else {
             cards.forEach { it.value.register = null }
@@ -87,7 +85,6 @@ class RobotEngine(
             cards.values.forEach { card ->
                 item {
                     set(it.register, card.register)
-                    set(it.robotId, card.robotId)
                     where { it.id eq card.id }
                 }
             }
@@ -114,6 +111,8 @@ class RobotEngine(
                 }
             }
         }
+
+        database.robots.update(robot)
     }
 
     /**
@@ -130,6 +129,8 @@ class RobotEngine(
             database.update(MovementCards) {
                 set(it.robotId, null)
                 where { it.robotId eq robot.id and it.register.isNull() }
+                // Only remove cards that are not in registers, as when they're assigned to registers they *must*
+                // stay assigned to a robot, too. Cards in a register without a robot don't make any sense
             }
             database.batchUpdate(MovementCards) {
                 cards.forEach { card ->

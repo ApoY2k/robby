@@ -184,10 +184,7 @@ class GameEngine(
         } else {
             // After all automatic turns are done, deal new cards so players can plan their next move
             game.state = GameState.PROGRAMMING_REGISTERS
-            robots.forEach {
-                robotEngine.prepareNewRound(game.id, it)
-                database.robots.update(it)
-            }
+            robots.forEach { robotEngine.prepareNewRound(game.id, it) }
         }
 
         database.games.update(game)

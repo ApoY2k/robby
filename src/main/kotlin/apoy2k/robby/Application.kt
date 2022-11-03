@@ -73,13 +73,6 @@ fun Application.setup(
         }
     }
 
-    intercept(ApplicationCallPipeline.Call) {
-        val session = call.sessions.get<Session>()
-        if (session == null) {
-            call.sessions.set(Session())
-        }
-    }
-
     install(StatusPages) {
         exception<Throwable> { call, cause ->
             logger.error("Unhandled error ${cause.message}", cause)

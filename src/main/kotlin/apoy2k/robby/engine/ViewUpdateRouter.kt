@@ -50,43 +50,30 @@ class ViewUpdateRouter(
                 val board = BoardEngine.fieldListToMatrix(fields)
                 val robots = database.robots.filter { it.gameId eq game.id }.map { it }
 
-                gameSessions
-                    .forEach { (httpSession, wsSessions) ->
-                        val user = database.users.find { it.id eq (httpSession.userId ?: -1) }
-                        val currentRobot = robots.find { user != null && it.userId == user.id }
-                        val cards = when (currentRobot != null) {
-                            true -> database.cards
-                                .filter { it.robotId eq currentRobot.id }
-                                .sortedByDescending { it.priority }
-                                .map { it }
+                gameSessions.forEach { (httpSession, wsSessions) ->
+                    val user = database.users.find { it.id eq (httpSession.userId ?: -1) }
+                    val robot = robots.find { user != null && it.userId == user.id }
+                    val cards = when (robot != null) {
+                        true -> database.cards
+                            .filter { it.robotId eq robot.id }
+                            .sortedByDescending { it.priority }
+                            .map { it }
 
-                            else -> listOf()
-                        }
-
-                        val gameView = StringBuilder()
-                            .appendHTML(false)
-                            .html {
-                                body {
-                                    insert(
-                                        GameTpl(
-                                            clock.instant(),
-                                            game,
-                                            robots,
-                                            board,
-                                            user,
-                                            currentRobot,
-                                            cards,
-                                        )
-                                    ) {}
-                                }
-                            }.toString()
-                        val frame = Frame.Text(gameView)
-
-                        wsSessions.forEach { wsSession ->
-                            logger.debug("Sending ViewUpdate of Game(${update.gameId}) to $httpSession")
-                            wsSession.send(frame)
-                        }
+                        else -> listOf()
                     }
+
+                    val gameView = GameTpl(clock.instant(), game, robots, board, user, robot, cards)
+                    val html = StringBuilder()
+                        .appendHTML(false)
+                        .html { body { insert(gameView) {} } }
+                        .toString()
+                    val frame = Frame.Text(html)
+
+                    wsSessions.forEach { wsSession ->
+                        logger.debug("Sending ViewUpdate of Game(${update.gameId}) to $httpSession")
+                        wsSession.send(frame)
+                    }
+                }
             } catch (err: Throwable) {
                 logger.error("Error sending ViewUpdate: ${err.message}", err)
             }

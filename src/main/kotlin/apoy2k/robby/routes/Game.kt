@@ -61,36 +61,24 @@ fun Route.game(
             val fields = database.fields.filter { it.gameId eq gameId }.map { it }
             val board = BoardEngine.fieldListToMatrix(fields)
             val robots = database.robots.filter { it.gameId eq gameId }.map { it }
-
             val session = call.sessions.get<Session>()
             val user = database.users.find { it.id eq (session?.userId ?: -1) }
-            val currentRobot = when (session?.userId != null) {
+            val robot = when (session?.userId != null) {
                 true -> robots.find { it.userId == session?.userId }
                 else -> null
             }
-            val cards = when (currentRobot != null) {
+            val cards = when (robot != null) {
                 true -> database.cards
-                    .filter { it.robotId eq currentRobot.id }
+                    .filter { it.robotId eq robot.id }
                     .sortedByDescending { it.priority }
                     .map { it }
 
                 else -> listOf()
             }
 
+            val gameView = GameTpl(clock.instant(), game, robots, board, user, robot, cards)
             call.respondHtmlTemplate(LayoutTpl(user)) {
-                content {
-                    insert(
-                        GameTpl(
-                            clock.instant(),
-                            game,
-                            robots,
-                            board,
-                            user,
-                            currentRobot,
-                            cards
-                        )
-                    ) {}
-                }
+                content { insert(gameView) {} }
             }
         }
     }
