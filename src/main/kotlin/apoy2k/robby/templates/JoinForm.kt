@@ -19,11 +19,6 @@ fun HtmlBlockTag.renderJoinForm(
                         return@card
                     }
 
-                    if (game.hasStarted(now)) {
-                        p("alert alert-info m-0") { +"Game has started. Specating only" }
-                        return@card
-                    }
-
                     if (user == null) {
                         p("alert alert-info m-0") { +"You are not logged in. Spectating only" }
                         return@card

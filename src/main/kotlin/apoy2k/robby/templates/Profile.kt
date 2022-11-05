@@ -74,7 +74,6 @@ fun HtmlBlockTag.renderRegister(
                 renderCard(register, card, locked = true, selected = true)
             } else {
                 robotCards
-                    .filter { it.register == null }
                     .forEach {
                         val selected = it.register == register
                         renderCard(register, it, locked = false, selected)

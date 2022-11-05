@@ -172,6 +172,11 @@ class RobotEngine(
      * Toggle the ready state on a robot
      */
     fun toggleReady(robot: Robot) {
+        if (database.cards.count { it.robotId eq robot.id and it.register.isNotNull() } != 5) {
+            // Robot does not have all registers programmed yet
+            return
+        }
+
         robot.ready = !robot.ready
         database.robots.update(robot)
     }
