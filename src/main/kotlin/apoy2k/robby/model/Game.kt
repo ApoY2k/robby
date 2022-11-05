@@ -19,6 +19,7 @@ enum class GameState {
     REPAIR_POWERUPS
 }
 
+@Suppress("unused")
 object Games : Table<Game>("games") {
     val id = int("id").primaryKey().bindTo { it.id }
     val currentRegister = int("currentRegister").bindTo { it.currentRegister }

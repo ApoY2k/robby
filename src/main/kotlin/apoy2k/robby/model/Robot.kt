@@ -10,6 +10,7 @@ enum class RobotModel {
     HUZZA,
 }
 
+@Suppress("unused")
 object Robots : Table<Robot>("robots") {
     val id = int("id").primaryKey().bindTo { it.id }
     val gameId = int("game_id").bindTo { it.gameId }

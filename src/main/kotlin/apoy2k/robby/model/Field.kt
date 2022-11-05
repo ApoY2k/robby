@@ -14,16 +14,28 @@ enum class FieldElement {
     LASER_2,
     ROTATE,
     PUSHER,
-    FLAG,
+    FLAG_1,
+    FLAG_2,
+    FLAG_3,
+    FLAG_4,
+    FLAG_5,
+    FLAG_6,
+    FLAG_7,
+    FLAG_8,
     REPAIR,
     REPAIR_MOD,
-    START,
+    START_1,
+    START_2,
+    START_3,
+    START_4,
+    START_5,
+    START_6,
+    START_7,
+    START_8,
     LASER_H,
     LASER_V,
     LASER_2_H,
-    LASER_2_V;
-
-    fun isBlocking() = this == WALL || this == LASER || this == LASER_2 || this == PUSHER
+    LASER_2_V,
 }
 
 // List of field elements that need to be combined with the directions of a field
@@ -39,8 +51,22 @@ val directionElements = listOf(
 
 // List of field elements that are overlayed on top of the direction elements
 val overlayElements = listOf(
-    FieldElement.FLAG,
-    FieldElement.START,
+    FieldElement.FLAG_1,
+    FieldElement.FLAG_2,
+    FieldElement.FLAG_3,
+    FieldElement.FLAG_4,
+    FieldElement.FLAG_5,
+    FieldElement.FLAG_6,
+    FieldElement.FLAG_7,
+    FieldElement.FLAG_8,
+    FieldElement.START_1,
+    FieldElement.START_2,
+    FieldElement.START_3,
+    FieldElement.START_4,
+    FieldElement.START_5,
+    FieldElement.START_6,
+    FieldElement.START_7,
+    FieldElement.START_8,
     FieldElement.REPAIR,
     FieldElement.REPAIR_MOD,
     FieldElement.LASER_H,
@@ -65,6 +91,31 @@ val applianceElements = listOf(
     FieldElement.PUSHER,
 )
 
+// List of all flag elements
+val flagElements = listOf(
+    FieldElement.FLAG_1,
+    FieldElement.FLAG_2,
+    FieldElement.FLAG_3,
+    FieldElement.FLAG_4,
+    FieldElement.FLAG_5,
+    FieldElement.FLAG_6,
+    FieldElement.FLAG_7,
+    FieldElement.FLAG_8,
+)
+
+// List of all start elements
+val startElements = listOf(
+    FieldElement.START_1,
+    FieldElement.START_2,
+    FieldElement.START_3,
+    FieldElement.START_4,
+    FieldElement.START_5,
+    FieldElement.START_6,
+    FieldElement.START_7,
+    FieldElement.START_8,
+)
+
+@Suppress("unused")
 object Fields : Table<Field>("fields") {
     val id = int("id").primaryKey().bindTo { it.id }
     val gameId = int("game_id").bindTo { it.gameId }
@@ -177,4 +228,30 @@ interface Field : Entity<Field> {
 
         return null
     }
+
+    /**
+     * True, if this field has any flag element on it
+     */
+    fun hasFlag() = flagElements.any { elements.contains(it) }
+
+    /**
+     * Returns the number of the first flag element on this field
+     */
+    fun getFlagNumber() = flagElements.first { elements.contains(it) }
+        .name
+        .takeLast(1)
+        .toInt()
+
+    /**
+     * True, if this field has any start element on it
+     */
+    fun hasStart() = startElements.any { elements.contains(it) }
+
+    /**
+     * Returns the number of the first start element on this field
+     */
+    fun getStartNumber() = startElements.first { elements.contains(it) }
+        .name
+        .takeLast(1)
+        .toInt()
 }

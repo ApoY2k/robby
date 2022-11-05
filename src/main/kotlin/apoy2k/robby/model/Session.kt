@@ -15,6 +15,7 @@ data class Session(
     val userId: Int? = null,
 )
 
+@Suppress("unused")
 object Sessions : Table<SessionData>("sessions") {
     var id = varchar("id").primaryKey().bindTo { it.id }
     var data = varchar("data").bindTo { it.data }

@@ -8,6 +8,7 @@ import org.ktorm.schema.int
 import org.ktorm.schema.varchar
 import java.util.*
 
+@Suppress("unused")
 object Users : Table<User>("users") {
     val id = int("id").primaryKey().bindTo { it.id }
     val name = varchar("name").bindTo { it.name }

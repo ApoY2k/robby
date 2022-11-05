@@ -284,12 +284,16 @@ class BoardEngine(
     fun touchCheckpoints(robots: List<Robot>) {
         // TODO Touching the same checkpoint multiple times should not increase the counter
         board.flatten()
-            .filter { field ->
-                field.elements.contains(FieldElement.FLAG)
-                        && robots.any { robot -> field.robotId == robot.id }
-            }
+            .filter { field -> field.hasFlag() && robots.any { robot -> field.robotId == robot.id } }
             .forEach { field ->
+                // Only count up the passed checkpoints if the flag is actually the next in line
+                // as in: the number of the already passed points must be exaclty one lower than the flag
+                // that is currently being touched
+                val flagNumber = field.getFlagNumber()
                 val robot = robots.first { it.id == field.robotId }
+                if (flagNumber != robot.passedCheckpoints + 1) {
+                    return@forEach
+                }
                 robot.passedCheckpoints += 1
             }
     }
@@ -327,9 +331,17 @@ class BoardEngine(
      * Place new robot on the board
      */
     fun placeRobot(robotId: Int): Field {
-        return board.flatten()
-            .first { it.elements.contains(FieldElement.START) && it.robotId == null }
-            .also { it.robotId = robotId }
+        val startField = board.flatten()
+            .filter { it.hasStart() && it.robotId == null }
+            .minBy { field ->
+                field.elements
+                    .first { startElements.contains(it) }
+                    .ordinal
+            }
+
+        return startField.also {
+            it.robotId = robotId
+        }
     }
 
     /**

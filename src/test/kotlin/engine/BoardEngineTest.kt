@@ -352,6 +352,58 @@ class BoardEngineTest {
         assertContains(board.fieldAt(2, 2).elements, FieldElement.LASER_2_V)
     }
 
+    @Test
+    fun `place robots on start fields in order`() {
+        val board = BoardEngine(
+            listOf(
+                listOf(Field.new(FieldElement.START_5)),
+                listOf(Field.new(FieldElement.START_8)),
+                listOf(Field.new(FieldElement.START_1)),
+                listOf(Field.new(FieldElement.START_2)),
+                listOf(Field.new(FieldElement.START_4)),
+            ), assignIds = true
+        )
+
+        board.placeRobot(1)
+        board.placeRobot(2)
+        board.placeRobot(3)
+        board.placeRobot(4)
+        board.placeRobot(5)
+
+        assertEquals(1, board.fieldAt(2, 0).robotId)
+        assertEquals(2, board.fieldAt(3, 0).robotId)
+        assertEquals(3, board.fieldAt(4, 0).robotId)
+        assertEquals(4, board.fieldAt(0, 0).robotId)
+        assertEquals(5, board.fieldAt(1, 0).robotId)
+    }
+
+    @Test
+    fun `touch checkpoint flags in order`() {
+        val board = BoardEngine(
+            listOf(
+                listOf(Field.new(FieldElement.FLAG_2)),
+                listOf(Field.new(FieldElement.FLAG_1)),
+            ), assignIds = true
+        )
+
+        val robot = Robot.new(RobotModel.ZIPPY).also { it.id = 1 }
+
+        board.fieldAt(0, 0).robotId = robot.id
+        board.touchCheckpoints(listOf(robot))
+        assertEquals(0, robot.passedCheckpoints)
+        board.fieldAt(0, 0).robotId = null
+
+        board.fieldAt(1, 0).robotId = robot.id
+        board.touchCheckpoints(listOf(robot))
+        assertEquals(1, robot.passedCheckpoints)
+        board.fieldAt(1, 0).robotId = null
+
+        board.fieldAt(0, 0).robotId = robot.id
+        board.touchCheckpoints(listOf(robot))
+        assertEquals(2, robot.passedCheckpoints)
+        board.fieldAt(0, 0).robotId = null
+    }
+
     @ParameterizedTest
     @MethodSource("provideLastLaserHitField")
     fun `find last laser hit field`(

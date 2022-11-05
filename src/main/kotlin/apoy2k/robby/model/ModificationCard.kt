@@ -1,7 +1,5 @@
 package apoy2k.robby.model
 
-import org.apache.commons.lang3.RandomStringUtils
-
 enum class PowerUp {
     RAMMING_GEAR,
     DUAL_PROCESSOR,
@@ -29,10 +27,4 @@ enum class PowerUp {
     REVERSE_GEAR,
     CIRCUIT_BREAKER,
     FIRE_CONTROL
-}
-
-data class ModificationCard(val powerUp: PowerUp, val description: String? = "") {
-    val id: String = RandomStringUtils.randomAlphanumeric(5)
-
-    override fun toString() = "ModificationCard($id, $powerUp)"
 }

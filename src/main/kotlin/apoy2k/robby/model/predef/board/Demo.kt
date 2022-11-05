@@ -119,7 +119,7 @@ fun generateDemoBoard() = listOf(
     ),
     listOf(
         Field.new(FieldElement.PUSHER, Direction.DOWN),
-        Field.new(FieldElement.FLAG),
+        Field.new(FieldElement.FLAG_1),
         Field.new(FieldElement.REPAIR),
         Field.new(FieldElement.REPAIR_MOD),
         Field.new(FieldElement.HOLE),
