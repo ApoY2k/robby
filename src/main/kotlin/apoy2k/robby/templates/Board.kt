@@ -1,6 +1,9 @@
 package apoy2k.robby.templates
 
-import apoy2k.robby.model.*
+import apoy2k.robby.model.Field
+import apoy2k.robby.model.Robot
+import apoy2k.robby.model.directionElements
+import apoy2k.robby.model.overlayElements
 import kotlinx.html.Entities
 import kotlinx.html.HtmlBlockTag
 import kotlinx.html.div
@@ -11,7 +14,7 @@ import kotlinx.html.div
 fun Field.directionElementsClass(): String {
     val directions = listOf(this.outgoingDirection)
         .plus(this.incomingDirections)
-        .filter { it != Direction.NONE }
+        .filterNotNull()
         .joinToString("") { it.name.take(1) }
     val elements = this.elements
         .filter { directionElements.contains(it) }

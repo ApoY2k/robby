@@ -85,14 +85,14 @@ interface Field : Entity<Field> {
                 null -> mutableListOf()
                 else -> mutableListOf(element)
             }
-            this.outgoingDirection = directions.firstOrNull() ?: Direction.NONE
+            this.outgoingDirection = directions.firstOrNull()
             this.incomingDirections = directions.drop(1)
         }
 
         @JvmStatic
         fun new(elements: List<FieldElement>, vararg directions: Direction) = Field {
             this.elements = elements.toMutableList()
-            this.outgoingDirection = directions.firstOrNull() ?: Direction.NONE
+            this.outgoingDirection = directions.firstOrNull()
             this.incomingDirections = directions.drop(1)
         }
     }
@@ -115,7 +115,7 @@ interface Field : Entity<Field> {
      * For laser/pusher fields: The position of the wall that the appliance is attached to
      * For wall fields: Position of a wall
      */
-    var outgoingDirection: Direction
+    var outgoingDirection: Direction?
 
     /**
      * Get list of all directions, no matter in or outgoing

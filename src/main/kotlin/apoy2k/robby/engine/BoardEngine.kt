@@ -207,10 +207,10 @@ class BoardEngine(
         val orientations = mutableMapOf<Int, Direction>()
 
         board.flatten()
-            .filter { it.elements.contains(beltType) }
+            .filter { it.elements.contains(beltType) && it.outgoingDirection != null }
             .forEach { field ->
                 val robotId = field.robotId ?: return@forEach
-                val movements = calculateRobotMove(robotId, field.outgoingDirection)
+                val movements = calculateRobotMove(robotId, field.outgoingDirection!!)
 
                     // Check if two robots would be moved into the same space and if so, don't move either one
                     .filter { movement ->
@@ -266,7 +266,11 @@ class BoardEngine(
             }
 
             val nextField = fieldAt(position)
-            val rotationMovement = getTurnMovement(incomingDirection, nextField.outgoingDirection)
+            val nextFieldOutgoingDirection = nextField.outgoingDirection
+            val rotationMovement = when (nextFieldOutgoingDirection != null) {
+                true -> getTurnMovement(incomingDirection, nextFieldOutgoingDirection)
+                else -> Movement.STAY
+            }
             val robot = robots.find { it.id == robotId } ?: return@forEach
             robot.rotate(rotationMovement)
         }
@@ -355,8 +359,7 @@ class BoardEngine(
                 it.elements.contains(FieldElement.LASER) || it.elements.contains(FieldElement.LASER_2)
             }
             .forEach { sourceField ->
-                val startPos = positionOf(sourceField)
-                val direction = sourceField.outgoingDirection
+                val direction = sourceField.outgoingDirection ?: return@forEach
                 val lastNonBlockedField = findLastLaserHitField(sourceField, direction)
                 val lastNonBlockedFieldPos = positionOf(lastNonBlockedField)
 
@@ -387,8 +390,6 @@ class BoardEngine(
                         true -> fieldAt(Position(lastNonBlockedFieldPos.row, lastNonBlockedFieldPos.col - 1))
                         false -> lastNonBlockedField
                     }
-
-                    Direction.NONE -> lastNonBlockedField
                 }
 
                 val endPos = positionOf(lastHitField)
@@ -400,12 +401,12 @@ class BoardEngine(
                 // Also, add an addtional step to the position so the laser conditions is not applied on the
                 // lasers source field itself!
 
+                val startPos = positionOf(sourceField)
                 val fields = when (direction) {
                     Direction.LEFT -> (endPos.col until startPos.col).map { fieldAt(Position(startPos.row, it)) }
                     Direction.RIGHT -> (startPos.col + 1..endPos.col).map { fieldAt(Position(startPos.row, it)) }
                     Direction.UP -> (endPos.row until startPos.row).map { fieldAt(Position(it, startPos.col)) }
                     Direction.DOWN -> (startPos.row + 1..endPos.row).map { fieldAt(Position(it, startPos.col)) }
-                    else -> emptyList()
                 }
 
                 // Then apply the laser condition of the source laser field to all fields in the

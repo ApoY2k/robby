@@ -23,7 +23,7 @@ create table if not exists "fields" (
     "elements" integer not null,
     "positionX" integer not null,
     "positionY" integer not null,
-    "outgoingDirection" text not null,
+    "outgoingDirection" text,
     "incomingDirections" text not null,
     foreign key("game_id") references "games"("id"),
     foreign key("robot_id") references "robots"("id"),

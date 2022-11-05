@@ -1,7 +1,6 @@
 package apoy2k.robby.model
 
 enum class Direction {
-    NONE,
     UP,
     RIGHT,
     DOWN,

@@ -76,7 +76,6 @@ interface Robot : Entity<Robot> {
                 Direction.DOWN -> Direction.LEFT
                 Direction.LEFT -> Direction.UP
                 Direction.RIGHT -> Direction.DOWN
-                else -> Direction.NONE
             }
         }
 
@@ -86,7 +85,6 @@ interface Robot : Entity<Robot> {
                 Direction.DOWN -> Direction.RIGHT
                 Direction.LEFT -> Direction.DOWN
                 Direction.RIGHT -> Direction.UP
-                else -> Direction.NONE
             }
         }
 
@@ -96,7 +94,6 @@ interface Robot : Entity<Robot> {
                 Direction.DOWN -> Direction.UP
                 Direction.LEFT -> Direction.RIGHT
                 Direction.RIGHT -> Direction.LEFT
-                else -> Direction.NONE
             }
         }
 
@@ -114,7 +111,6 @@ interface Robot : Entity<Robot> {
                 Direction.DOWN -> Direction.UP
                 Direction.LEFT -> Direction.RIGHT
                 Direction.RIGHT -> Direction.LEFT
-                else -> Direction.NONE
             }
         }
 
