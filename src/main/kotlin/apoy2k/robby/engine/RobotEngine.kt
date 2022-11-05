@@ -30,17 +30,20 @@ class RobotEngine(
             throw IncompleteAction("$robot and $card do not belong to the same game")
         }
 
+        if (robot.isLocked(register)) {
+            return
+        }
+
         logger.info("Selecting card $cardId for $robot to register $register")
 
         card.robotId = robot.id
         card.register = register
-        database.useTransaction { tx ->
+        database.useTransaction {
             database.update(MovementCards) {
                 set(it.register, null)
                 where { it.robotId eq robot.id and (it.register eq register) }
             }
             database.cards.update(card)
-            tx.commit()
         }
     }
 

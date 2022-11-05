@@ -205,12 +205,68 @@ div.overlay-repair_mod::after {
     content: "🛠";
 }
 
-div.overlay-flag::after {
-    content: "🚩";
+div.overlay-flag_1::after {
+    content: "🚩1";
 }
 
-div.overlay-start::after {
-    content: "🚦";
+div.overlay-flag_2::after {
+    content: "🚩2";
+}
+
+div.overlay-flag_3::after {
+    content: "🚩3";
+}
+
+div.overlay-flag_4::after {
+    content: "🚩4";
+}
+
+div.overlay-flag_5::after {
+    content: "🚩5";
+}
+
+div.overlay-flag_6::after {
+    content: "🚩6";
+}
+
+div.overlay-flag_7::after {
+    content: "🚩7";
+}
+
+div.overlay-flag_8::after {
+    content: "🚩8";
+}
+
+div.overlay-start_1::after {
+    content: "🚦1";
+}
+
+div.overlay-start_2::after {
+    content: "🚦2";
+}
+
+div.overlay-start_3::after {
+    content: "🚦3";
+}
+
+div.overlay-start_4::after {
+    content: "🚦4";
+}
+
+div.overlay-start_5::after {
+    content: "🚦5";
+}
+
+div.overlay-start_6::after {
+    content: "🚦6";
+}
+
+div.overlay-start_7::after {
+    content: "🚦7";
+}
+
+div.overlay-start_8::after {
+    content: "🚦8";
 }
 
 .robot {
