@@ -7,7 +7,6 @@ import org.ktorm.dsl.eq
 import org.ktorm.entity.filter
 import org.ktorm.entity.map
 import org.slf4j.LoggerFactory
-import kotlin.math.atan2
 
 class BoardEngine(
     val board: List<List<Field>>,
@@ -208,9 +207,10 @@ class BoardEngine(
         val orientations = mutableMapOf<Int, Direction>()
 
         board.flatten()
-            .filter { it.elements.contains(beltType) && it.robotId != null }
+            .filter { it.elements.contains(beltType) }
             .forEach { field ->
-                val movements = calculateRobotMove(field.robotId!!, field.outgoingDirection)
+                val robotId = field.robotId ?: return@forEach
+                val movements = calculateRobotMove(robotId, field.outgoingDirection)
 
                     // Check if two robots would be moved into the same space and if so, don't move either one
                     .filter { movement ->
@@ -266,7 +266,7 @@ class BoardEngine(
             }
 
             val nextField = fieldAt(position)
-            val rotationMovement = getTurnDirection(incomingDirection, nextField.outgoingDirection)
+            val rotationMovement = getTurnMovement(incomingDirection, nextField.outgoingDirection)
             val robot = robots.find { it.id == robotId } ?: return@forEach
             robot.rotate(rotationMovement)
         }
@@ -326,25 +326,6 @@ class BoardEngine(
         return board.flatten()
             .first { it.elements.contains(FieldElement.START) && it.robotId == null }
             .also { it.robotId = robotId }
-    }
-
-    /**
-     * Determine the movement (turn) that translates one direction into another
-     */
-    private fun getTurnDirection(incomingDirection: Direction, outgoingDirection: Direction): Movement {
-        val incVec = incomingDirection.toVec2()
-        val outVec = outgoingDirection.toVec2()
-
-        val angle = atan2(
-            incVec.x * outVec.x - incVec.y * outVec.y,
-            incVec.x * outVec.x + incVec.y * outVec.y
-        )
-
-        return when {
-            angle < 0 -> Movement.TURN_RIGHT
-            angle > 0 -> Movement.TURN_LEFT
-            else -> Movement.STAY
-        }
     }
 
     /**

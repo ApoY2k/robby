@@ -5,15 +5,15 @@ enum class Direction {
     UP,
     RIGHT,
     DOWN,
-    LEFT
+    LEFT,
 }
 
-data class Vec2(val x: Float, val y: Float)
-
-fun Direction.toVec2() = when (this) {
-    Direction.NONE -> Vec2(0f, 0f)
-    Direction.UP -> Vec2(0f, 1f)
-    Direction.RIGHT -> Vec2(1f, 0f)
-    Direction.DOWN -> Vec2(0f, -1f)
-    Direction.LEFT -> Vec2(-1f, 0f)
-}
+/**
+ * Determine the movement (turn) that resolves when moving along a curve from outside a field into a direction
+ */
+fun getTurnMovement(incomingDirection: Direction, outgoingDirection: Direction) =
+    when (incomingDirection.ordinal - outgoingDirection.ordinal) {
+        -1, 3 -> Movement.TURN_LEFT
+        1, -3 -> Movement.TURN_RIGHT
+        else -> Movement.STAY
+    }

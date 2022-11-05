@@ -84,6 +84,24 @@ class BoardEngineTest {
     }
 
     @Test
+    fun `continous belt doesn't change robot orientation`() {
+        val board = BoardEngine(
+            listOf(
+                listOf(
+                    Field.new(FieldElement.BELT, Direction.LEFT),
+                    Field.new(FieldElement.BELT, Direction.LEFT),
+                    Field.new(FieldElement.BELT, Direction.LEFT),
+                ),
+            ), assignIds = true
+        )
+
+        board.fieldAt(0, 2).robotId = robot1.id
+        board.moveBelts(FieldElement.BELT, listOf(robot1))
+        assertEquals(robot1.id, board.fieldAt(0, 1).robotId)
+        assertEquals(Direction.DOWN, robot1.facing)
+    }
+
+    @Test
     fun `belt up moves robot`() {
         val card = MovementCard.new(Movement.STRAIGHT, 1)
         card.robotId = robot1.id
@@ -145,7 +163,7 @@ class BoardEngineTest {
         val board = BoardEngine(
             listOf(
                 listOf(Field.new(FieldElement.BELT, Direction.DOWN)),
-                listOf(Field.new(FieldElement.BELT, Direction.DOWN, Direction.RIGHT)),
+                listOf(Field.new(FieldElement.BELT, Direction.RIGHT, Direction.DOWN)),
             ), assignIds = true
         )
 
@@ -158,7 +176,7 @@ class BoardEngineTest {
         assertNull(start.robotId)
         assertNotNull(end.robotId)
         assertEquals(robot1.id, end.robotId)
-        assertEquals(robot1.facing, Direction.RIGHT)
+        assertEquals(Direction.RIGHT, robot1.facing)
     }
 
     @Test
@@ -346,6 +364,16 @@ class BoardEngineTest {
         assertEquals(expectedEndField, endField)
     }
 
+    @ParameterizedTest
+    @MethodSource("provideTurnMovement")
+    fun `calculate turn movement`(
+        incomingDirection: Direction,
+        outgoingDirection: Direction,
+        expectedMovement: Movement,
+    ) {
+        assertEquals(expectedMovement, getTurnMovement(incomingDirection, outgoingDirection))
+    }
+
     companion object {
         @JvmStatic
         fun resetBoard(board: BoardEngine) {
@@ -405,5 +433,25 @@ class BoardEngineTest {
                 Arguments.of(laserBoard, laserBoard.fieldAt(0, 2), Direction.DOWN, laserBoard.fieldAt(3, 2)),
             )
         }
+
+        @JvmStatic
+        fun provideTurnMovement(): Stream<Arguments> = Stream.of(
+            Arguments.of(Direction.UP, Direction.RIGHT, Movement.TURN_LEFT),
+            Arguments.of(Direction.UP, Direction.LEFT, Movement.TURN_RIGHT),
+            Arguments.of(Direction.UP, Direction.DOWN, Movement.STAY),
+            Arguments.of(Direction.UP, Direction.UP, Movement.STAY),
+            Arguments.of(Direction.DOWN, Direction.RIGHT, Movement.TURN_RIGHT),
+            Arguments.of(Direction.DOWN, Direction.LEFT, Movement.TURN_LEFT),
+            Arguments.of(Direction.DOWN, Direction.DOWN, Movement.STAY),
+            Arguments.of(Direction.DOWN, Direction.UP, Movement.STAY),
+            Arguments.of(Direction.LEFT, Direction.RIGHT, Movement.STAY),
+            Arguments.of(Direction.LEFT, Direction.LEFT, Movement.STAY),
+            Arguments.of(Direction.LEFT, Direction.DOWN, Movement.TURN_RIGHT),
+            Arguments.of(Direction.LEFT, Direction.UP, Movement.TURN_LEFT),
+            Arguments.of(Direction.RIGHT, Direction.RIGHT, Movement.STAY),
+            Arguments.of(Direction.RIGHT, Direction.LEFT, Movement.STAY),
+            Arguments.of(Direction.RIGHT, Direction.DOWN, Movement.TURN_LEFT),
+            Arguments.of(Direction.RIGHT, Direction.UP, Movement.TURN_RIGHT),
+        )
     }
 }
