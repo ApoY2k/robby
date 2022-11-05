@@ -42,23 +42,16 @@ a.card:hover {
     position: relative;
 }
 
-.type-hole {
-    background-color: #888;
-}
-
-.type-wall, .type-laser, .type-laser_2, .type-pusher {
+.wall, .laser, .laser_2, .pusher {
     border-width: 5px;
     border-color: #bbbb04;
 }
 
-.field[class*="type-rotate"]::after,
-.field[class*="type-laser"]::after,
-div[class*="condition"]::after,
-.field[class*="type-belt"]::after,
-.field[class*="type-pusher"]::after,
-.type-repair::after,
-.type-repair_mod::after,
-.type-flag::after {
+.field[class*="rotate"]::after,
+.field[class*="laser"]::after,
+.field[class*="belt"]::after,
+.field[class*="pusher"]::after,
+div[class*="overlay"]::after {
     content: "";
     display: block;
     position: absolute;
@@ -74,146 +67,150 @@ div[class*="condition"]::after,
     background-position: center;
 }
 
-.type-wall_d, .type-wall_ld, .type-wall_ldr, .type-wall_lud, .type-wall_urd, .type-wall_lurd, .type-wall_ud,
-.type-wall_rd, .type-wall_d, .type-laser_u, .type-laser_2_u, .type-pusher_u {
+.wall_d, .wall_ld, .wall_ldr, .wall_lud, .wall_urd, .wall_lurd, .wall_ud,.wall_rd, .wall_d, .laser_u, .laser_2_u, .pusher_u {
     border-bottom-style: solid;
 }
 
-.type-wall_lu, .type-wall_lur, .type-wall_lud, .type-wall_urd, .type-wall_lurd, .type-wall_u, .type-wall_ur,
-.type-wall_ud, .type-laser_d, .type-laser_2_d, .type-pusher_d {
+.wall_lu, .wall_lur, .wall_lud, .wall_urd, .wall_lurd, .wall_u, .wall_ur,.wall_ud, .laser_d, .laser_2_d, .pusher_d {
     border-top-style: solid;
 }
 
-.type-wall_l, .type-wall_lu, .type-wall_lr, .type-wall_lr, .type-wall_ld, .type-wall_lur, .type-wall_ldr,
-.type-wall_lud, .type-wall_lurd, .type-laser_r, .type-laser_2_r, .type-pusher_r {
+.wall_l, .wall_lu, .wall_lr, .wall_lr, .wall_ld, .wall_lur, .wall_ldr,.wall_lud, .wall_lurd, .laser_r, .laser_2_r, .pusher_r {
     border-left-style: solid;
 }
 
-.type-wall_lr, .type-wall_lur, .type-wall_ldr, .type-wall_urd, .type-wall_lurd, .type-wall_ur, .type-wall_r,
-.type-wall_rd, .type-laser_l, .type-laser_2_l, .type-pusher_l {
+.wall_lr, .wall_lur, .wall_ldr, .wall_urd, .wall_lurd, .wall_ur, .wall_r,.wall_rd, .laser_l, .laser_2_l, .pusher_l {
     border-right-style: solid;
 }
 
-.type-rotate_l::after {
+.rotate_l::after {
     background-image: url("/assets/icons/rotate_left.png");
 }
 
-.type-rotate_r::after {
+.rotate_r::after {
     background-image: url("/assets/icons/rotate_right.png");
 }
 
-.type-belt_l::after, .type-belt_u::after, .type-belt_d::after, .type-belt_r::after {
+.belt_l::after, .belt_u::after, .belt_d::after, .belt_r::after {
     background-image: url("/assets/icons/straight.png");
 }
 
-.type-belt_2_l::after, .type-belt_2_u::after, .type-belt_2_d::after, .type-belt_2_r::after {
+.belt_2_l::after, .belt_2_u::after, .belt_2_d::after, .belt_2_r::after {
     background-image: url("/assets/icons/straight_2.png");
 }
 
-.type-belt_lu::after, .type-belt_ru::after, .type-belt_dr::after, .type-belt_ul::after {
+.belt_lu::after, .belt_ru::after, .belt_dr::after, .belt_ul::after {
     background-image: url("/assets/icons/turn_right.png");
 }
 
-.type-belt_2_lu::after, .type-belt_2_ru::after, .type-belt_2_dr::after, .type-belt_2_ld::after, .type-belt_2_ul::after {
+.belt_2_lu::after, .belt_2_ru::after, .belt_2_dr::after, .belt_2_ld::after, .belt_2_ul::after {
     background-image: url("/assets/icons/turn_2_right.png");
 }
 
-.type-belt_dl::after, .type-belt_ld::after, .type-belt_rd::after, .type-belt_ur::after {
+.belt_dl::after, .belt_ld::after, .belt_rd::after, .belt_ur::after {
     background-image: url("/assets/icons/turn_left.png");
 }
 
-.type-belt_2_dl::after, .type-belt_2_rd::after, .type-belt_2_ur::after {
+.belt_2_dl::after, .belt_2_rd::after, .belt_2_ur::after {
     background-image: url("/assets/icons/turn_2_left.png");
 }
 
-.type-belt_lur::after, .type-belt_urd::after, .type-belt_dlu::after, .type-belt_rld::after {
+.belt_lur::after, .belt_urd::after, .belt_dlu::after, .belt_rld::after {
     background-image: url("/assets/icons/merge_r.png");
 }
 
-.type-belt_2_lur::after, .type-belt_2_urd::after, .type-belt_2_dlu::after, .type-belt_2_rld::after {
+.belt_2_lur::after, .belt_2_urd::after, .belt_2_dlu::after, .belt_2_rld::after {
     background-image: url("/assets/icons/merge_2_r.png");
 }
 
-.type-belt_lud::after, .type-belt_ulr::after, .type-belt_rud::after, .type-belt_dlr::after {
+.belt_lud::after, .belt_ulr::after, .belt_rud::after, .belt_dlr::after {
     background-image: url("/assets/icons/merge_lr.png");
 }
 
-.type-belt_2_lud::after, .type-belt_2_ulr::after, .type-belt_2_rud::after, .type-belt_2_dlr::after {
+.belt_2_lud::after, .belt_2_ulr::after, .belt_2_rud::after, .belt_2_dlr::after {
     background-image: url("/assets/icons/merge_2_lr.png");
 }
 
-.type-belt_lrd::after, .type-belt_uld::after, .type-belt_rlu::after, .type-belt_dur::after {
+.belt_lrd::after, .belt_uld::after, .belt_rlu::after, .belt_dur::after {
     background-image: url("/assets/icons/merge_l.png");
 }
 
-.type-belt_2_lrd::after, .type-belt_2_uld::after, .type-belt_2_rlu::after, .type-belt_2_dur::after {
+.belt_2_lrd::after, .belt_2_uld::after, .belt_2_rlu::after, .belt_2_dur::after {
     background-image: url("/assets/icons/merge_2_l.png");
 }
 
-.type-belt_lurd::after, .type-belt_ulrd::after, .type-belt_dlur::after, .type-belt_rlud::after {
+.belt_lurd::after, .belt_ulrd::after, .belt_dlur::after, .belt_rlud::after {
     background-image: url("/assets/icons/merge_lrd.png");
 }
 
-.type-belt_2_lurd::after, .type-belt_2_ulrd::after, .type-belt_2_dlur::after, .type-belt_2_rlud::after {
+.belt_2_lurd::after, .belt_2_ulrd::after, .belt_2_dlur::after, .belt_2_rlud::after {
     background-image: url("/assets/icons/merge_2_lrd.png");
 }
 
-.type-belt_l::after, .type-belt_lu::after, .type-belt_2_lu::after, .type-belt_ld::after, .type-belt_ul::after,
-.type-belt_dl::after, .type-belt_lur::after, .type-belt_lud::after, .type-belt_lrd::after, .type-belt_lurd::after,
-.type-belt_2_l::after, .type-belt_2_ul::after, .type-belt_2_dl::after, .type-belt_2_lur::after, .type-belt_2_lud::after,
-.type-belt_2_lrd::after, .type-belt_2_lurd::after, .type-laser_r::after, .type-laser_2_r::after, .type-pusher_r::after {
+.belt_l::after, .belt_lu::after, .belt_2_lu::after, .belt_ld::after, .belt_ul::after,
+.belt_dl::after, .belt_lur::after, .belt_lud::after, .belt_lrd::after, .belt_lurd::after,
+.belt_2_l::after, .belt_2_ul::after, .belt_2_dl::after, .belt_2_lur::after, .belt_2_lud::after,
+.belt_2_lrd::after, .belt_2_lurd::after, .laser_r::after, .laser_2_r::after, .pusher_r::after {
     transform: rotate(-90deg);
 }
 
-.type-belt_r::after, .type-belt_dr::after, .type-belt_ur::after, .type-belt_rud::after, .type-belt_rlu::after,
-.type-belt_rld::after, .type-belt_rlud::after, .type-belt_2_r::after, .type-belt_2_dr::after, .type-belt_2_ur::after,
-.type-belt_2_rud::after, .type-belt_2_rlu::after, .type-belt_2_rld::after, .type-belt_2_rlud::after,
-.type-laser_l::after, .type-laser_2_l::after, .type-pusher_l::after {
+.belt_r::after, .belt_dr::after, .belt_ur::after, .belt_rud::after, .belt_rlu::after,
+.belt_rld::after, .belt_rlud::after, .belt_2_r::after, .belt_2_dr::after, .belt_2_ur::after,
+.belt_2_rud::after, .belt_2_rlu::after, .belt_2_rld::after, .belt_2_rlud::after,
+.laser_l::after, .laser_2_l::after, .pusher_l::after {
     transform: rotate(90deg);
 }
 
-.type-belt_d::after, .type-belt_rd::after, .type-belt_dlu::after, .type-belt_dur::after, .type-belt_dlur::after,
-.type-belt_dlr::after,.type-belt_2_d::after, .type-belt_2_ld::after, .type-belt_2_rd::after, .type-belt_2_dlu::after,
-.type-belt_2_dur::after, .type-belt_2_dlur::after, .type-belt_2_dlr::after, .type-laser_u::after,
-.type-laser_2_u::after, .type-pusher_u::after {
+.belt_d::after, .belt_rd::after, .belt_dlu::after, .belt_dur::after, .belt_dlur::after,
+.belt_dlr::after,.belt_2_d::after, .belt_2_ld::after, .belt_2_rd::after, .belt_2_dlu::after,
+.belt_2_dur::after, .belt_2_dlur::after, .belt_2_dlr::after, .laser_u::after,
+.laser_2_u::after, .pusher_u::after {
     transform: rotate(180deg);
 }
 
-.field[class*="type-laser"]::after {
+.field[class*="laser"]::after {
     background-image: url("/assets/icons/laser.png");
 }
 
-.field[class*="type-laser_2"]::after {
+.field[class*="laser_2"]::after {
     background-image: url("/assets/icons/laser_2.png");
 }
 
-.field[class*="type-pusher"]::after {
+.field[class*="pusher"]::after {
     background-image: url("/assets/icons/pusher.png");
     background-position: center -10px;
 }
 
-div.condition-laser_h::after, div.condition-laser_v::after {
-    background-image: url("/assets/icons/condition-laser.png");
+div.overlay-laser_h::after, div.overlay-laser_v::after {
+    background-image: url("/assets/icons/overlay-laser.png");
 }
 
-div.condition-laser_2_h::after, div.condition-laser_2_v::after {
-    background-image: url("/assets/icons/condition-laser_2.png");
+div.overlay-laser_2_h::after, div.overlay-laser_2_v::after {
+    background-image: url("/assets/icons/overlay-laser_2.png");
 }
 
-div.condition-laser_h::after, div.condition-laser_2_h::after {
+div.overlay-laser_h::after, div.laser_2_h::after {
     transform: rotate(90deg);
 }
 
-.type-repair::after {
+div.overlay-hole::after {
+    content: "⚫";
+}
+
+div.overlay-repair::after {
     content: "🔧";
 }
 
-.type-repair_mod::after {
+div.overlay-repair_mod::after {
     content: "🛠";
 }
 
-.type-flag::after {
+div.overlay-flag::after {
     content: "🚩";
+}
+
+div.overlay-start::after {
+    content: "🚦";
 }
 
 .robot {

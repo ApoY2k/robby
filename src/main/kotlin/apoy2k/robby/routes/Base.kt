@@ -1,5 +1,6 @@
 package apoy2k.robby.routes
 
+import apoy2k.robby.engine.BoardEngine
 import apoy2k.robby.model.*
 import apoy2k.robby.model.predef.board.generateChopShopBoard
 import apoy2k.robby.templates.HomeTpl
@@ -62,13 +63,29 @@ fun Route.base(
         val session = call.sessions.get<Session>()
         val user = database.users.find { it.id eq (session?.userId ?: -1) }
         val robots = mutableListOf<Robot>()
-        val board = when (call.parameters["id"]) {
+        val fields = when (call.parameters["id"]) {
             "chop-shop" -> generateChopShopBoard()
             "laser-test" -> listOf(
-                listOf(Field.new(FieldElement.START), Field.new(FieldElement.WALL, Direction.LEFT), Field.new()),
-                listOf(Field.new(FieldElement.WALL, Direction.DOWN), Field.new(), Field.new()),
-                listOf(Field.new(), Field.new(), Field.new(FieldElement.WALL, Direction.RIGHT)),
-                listOf(Field.new(), Field.new(FieldElement.WALL, Direction.UP), Field.new()),
+                listOf(
+                    Field.new(),
+                    Field.new(FieldElement.WALL, Direction.DOWN),
+                    Field.new(FieldElement.LASER_2, Direction.DOWN),
+                ),
+                listOf(
+                    Field.new(),
+                    Field.new(FieldElement.LASER_2, Direction.UP),
+                    Field.new(),
+                ),
+                listOf(
+                    Field.new(),
+                    Field.new(),
+                    Field.new(),
+                ),
+                listOf(
+                    Field.new(),
+                    Field.new(FieldElement.LASER, Direction.UP),
+                    Field.new(),
+                ),
             )
 
             "robot-states" -> {
@@ -89,7 +106,7 @@ fun Route.base(
                     it.poweredDown = true
                 }
                 robots.add(robot2)
-                board[0][1].robotId = robot1.id
+                board[0][0].robotId = robot1.id
                 board[1][1].robotId = robot2.id
                 board
             }
@@ -97,10 +114,13 @@ fun Route.base(
             else -> null
         }
 
-        if (board == null) {
+        if (fields == null) {
             call.respondRedirect(Location.BOARDS_ROOT.path)
             return@get
         }
+
+        val boardEngine = BoardEngine(fields, assignIds = true)
+        boardEngine.updateLaserOverlays()
 
         call.respondHtmlTemplate(LayoutTpl(user)) {
             content {
@@ -108,7 +128,7 @@ fun Route.base(
                     +"Board Preview"
                 }
                 div {
-                    renderBoard(board, robots)
+                    renderBoard(fields, robots)
                 }
             }
         }

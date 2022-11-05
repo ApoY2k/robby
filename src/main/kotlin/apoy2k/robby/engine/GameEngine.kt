@@ -15,6 +15,7 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import org.ktorm.database.Database
 import org.ktorm.dsl.and
+import org.ktorm.dsl.batchUpdate
 import org.ktorm.dsl.eq
 import org.ktorm.entity.*
 import org.slf4j.LoggerFactory
@@ -53,7 +54,7 @@ class GameEngine(
             try {
                 logger.debug("Received $action")
 
-                val boardEngine = BoardEngine.build(game.id, database)
+                val boardEngine = BoardEngine.buildFromGame(game.id, database)
 
                 // Perform the action and run automatic registers and actions
                 // with ViewUpdates in a separate coroutine so the channel isn't blocked
@@ -120,22 +121,45 @@ class GameEngine(
             startedAt = null
             finishedAt = null
         }
-
         val fields = when (type) {
             BoardType.CHOPSHOP -> generateChopShopBoard()
             BoardType.DEMO -> generateDemoBoard()
             BoardType.SANDBOX -> generateSandboxBoard()
         }
 
-        return database.useTransaction {
+        database.useTransaction {
             database.games.add(game)
-            database.createFieldsForGame(fields, game.id)
+
+            fields.mapIndexed { row, rowFields ->
+                rowFields.mapIndexed { col, field ->
+                    field.gameId = game.id
+                    field.positionX = col
+                    field.positionY = row
+
+                    database.fields.add(field)
+                }
+            }
+
+            // Applying laser overlays only works correctly when all fields are uniquely adressable with an ID
+            // so this has to be done *after* writing the DB entries for fields, as that will set the field IDs
+            val boardEngine = BoardEngine(fields)
+            val updateFields = boardEngine.updateLaserOverlays()
+            database.batchUpdate(Fields) {
+                updateFields.forEach { field ->
+                    item {
+                        set(it.elements, field.elements)
+                        where { it.id eq field.id }
+                    }
+                }
+            }
+
             generateStandardDeck().forEach {
                 it.gameId = game.id
                 database.cards.add(it)
             }
-            game
         }
+
+        return game
     }
 
     /**
@@ -255,6 +279,7 @@ class GameEngine(
 
         val robots = database.robots.filter { it.gameId eq game.id }.map { it }
         boardEngine.moveBelts(FieldElement.BELT_2, robots)
+            .forEach { database.fields.update(it) }
         robots.forEach { database.robots.update(it) }
 
         updates.emit(ViewUpdate(game.id))
@@ -264,6 +289,7 @@ class GameEngine(
         database.games.update(game)
 
         boardEngine.moveBelts(FieldElement.BELT, robots)
+            .forEach { database.fields.update(it) }
         robots.forEach { database.robots.update(it) }
 
         updates.emit(ViewUpdate(game.id))
@@ -285,6 +311,14 @@ class GameEngine(
         database.games.update(game)
 
         boardEngine.fireLasers(FieldElement.LASER, robots)
+        robots.forEach { database.robots.update(it) }
+        updates.emit(ViewUpdate(game.id))
+        delay(GAME_ENGINE_STEP_DELAY)
+
+        game.state = GameState.FIRE_ROBOT_LASERS
+        database.games.update(game)
+
+        boardEngine.fireRobotLasers()
         robots.forEach { database.robots.update(it) }
         updates.emit(ViewUpdate(game.id))
         delay(GAME_ENGINE_STEP_DELAY)

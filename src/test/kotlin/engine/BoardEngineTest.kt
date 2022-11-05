@@ -8,9 +8,7 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.MethodSource
 import java.util.stream.Stream
-import kotlin.test.assertEquals
-import kotlin.test.assertNotNull
-import kotlin.test.assertNull
+import kotlin.test.*
 
 class BoardEngineTest {
     //   0 1 2 3
@@ -290,18 +288,6 @@ class BoardEngineTest {
         assertEquals(robot2.id, down.robotId)
     }
 
-    @ParameterizedTest
-    @MethodSource("provideTestFirstFieldByDirection")
-    fun `find field by direction`(
-        board: BoardEngine,
-        startField: Field,
-        direction: Direction,
-        expectedEndField: Field
-    ) {
-        val endField = board.findLastNonBlockedField(startField, direction)
-        assertEquals(expectedEndField, endField)
-    }
-
     @Test
     fun `laser damages robot`() {
         val board = BoardEngine(
@@ -312,6 +298,7 @@ class BoardEngineTest {
                 listOf(Field.new(), Field.new()),
             ), assignIds = true
         )
+        board.updateLaserOverlays()
 
         val zippy = Robot.new(RobotModel.ZIPPY).also { it.id = 1 }
         board.fieldAt(2, 0).robotId = zippy.id
@@ -325,6 +312,40 @@ class BoardEngineTest {
         assertEquals(0, klaus.damage)
     }
 
+    @Test
+    fun `laser overlay applied`() {
+        val board = BoardEngine(
+            listOf(
+                listOf(
+                    Field.new(),
+                    Field.new(FieldElement.WALL, Direction.DOWN),
+                    Field.new(FieldElement.LASER_2, Direction.DOWN)
+                ),
+                listOf(Field.new(), Field.new(FieldElement.LASER_2, Direction.UP), Field.new()),
+                listOf(Field.new(), Field.new(), Field.new()),
+                listOf(Field.new(), Field.new(FieldElement.LASER, Direction.UP), Field.new())
+            ), assignIds = true
+        )
+        board.updateLaserOverlays()
+
+        assertTrue(board.fieldAt(0, 1).elements.none { it == FieldElement.LASER_V })
+        assertTrue(board.fieldAt(1, 1).elements.none { it == FieldElement.LASER_V })
+        assertContains(board.fieldAt(1, 2).elements, FieldElement.LASER_2_V)
+        assertContains(board.fieldAt(2, 2).elements, FieldElement.LASER_2_V)
+    }
+
+    @ParameterizedTest
+    @MethodSource("provideLastLaserHitField")
+    fun `find last laser hit field`(
+        board: BoardEngine,
+        startField: Field,
+        direction: Direction,
+        expectedEndField: Field
+    ) {
+        val endField = board.findLastLaserHitField(startField, direction)
+        assertEquals(expectedEndField, endField)
+    }
+
     companion object {
         @JvmStatic
         fun resetBoard(board: BoardEngine) {
@@ -334,8 +355,8 @@ class BoardEngineTest {
         }
 
         @JvmStatic
-        fun provideTestFirstFieldByDirection(): Stream<Arguments> {
-            val board = BoardEngine(
+        fun provideLastLaserHitField(): Stream<Arguments> {
+            val wallBoard = BoardEngine(
                 listOf(
                     listOf(Field.new(), Field.new(FieldElement.WALL, Direction.LEFT), Field.new()),
                     listOf(Field.new(FieldElement.WALL, Direction.DOWN), Field.new(), Field.new()),
@@ -344,18 +365,44 @@ class BoardEngineTest {
                 ), assignIds = true
             )
 
+            val robotBoard = BoardEngine(
+                listOf(
+                    listOf(Field.new()),
+                    listOf(Field.new()),
+                    listOf(Field.new().also { it.robotId = 1 }),
+                    listOf(Field.new()),
+                ), assignIds = true
+            )
+
+            val laserBoard = BoardEngine(
+                listOf(
+                    listOf(
+                        Field.new(),
+                        Field.new(FieldElement.WALL, Direction.DOWN),
+                        Field.new(FieldElement.LASER_2, Direction.DOWN)
+                    ),
+                    listOf(Field.new(), Field.new(FieldElement.LASER_2, Direction.UP), Field.new()),
+                    listOf(Field.new(), Field.new(), Field.new()),
+                    listOf(Field.new(), Field.new(FieldElement.LASER, Direction.UP), Field.new())
+                ), assignIds = true
+            )
+
             return Stream.of(
-                Arguments.of(board, board.fieldAt(0, 0), Direction.RIGHT, board.fieldAt(0, 0)),
-                Arguments.of(board, board.fieldAt(1, 1), Direction.UP, board.fieldAt(0, 1)),
-                Arguments.of(board, board.fieldAt(1, 1), Direction.LEFT, board.fieldAt(1, 0)),
-                Arguments.of(board, board.fieldAt(0, 2), Direction.DOWN, board.fieldAt(3, 2)),
-                Arguments.of(board, board.fieldAt(3, 2), Direction.LEFT, board.fieldAt(3, 0)),
-                Arguments.of(board, board.fieldAt(3, 0), Direction.RIGHT, board.fieldAt(3, 2)),
-                Arguments.of(board, board.fieldAt(3, 1), Direction.UP, board.fieldAt(0, 1)),
-                Arguments.of(board, board.fieldAt(0, 0), Direction.LEFT, board.fieldAt(0, 0)),
-                Arguments.of(board, board.fieldAt(0, 0), Direction.UP, board.fieldAt(0, 0)),
-                Arguments.of(board, board.fieldAt(2, 2), Direction.RIGHT, board.fieldAt(2, 2)),
-                Arguments.of(board, board.fieldAt(3, 1), Direction.DOWN, board.fieldAt(3, 1)),
+                Arguments.of(wallBoard, wallBoard.fieldAt(0, 0), Direction.RIGHT, wallBoard.fieldAt(0, 0)),
+                Arguments.of(wallBoard, wallBoard.fieldAt(1, 1), Direction.UP, wallBoard.fieldAt(0, 1)),
+                Arguments.of(wallBoard, wallBoard.fieldAt(1, 1), Direction.LEFT, wallBoard.fieldAt(1, 0)),
+                Arguments.of(wallBoard, wallBoard.fieldAt(0, 2), Direction.DOWN, wallBoard.fieldAt(3, 2)),
+                Arguments.of(wallBoard, wallBoard.fieldAt(3, 2), Direction.LEFT, wallBoard.fieldAt(3, 0)),
+                Arguments.of(wallBoard, wallBoard.fieldAt(3, 0), Direction.RIGHT, wallBoard.fieldAt(3, 2)),
+                Arguments.of(wallBoard, wallBoard.fieldAt(3, 1), Direction.UP, wallBoard.fieldAt(0, 1)),
+                Arguments.of(wallBoard, wallBoard.fieldAt(0, 0), Direction.LEFT, wallBoard.fieldAt(0, 0)),
+                Arguments.of(wallBoard, wallBoard.fieldAt(0, 0), Direction.UP, wallBoard.fieldAt(0, 0)),
+                Arguments.of(wallBoard, wallBoard.fieldAt(2, 2), Direction.RIGHT, wallBoard.fieldAt(2, 2)),
+                Arguments.of(wallBoard, wallBoard.fieldAt(3, 1), Direction.DOWN, wallBoard.fieldAt(3, 1)),
+                Arguments.of(robotBoard, robotBoard.fieldAt(0, 0), Direction.DOWN, robotBoard.fieldAt(2, 0)),
+                Arguments.of(robotBoard, robotBoard.fieldAt(3, 0), Direction.UP, robotBoard.fieldAt(2, 0)),
+                Arguments.of(laserBoard, laserBoard.fieldAt(3, 1), Direction.UP, laserBoard.fieldAt(2, 1)),
+                Arguments.of(laserBoard, laserBoard.fieldAt(0, 2), Direction.DOWN, laserBoard.fieldAt(3, 2)),
             )
         }
     }

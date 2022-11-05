@@ -16,14 +16,12 @@ class BoardEngine(
     private val logger = LoggerFactory.getLogger(this.javaClass)
 
     init {
+        // Generate some IDs for all fields, only used for unit testing
         if (assignIds) {
             board.flatten().forEachIndexed { idx, field ->
                 field.id = idx
             }
         }
-
-        // Add laser conditions on all fields in a lasers way (just once on intializing the field)
-        applyLaserConditions()
     }
 
     companion object {
@@ -32,7 +30,7 @@ class BoardEngine(
          * Build a board engine instance for a specific game
          */
         @JvmStatic
-        fun build(gameId: Int, database: Database): BoardEngine {
+        fun buildFromGame(gameId: Int, database: Database): BoardEngine {
             val fields = database.fields.filter { it.gameId eq gameId }.map { it }
             return BoardEngine(fieldListToMatrix(fields))
         }
@@ -68,6 +66,7 @@ class BoardEngine(
      * Get the indices (row/col) of the provided field
      */
     private fun positionOf(field: Field): Position {
+        // TODO For this to work reliably, the fields *must* have IDs - could there be a better way to handle this?
         val row = board.indexOfFirst { it.contains(field) }
         return Position(row, board[row].indexOf(field))
     }
@@ -78,9 +77,9 @@ class BoardEngine(
      * ever move the robot one (or zero, depending on the card) step.
      * Repeating movements must be done by the calling operation
      *
-     * @return List of entities to update after execution
+     * @return Collection of fields updated during execution
      */
-    fun execute(card: MovementCard, robot: Robot): List<Field> {
+    fun execute(card: MovementCard, robot: Robot): Collection<Field> {
         logger.debug("Executing $card on $robot")
         robot.rotate(card.movement)
 
@@ -129,9 +128,11 @@ class BoardEngine(
 
     /**
      * Apply a map of position->robot entries to the board
+     *
+     * @return Collection of fields updated during execution
      */
-    private fun applyPositions(positions: Map<Position, Int>): List<Field> {
-        val result = mutableListOf<Field>()
+    private fun applyPositions(positions: Map<Position, Int>): Collection<Field> {
+        val result = mutableSetOf<Field>()
         board.flatten().forEach { field ->
             // If a robot on a field is referenced in the position map, it must be removed from its "old" field
             // before it can be placed on the new one, defined in the positions map
@@ -147,6 +148,12 @@ class BoardEngine(
                 result.add(field)
             }
         }
+
+        // As robots have moved, the laser overlays must be recalculated, so they can reflect possible blocks or
+        // lasers by the moved robots
+        val overlayUpdates = updateLaserOverlays()
+        result.addAll(overlayUpdates)
+
         return result
     }
 
@@ -189,8 +196,10 @@ class BoardEngine(
 
     /**
      * Move all belts of the given type *one* tick
+     *
+     * @return Collection of fields updated during execution
      */
-    fun moveBelts(beltType: FieldElement, robots: List<Robot>) {
+    fun moveBelts(beltType: FieldElement, robots: List<Robot>): Collection<Field> {
         // Collect new positions that result of the belt moves as a list of "to execute" movements
         // Each movement contains the robot that moves and the row/col index of the new field after the movement
         val newPositions = mutableMapOf<Position, Int>()
@@ -262,7 +271,7 @@ class BoardEngine(
             robot.rotate(rotationMovement)
         }
 
-        applyPositions(newPositions)
+        return applyPositions(newPositions)
     }
 
     /**
@@ -339,10 +348,14 @@ class BoardEngine(
     }
 
     /**
-     * Apply the laser(_2)(_h/_v) condition on all fields that are in the direction of any laser
-     * on the board. Must be called directly after the board fields are initialized
+     * Refresh the laser the laser(_2)(_h/_v) ovlerays on all fields that are in the direction of any laser
+     * on the board. This should be called every time a robot has or was moved, so they overlays correctly
+     * reflect that robots block lasers as well as walls.
+     * @return Collection of all fields that were updated with overlays
      */
-    private fun applyLaserConditions() {
+    fun updateLaserOverlays(): Collection<Field> {
+        val result = mutableSetOf<Field>()
+
         /**
          * For each laser:
          *  - determine orientation and find next wall (or end of board)
@@ -352,38 +365,49 @@ class BoardEngine(
          *  - damage each robot for 1 point
          */
         board.flatten()
-            .filter { it.elements.contains(FieldElement.LASER) || it.elements.contains(FieldElement.LASER_2) }
+            .filter {
+                // Reset existing overlays before
+                it.elements.removeIf { el -> laserOverlays.contains(el) }
+
+                // Exexute the overlay algorithm for each field that has a laser-emitting element on it
+                // TODO Also calculate overlays for robot lasers
+                it.elements.contains(FieldElement.LASER) || it.elements.contains(FieldElement.LASER_2)
+            }
             .forEach { sourceField ->
                 val startPos = positionOf(sourceField)
                 val direction = sourceField.outgoingDirection
-                val nextWall = findLastNonBlockedField(sourceField, direction)
-                val wallPosition = positionOf(nextWall)
+                val lastNonBlockedField = findLastLaserHitField(sourceField, direction)
+                val lastNonBlockedFieldPos = positionOf(lastNonBlockedField)
 
-                // Depending on *where* the wall is on the field, the laser might still hit a target on the field,
-                // or it is stopped on the edge to the field (that is, it will stop one
+                // Special case for walls, as depending on the positioning of the wall, the laser might
+                // be able to pass the field, e.g. when the wall is parallel to the laser direction
+                // or when the wall is on the far side of the field
+
+                // As such, depending on *where* the wall is on the field, the laser might still hit a target on
+                // the field, or it is stopped on the edge to the field (that is, it will stop one
                 // field *ahead* of the found field instead of the field itself)
                 val lastHitField = when (direction) {
-                    Direction.LEFT -> when (nextWall.hasDirection(Direction.RIGHT)) {
-                        true -> fieldAt(Position(wallPosition.row, wallPosition.col + 1))
-                        false -> nextWall
+                    Direction.LEFT -> when (lastNonBlockedField.hasDirection(Direction.RIGHT)) {
+                        true -> fieldAt(Position(lastNonBlockedFieldPos.row, lastNonBlockedFieldPos.col + 1))
+                        false -> lastNonBlockedField
                     }
 
-                    Direction.UP -> when (nextWall.hasDirection(Direction.DOWN)) {
-                        true -> fieldAt(Position(wallPosition.row + 1, wallPosition.col))
-                        false -> nextWall
+                    Direction.UP -> when (lastNonBlockedField.hasDirection(Direction.DOWN)) {
+                        true -> fieldAt(Position(lastNonBlockedFieldPos.row + 1, lastNonBlockedFieldPos.col))
+                        false -> lastNonBlockedField
                     }
 
-                    Direction.DOWN -> when (nextWall.hasDirection(Direction.UP)) {
-                        true -> fieldAt(Position(wallPosition.row - 1, wallPosition.col))
-                        false -> nextWall
+                    Direction.DOWN -> when (lastNonBlockedField.hasDirection(Direction.UP)) {
+                        true -> fieldAt(Position(lastNonBlockedFieldPos.row - 1, lastNonBlockedFieldPos.col))
+                        false -> lastNonBlockedField
                     }
 
-                    Direction.RIGHT -> when (nextWall.hasDirection(Direction.LEFT)) {
-                        true -> fieldAt(Position(wallPosition.row, wallPosition.col - 1))
-                        false -> nextWall
+                    Direction.RIGHT -> when (lastNonBlockedField.hasDirection(Direction.LEFT)) {
+                        true -> fieldAt(Position(lastNonBlockedFieldPos.row, lastNonBlockedFieldPos.col - 1))
+                        false -> lastNonBlockedField
                     }
 
-                    Direction.NONE -> nextWall
+                    Direction.NONE -> lastNonBlockedField
                 }
 
                 val endPos = positionOf(lastHitField)
@@ -408,12 +432,16 @@ class BoardEngine(
                 fields.forEach apply@{ inLineField ->
                     val element = sourceField.getInLineLaserFieldElements() ?: return@apply
                     inLineField.elements.add(element)
+                    result.add(inLineField)
                 }
             }
+
+        return result
     }
 
     /**
-     * Fire all lasers of the given type, damaging all robots in its line
+     * Fire all lasers of the given type, damaging the first robot in its line.
+     * This only works when laser overlays where updated before!
      */
     fun fireLasers(type: FieldElement, robots: List<Robot>) {
         board.flatten()
@@ -439,107 +467,112 @@ class BoardEngine(
     }
 
     /**
-     * Finds the last field, starting from a field and going in a direciton until any blocking wall is encountered.
-     * Returns the last field right before the blocking wall.
+     * Fire robot lasers
      */
-    fun findLastNonBlockedField(startField: Field, direction: Direction): Field {
+    fun fireRobotLasers() {
+        // TODO
+    }
+
+    /**
+     * Finds the last field a laser can hit, starting from a field and going in a direciton until any blocking element
+     * is encountered. Returns the last field that is considered "hit" by the laser.
+     */
+    fun findLastLaserHitField(startField: Field, direction: Direction): Field {
         val startPos = positionOf(startField)
 
-        return when (direction) {
-            Direction.RIGHT -> {
-                for (col in startPos.col + 1 until board[startPos.row].size) {
-                    val field = fieldAt(Position(startPos.row, col))
-                    if (!field.hasBlockingELement() || !field.hasHorizontalDirection()) {
-                        continue
-                    }
+        if (direction == Direction.RIGHT) {
+            for (col in startPos.col + 1 until board[startPos.row].size) {
+                val field = fieldAt(Position(startPos.row, col))
+                if (!field.blocksHorizontalLaser()) {
+                    continue
+                }
 
-                    if (field.elements.contains(FieldElement.WALL)) {
-                        return when (field.hasDirection(Direction.LEFT)) {
-                            true -> fieldAt(Position(startPos.row, col - 1))
-                            else -> field
-                        }
-                    }
-
-                    return when (field.hasDirection(Direction.RIGHT)) {
+                if (field.elements.contains(FieldElement.WALL)) {
+                    return when (field.hasDirection(Direction.LEFT)) {
                         true -> fieldAt(Position(startPos.row, col - 1))
                         else -> field
                     }
                 }
 
-                return fieldAt(Position(startPos.row, board[startPos.row].size - 1))
+                return when (field.hasDirection(Direction.RIGHT)) {
+                    true -> fieldAt(Position(startPos.row, col - 1))
+                    else -> field
+                }
             }
 
-            Direction.LEFT -> {
-                for (col in startPos.col - 1 downTo 0) {
-                    val field = fieldAt(Position(startPos.row, col))
-                    if (!field.hasBlockingELement() || !field.hasHorizontalDirection()) {
-                        continue
-                    }
+            return fieldAt(Position(startPos.row, board[startPos.row].size - 1))
+        }
 
-                    if (field.elements.contains(FieldElement.WALL)) {
-                        return when (field.hasDirection(Direction.RIGHT)) {
-                            true -> fieldAt(Position(startPos.row, col + 1))
-                            else -> field
-                        }
-                    }
+        if (direction == Direction.LEFT) {
+            for (col in startPos.col - 1 downTo 0) {
+                val field = fieldAt(Position(startPos.row, col))
+                if (!field.blocksHorizontalLaser()) {
+                    continue
+                }
 
-                    return when (field.hasDirection(Direction.LEFT)) {
+                if (field.elements.contains(FieldElement.WALL)) {
+                    return when (field.hasDirection(Direction.RIGHT)) {
                         true -> fieldAt(Position(startPos.row, col + 1))
                         else -> field
                     }
                 }
 
-                return fieldAt(Position(startPos.row, 0))
+                return when (field.hasDirection(Direction.LEFT)) {
+                    true -> fieldAt(Position(startPos.row, col + 1))
+                    else -> field
+                }
             }
 
-            Direction.DOWN -> {
-                for (row in startPos.row + 1 until board.size) {
-                    val field = fieldAt(Position(row, startPos.col))
-                    if (!field.hasBlockingELement() || !field.hasVerticalDirection()) {
-                        continue
-                    }
+            return fieldAt(Position(startPos.row, 0))
+        }
 
-                    if (field.elements.contains(FieldElement.WALL)) {
-                        return when (field.hasDirection(Direction.UP)) {
-                            true -> fieldAt(Position(row - 1, startPos.col))
-                            else -> field
-                        }
-                    }
+        if (direction == Direction.DOWN) {
+            for (row in startPos.row + 1 until board.size) {
+                val field = fieldAt(Position(row, startPos.col))
+                if (!field.blocksVerticalLaser()) {
+                    continue
+                }
 
-                    return when (field.hasDirection(Direction.DOWN)) {
+                if (field.elements.contains(FieldElement.WALL)) {
+                    return when (field.hasDirection(Direction.UP)) {
                         true -> fieldAt(Position(row - 1, startPos.col))
                         else -> field
                     }
                 }
 
-                return fieldAt(Position(board.size - 1, startPos.col))
+                return when (field.hasDirection(Direction.DOWN)) {
+                    true -> fieldAt(Position(row - 1, startPos.col))
+                    else -> field
+                }
             }
 
-            Direction.UP -> {
-                for (row in startPos.row - 1 downTo 0) {
-                    val field = fieldAt(Position(row, startPos.col))
-                    if (!field.hasBlockingELement() || !field.hasVerticalDirection()) {
-                        continue
-                    }
+            return fieldAt(Position(board.size - 1, startPos.col))
+        }
 
-                    if (field.elements.contains(FieldElement.WALL)) {
-                        return when (field.hasDirection(Direction.DOWN)) {
-                            true -> fieldAt(Position(row + 1, startPos.col))
-                            else -> field
-                        }
-                    }
+        if (direction == Direction.UP) {
+            for (row in startPos.row - 1 downTo 0) {
+                val field = fieldAt(Position(row, startPos.col))
+                if (!field.blocksVerticalLaser()) {
+                    continue
+                }
 
-                    return when (field.hasDirection(Direction.UP)) {
+                if (field.elements.contains(FieldElement.WALL)) {
+                    return when (field.hasDirection(Direction.DOWN)) {
                         true -> fieldAt(Position(row + 1, startPos.col))
                         else -> field
                     }
                 }
 
-                return fieldAt(Position(0, startPos.col))
+                return when (field.hasDirection(Direction.UP)) {
+                    true -> fieldAt(Position(row + 1, startPos.col))
+                    else -> field
+                }
             }
 
-            else -> startField
+            return fieldAt(Position(0, startPos.col))
         }
+
+        return startField
     }
 }
 

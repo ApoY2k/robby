@@ -33,6 +33,9 @@ class LayoutTpl(
                             li("nav-item") {
                                 a(Location.ROOT.path, classes = "nav-link") { +"Games" }
                             }
+                            li("nav-itm") {
+                                a(Location.BOARDS_VIEW.path, classes = "nav-link") { +"Boards Preview" }
+                            }
                         }
                         ul("navbar-nav") {
                             li("nav-item") {

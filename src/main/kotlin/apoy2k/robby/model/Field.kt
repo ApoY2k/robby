@@ -26,6 +26,45 @@ enum class FieldElement {
     fun isBlocking() = this == WALL || this == LASER || this == LASER_2 || this == PUSHER
 }
 
+// List of field elements that need to be combined with the directions of a field
+val directionElements = listOf(
+    FieldElement.BELT,
+    FieldElement.BELT_2,
+    FieldElement.WALL,
+    FieldElement.LASER,
+    FieldElement.LASER_2,
+    FieldElement.PUSHER,
+    FieldElement.ROTATE,
+)
+
+// List of field elements that are overlayed on top of the direction elements
+val overlayElements = listOf(
+    FieldElement.FLAG,
+    FieldElement.START,
+    FieldElement.REPAIR,
+    FieldElement.REPAIR_MOD,
+    FieldElement.LASER_H,
+    FieldElement.LASER_V,
+    FieldElement.LASER_2_H,
+    FieldElement.LASER_2_V,
+    FieldElement.HOLE,
+)
+
+// List of laser overlay field elements
+val laserOverlays = listOf(
+    FieldElement.LASER_H,
+    FieldElement.LASER_V,
+    FieldElement.LASER_2_H,
+    FieldElement.LASER_2_V,
+)
+
+// List of appliance elements that are attached to walls
+val applianceElements = listOf(
+    FieldElement.LASER,
+    FieldElement.LASER_2,
+    FieldElement.PUSHER,
+)
+
 object Fields : Table<Field>("fields") {
     val id = int("id").primaryKey().bindTo { it.id }
     val gameId = int("game_id").bindTo { it.gameId }
@@ -89,14 +128,31 @@ interface Field : Entity<Field> {
     fun hasDirection(direction: Direction) = getDirections().contains(direction)
 
     /**
-     * True if any direction on the field is vertical
+     * True, if this field has *any one* of the provided directions
      */
-    fun hasVerticalDirection() = getDirections().any { it.isVertical() }
+    fun hasAnyDirection(vararg directions: Direction) = getDirections().any { directions.contains(it) }
 
     /**
-     * True if any direction on the field is horizontal
+     * True if the field contains a vertical wall element
      */
-    fun hasHorizontalDirection() = getDirections().any { it.isHorizontal() }
+    fun hasVerticalWall() = hasAnyDirection(Direction.LEFT, Direction.RIGHT)
+            && (elements.contains(FieldElement.WALL) || applianceElements.any { elements.contains(it) })
+
+    /**
+     * True if the field contains a horizontal wall element
+     */
+    fun hasHorizontalWall() = hasAnyDirection(Direction.UP, Direction.DOWN)
+            && (elements.contains(FieldElement.WALL) || applianceElements.any { elements.contains(it) })
+
+    /**
+     * True, if this field blocks a vertical laser (either by walls or if a robot is on it)
+     */
+    fun blocksVerticalLaser() = hasHorizontalWall() || robotId != null
+
+    /**
+     * True, if this field blocks a vertical laser (either by walls or if a robot is on it)
+     */
+    fun blocksHorizontalLaser() = hasVerticalWall() || robotId != null
 
     /**
      * Returns the FieldCondition to apply to any fields that might be in line of this lasser type
@@ -121,9 +177,4 @@ interface Field : Entity<Field> {
 
         return null
     }
-
-    /**
-     * true, if this field contains any blocking elements
-     */
-    fun hasBlockingELement() = elements.any { it.isBlocking() }
 }

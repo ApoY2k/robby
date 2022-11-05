@@ -1,7 +1,6 @@
 package apoy2k.robby.model
 
 import org.ktorm.database.Database
-import org.ktorm.entity.add
 import org.ktorm.entity.sequenceOf
 import org.ktorm.schema.BaseTable
 import org.ktorm.schema.Column
@@ -35,23 +34,3 @@ val Database.cards get() = this.sequenceOf(MovementCards)
 val Database.robots get() = this.sequenceOf(Robots)
 val Database.sessions get() = this.sequenceOf(Sessions)
 val Database.users get() = this.sequenceOf(Users)
-
-/**
- * Use the given matrix of fields and assign them to the given game, saving them in the database
- * with their corresponding coordinates
- */
-fun Database.createFieldsForGame(fields: List<List<Field>>, gameId: Int) {
-    val dbFields = fields
-        .mapIndexed { row, rowFields ->
-            rowFields.mapIndexed { col, field ->
-                field.also {
-                    it.gameId = gameId
-                    it.positionX = col
-                    it.positionY = row
-                }
-            }
-        }
-        .flatten()
-
-    dbFields.forEach { this.fields.add(it) }
-}

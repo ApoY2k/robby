@@ -14,6 +14,7 @@ enum class GameState {
     MOVE_BARD_ELEMENTS_1,
     FIRE_LASERS_2,
     FIRE_LASERS_1,
+    FIRE_ROBOT_LASERS,
     CHECKPOINTS,
     REPAIR_POWERUPS
 }

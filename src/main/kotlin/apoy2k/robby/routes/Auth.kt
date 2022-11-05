@@ -82,9 +82,9 @@ fun Route.auth(
             }
         }
 
-        val session = call.sessions.get<Session>()
+        val session = call.sessions.get() ?: Session()
         call.sessions.set(
-            session?.copy(userId = user.id)
+            session.copy(userId = user.id)
         )
         call.respondRedirect(Location.ROOT.path)
     }

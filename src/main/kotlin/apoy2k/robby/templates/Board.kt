@@ -1,30 +1,34 @@
 package apoy2k.robby.templates
 
-import apoy2k.robby.model.Direction
-import apoy2k.robby.model.Field
-import apoy2k.robby.model.Robot
+import apoy2k.robby.model.*
 import kotlinx.html.Entities
 import kotlinx.html.HtmlBlockTag
 import kotlinx.html.div
 
-fun Field.toCssClass(): String {
+/**
+ * Combine the field elements that require directions of a field with the directions of said field.
+ */
+fun Field.directionElementsClass(): String {
     val directions = listOf(this.outgoingDirection)
         .plus(this.incomingDirections)
         .filter { it != Direction.NONE }
         .joinToString("") { it.name.take(1) }
-
-    return this.elements.map { it.name }.plus(directions)
-        .filter { it.isNotBlank() }
-        .joinToString("_") { it.lowercase() }
+    val elements = this.elements
+        .filter { directionElements.contains(it) }
+        .map { it.name }
+    return elements
+        .joinToString(" ") { "${it}_$directions".lowercase() }
 }
 
 fun HtmlBlockTag.renderField(field: Field, robot: Robot? = null) {
-    div("field type-${field.toCssClass()}") {
-        field.elements.forEach { element ->
-            div("condition-${element.name.lowercase()}") {
-                +Entities.nbsp
+    div("field ${field.directionElementsClass()}") {
+        field.elements
+            .filter { overlayElements.contains(it) }
+            .forEach { element ->
+                div("overlay-${element.name.lowercase()}") {
+                    +Entities.nbsp
+                }
             }
-        }
 
         if (robot == null) {
             +Entities.nbsp

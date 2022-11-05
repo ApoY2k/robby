@@ -13,9 +13,7 @@ import org.ktorm.schema.varchar
 
 data class Session(
     val userId: Int? = null,
-) {
-    val isLoggedIn = userId != null
-}
+)
 
 object Sessions : Table<SessionData>("sessions") {
     var id = varchar("id").primaryKey().bindTo { it.id }

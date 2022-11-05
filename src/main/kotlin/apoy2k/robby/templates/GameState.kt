@@ -39,6 +39,7 @@ fun UL.renderRegister(game: Game, register: Int) {
         renderState("Moving Slow Board Elements", game.state == GameState.MOVE_BARD_ELEMENTS_1)
         renderState("Fire Double Lasers", game.state == GameState.FIRE_LASERS_2)
         renderState("Fire Single Lasers", game.state == GameState.FIRE_LASERS_1)
+        renderState("Fire Robot Lasers", game.state == GameState.FIRE_ROBOT_LASERS)
         renderState("Touching Checkpoints", game.state == GameState.CHECKPOINTS)
         renderState("Repair & Powerups", game.state == GameState.REPAIR_POWERUPS)
     }
