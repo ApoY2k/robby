@@ -11,42 +11,51 @@ import java.util.stream.Stream
 import kotlin.test.*
 
 class BoardEngineTest {
-    //   0 1 2 3
-    // 0
-    // 1
-    // 2 R L U D
-    // 3
-    private val boardEngine = BoardEngine(
-        listOf(
-            listOf(Field.new(), Field.new(), Field.new(), Field.new()),
-            listOf(Field.new(), Field.new(), Field.new(), Field.new()),
-            listOf(
-                Field.new(FieldElement.BELT, Direction.RIGHT),
-                Field.new(FieldElement.BELT, Direction.LEFT),
-                Field.new(FieldElement.BELT, Direction.UP),
-                Field.new(FieldElement.BELT, Direction.DOWN)
-            ),
-            listOf(Field.new(), Field.new(), Field.new(), Field.new())
-        ), assignIds = true
-    )
 
-    private val emptyBoardEngine = BoardEngine(
-        listOf(
-            listOf(Field.new(), Field.new(), Field.new(), Field.new()),
-            listOf(Field.new(), Field.new(), Field.new(), Field.new()),
-            listOf(Field.new(), Field.new(), Field.new(), Field.new()),
-            listOf(Field.new(), Field.new(), Field.new(), Field.new())
-        ), assignIds = true
-    )
+    private lateinit var boardEngine: BoardEngine
+    private lateinit var emptyBoardEngine: BoardEngine
 
-    private val robot1 = Robot.new(RobotModel.ZIPPY, "1", 1).also { it.id = 1 }
-    private val robot2 = Robot.new(RobotModel.ZIPPY, "2", 2).also { it.id = 2 }
-    private val robot3 = Robot.new(RobotModel.ZIPPY, "3", 3).also { it.id = 3 }
+    private lateinit var robot1: Robot
+    private lateinit var robot2: Robot
+    private lateinit var robot3: Robot
 
     @BeforeEach
     fun setup() {
-        resetBoard(boardEngine)
-        resetBoard(emptyBoardEngine)
+        robot1 = Robot.new(RobotModel.ZIPPY, "1", 1).also { it.id = 1 }
+        robot2 = Robot.new(RobotModel.ZIPPY, "2", 2).also { it.id = 2 }
+        robot3 = Robot.new(RobotModel.ZIPPY, "3", 3).also { it.id = 3 }
+
+        //   0 1 2 3
+        // 0
+        // 1
+        // 2 R L U D
+        // 3
+        boardEngine = BoardEngine(
+            listOf(
+                listOf(Field.new(), Field.new(), Field.new(), Field.new()),
+                listOf(Field.new(), Field.new(), Field.new(), Field.new()),
+                listOf(
+                    Field.new(FieldElement.BELT, Direction.RIGHT),
+                    Field.new(FieldElement.BELT, Direction.LEFT),
+                    Field.new(FieldElement.BELT, Direction.UP),
+                    Field.new(FieldElement.BELT, Direction.DOWN)
+                ),
+                listOf(Field.new(), Field.new(), Field.new(), Field.new())
+            ),
+            listOf(robot1, robot2, robot3),
+            assignIds = true
+        )
+
+        emptyBoardEngine = BoardEngine(
+            listOf(
+                listOf(Field.new(), Field.new(), Field.new(), Field.new()),
+                listOf(Field.new(), Field.new(), Field.new(), Field.new()),
+                listOf(Field.new(), Field.new(), Field.new(), Field.new()),
+                listOf(Field.new(), Field.new(), Field.new(), Field.new())
+            ),
+            listOf(robot1, robot2, robot3),
+            assignIds = true
+        )
     }
 
     @Test
@@ -59,7 +68,7 @@ class BoardEngineTest {
 
         source.robotId = robot1.id
         boardEngine.execute(card, robot1)
-        boardEngine.moveBelts(FieldElement.BELT, listOf(robot1))
+        boardEngine.moveBelts(FieldElement.BELT)
 
         assertNull(source.robotId)
         assertNotNull(target.robotId)
@@ -76,7 +85,7 @@ class BoardEngineTest {
 
         source.robotId = robot1.id
         boardEngine.execute(card, robot1)
-        boardEngine.moveBelts(FieldElement.BELT, listOf(robot1))
+        boardEngine.moveBelts(FieldElement.BELT)
 
         assertNull(source.robotId)
         assertNotNull(target.robotId)
@@ -92,11 +101,13 @@ class BoardEngineTest {
                     Field.new(FieldElement.BELT, Direction.LEFT),
                     Field.new(FieldElement.BELT, Direction.LEFT),
                 ),
-            ), assignIds = true
+            ),
+            listOf(robot1),
+            assignIds = true
         )
 
         board.fieldAt(0, 2).robotId = robot1.id
-        board.moveBelts(FieldElement.BELT, listOf(robot1))
+        board.moveBelts(FieldElement.BELT)
         assertEquals(robot1.id, board.fieldAt(0, 1).robotId)
         assertEquals(Direction.DOWN, robot1.facing)
     }
@@ -110,7 +121,7 @@ class BoardEngineTest {
 
         source.robotId = robot1.id
         boardEngine.execute(card, robot1)
-        boardEngine.moveBelts(FieldElement.BELT, listOf(robot1))
+        boardEngine.moveBelts(FieldElement.BELT)
 
         assertNotNull(source.robotId)
         assertEquals(robot1.id, source.robotId)
@@ -126,7 +137,7 @@ class BoardEngineTest {
 
         source.robotId = robot1.id
         boardEngine.execute(card, robot1)
-        boardEngine.moveBelts(FieldElement.BELT, listOf(robot1))
+        boardEngine.moveBelts(FieldElement.BELT)
 
         assertNull(source.robotId)
         assertNotNull(target.robotId)
@@ -140,7 +151,9 @@ class BoardEngineTest {
                 listOf(Field.new(FieldElement.BELT, Direction.DOWN)),
                 listOf(Field.new()),
                 listOf(Field.new(FieldElement.BELT, Direction.UP)),
-            )
+            ),
+            listOf(robot1, robot2),
+            assignIds = true
         )
 
         val up = board.fieldAt(0, 0)
@@ -149,7 +162,7 @@ class BoardEngineTest {
 
         up.robotId = robot1.id
         down.robotId = robot2.id
-        board.moveBelts(FieldElement.BELT, listOf(robot1, robot2))
+        board.moveBelts(FieldElement.BELT)
 
         assertNotNull(up.robotId)
         assertNull(middle.robotId)
@@ -164,14 +177,16 @@ class BoardEngineTest {
             listOf(
                 listOf(Field.new(FieldElement.BELT, Direction.DOWN)),
                 listOf(Field.new(FieldElement.BELT, Direction.RIGHT, Direction.DOWN)),
-            ), assignIds = true
+            ),
+            listOf(robot1),
+            assignIds = true
         )
 
         val start = board.fieldAt(0, 0)
         val end = board.fieldAt(1, 0)
 
         start.robotId = robot1.id
-        board.moveBelts(FieldElement.BELT, listOf(robot1))
+        board.moveBelts(FieldElement.BELT)
 
         assertNull(start.robotId)
         assertNotNull(end.robotId)
@@ -308,23 +323,24 @@ class BoardEngineTest {
 
     @Test
     fun `laser damages robot`() {
+        val zippy = Robot.new(RobotModel.ZIPPY).also { it.id = 1 }
+        val klaus = Robot.new(RobotModel.KLAUS).also { it.id = 2 }
+
         val board = BoardEngine(
             listOf(
                 listOf(Field.new(FieldElement.LASER, Direction.DOWN), Field.new()),
                 listOf(Field.new(), Field.new()),
                 listOf(Field.new(), Field.new()),
                 listOf(Field.new(), Field.new()),
-            ), assignIds = true
+            ),
+            listOf(zippy, klaus),
+            assignIds = true
         )
-        board.updateLaserOverlays()
-
-        val zippy = Robot.new(RobotModel.ZIPPY).also { it.id = 1 }
         board.fieldAt(2, 0).robotId = zippy.id
-
-        val klaus = Robot.new(RobotModel.KLAUS).also { it.id = 2 }
         board.fieldAt(2, 1).robotId = klaus.id
 
-        board.fireLasers(FieldElement.LASER, listOf(zippy, klaus))
+        board.updateLaserOverlays()
+        board.fireLasers(FieldElement.LASER)
 
         assertEquals(1, zippy.damage)
         assertEquals(0, klaus.damage)
@@ -335,14 +351,16 @@ class BoardEngineTest {
         val board = BoardEngine(
             listOf(
                 listOf(
-                    Field.new(),
+                    Field.new(FieldElement.LASER, Direction.DOWN),
                     Field.new(FieldElement.WALL, Direction.DOWN),
                     Field.new(FieldElement.LASER_2, Direction.DOWN)
                 ),
                 listOf(Field.new(), Field.new(FieldElement.LASER_2, Direction.UP), Field.new()),
                 listOf(Field.new(), Field.new(), Field.new()),
                 listOf(Field.new(), Field.new(FieldElement.LASER, Direction.UP), Field.new())
-            ), assignIds = true
+            ),
+            listOf(robot1),
+            assignIds = true
         )
         board.updateLaserOverlays()
 
@@ -350,6 +368,16 @@ class BoardEngineTest {
         assertTrue(board.fieldAt(1, 1).elements.none { it == FieldElement.LASER_V })
         assertContains(board.fieldAt(1, 2).elements, FieldElement.LASER_2_V)
         assertContains(board.fieldAt(2, 2).elements, FieldElement.LASER_2_V)
+        assertContains(board.fieldAt(1, 0).elements, FieldElement.LASER_V)
+        assertContains(board.fieldAt(2, 0).elements, FieldElement.LASER_V)
+        assertContains(board.fieldAt(3, 0).elements, FieldElement.LASER_V)
+
+        board.fieldAt(1, 0).robotId = robot1.id
+        board.updateLaserOverlays()
+
+        assertContains(board.fieldAt(1, 0).elements, FieldElement.LASER_V)
+        assertTrue(board.fieldAt(2, 0).elements.none { it == FieldElement.LASER_V })
+        assertTrue(board.fieldAt(3, 0).elements.none { it == FieldElement.LASER_V })
     }
 
     @Test
@@ -361,7 +389,9 @@ class BoardEngineTest {
                 listOf(Field.new(FieldElement.START_1)),
                 listOf(Field.new(FieldElement.START_2)),
                 listOf(Field.new(FieldElement.START_4)),
-            ), assignIds = true
+            ),
+            emptyList(),
+            assignIds = true
         )
 
         board.placeRobot(1)
@@ -379,27 +409,29 @@ class BoardEngineTest {
 
     @Test
     fun `touch checkpoint flags in order`() {
+        val robot = Robot.new(RobotModel.ZIPPY).also { it.id = 1 }
+
         val board = BoardEngine(
             listOf(
                 listOf(Field.new(FieldElement.FLAG_2)),
                 listOf(Field.new(FieldElement.FLAG_1)),
-            ), assignIds = true
+            ),
+            listOf(robot),
+            assignIds = true
         )
 
-        val robot = Robot.new(RobotModel.ZIPPY).also { it.id = 1 }
-
         board.fieldAt(0, 0).robotId = robot.id
-        board.touchCheckpoints(listOf(robot))
+        board.touchCheckpoints()
         assertEquals(0, robot.passedCheckpoints)
         board.fieldAt(0, 0).robotId = null
 
         board.fieldAt(1, 0).robotId = robot.id
-        board.touchCheckpoints(listOf(robot))
+        board.touchCheckpoints()
         assertEquals(1, robot.passedCheckpoints)
         board.fieldAt(1, 0).robotId = null
 
         board.fieldAt(0, 0).robotId = robot.id
-        board.touchCheckpoints(listOf(robot))
+        board.touchCheckpoints()
         assertEquals(2, robot.passedCheckpoints)
         board.fieldAt(0, 0).robotId = null
     }
@@ -427,12 +459,6 @@ class BoardEngineTest {
     }
 
     companion object {
-        @JvmStatic
-        fun resetBoard(board: BoardEngine) {
-            board.board.flatten().forEach {
-                it.robotId = null
-            }
-        }
 
         @JvmStatic
         fun provideLastLaserHitField(): Stream<Arguments> {
@@ -442,7 +468,9 @@ class BoardEngineTest {
                     listOf(Field.new(FieldElement.WALL, Direction.DOWN), Field.new(), Field.new()),
                     listOf(Field.new(), Field.new(), Field.new(FieldElement.WALL, Direction.RIGHT)),
                     listOf(Field.new(), Field.new(FieldElement.WALL, Direction.UP), Field.new()),
-                ), assignIds = true
+                ),
+                emptyList(),
+                assignIds = true
             )
 
             val robotBoard = BoardEngine(
@@ -451,7 +479,9 @@ class BoardEngineTest {
                     listOf(Field.new()),
                     listOf(Field.new().also { it.robotId = 1 }),
                     listOf(Field.new()),
-                ), assignIds = true
+                ),
+                emptyList(),
+                assignIds = true
             )
 
             val laserBoard = BoardEngine(
@@ -464,7 +494,9 @@ class BoardEngineTest {
                     listOf(Field.new(), Field.new(FieldElement.LASER_2, Direction.UP), Field.new()),
                     listOf(Field.new(), Field.new(), Field.new()),
                     listOf(Field.new(), Field.new(FieldElement.LASER, Direction.UP), Field.new())
-                ), assignIds = true
+                ),
+                emptyList(),
+                assignIds = true
             )
 
             return Stream.of(

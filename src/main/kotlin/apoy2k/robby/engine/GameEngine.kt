@@ -142,7 +142,7 @@ class GameEngine(
 
             // Applying laser overlays only works correctly when all fields are uniquely adressable with an ID
             // so this has to be done *after* writing the DB entries for fields, as that will set the field IDs
-            val boardEngine = BoardEngine(fields)
+            val boardEngine = BoardEngine(fields, emptyList())
             val updateFields = boardEngine.updateLaserOverlays()
             database.batchUpdate(Fields) {
                 updateFields.forEach { field ->
@@ -278,7 +278,7 @@ class GameEngine(
         database.games.update(game)
 
         val robots = database.robots.filter { it.gameId eq game.id }.map { it }
-        boardEngine.moveBelts(FieldElement.BELT_2, robots)
+        boardEngine.moveBelts(FieldElement.BELT_2)
             .forEach { database.fields.update(it) }
         robots.forEach { database.robots.update(it) }
 
@@ -288,7 +288,7 @@ class GameEngine(
         game.state = GameState.MOVE_BARD_ELEMENTS_1
         database.games.update(game)
 
-        boardEngine.moveBelts(FieldElement.BELT, robots)
+        boardEngine.moveBelts(FieldElement.BELT)
             .forEach { database.fields.update(it) }
         robots.forEach { database.robots.update(it) }
 
@@ -300,9 +300,8 @@ class GameEngine(
         game.state = GameState.FIRE_LASERS_2
         database.games.update(game)
 
-        val robots = database.robots.filter { it.gameId eq game.id }.map { it }
-        boardEngine.fireLasers(FieldElement.LASER_2, robots)
-        robots.forEach { database.robots.update(it) }
+        boardEngine.fireLasers(FieldElement.LASER_2)
+            .forEach { database.robots.update(it) }
 
         updates.emit(ViewUpdate(game.id))
         delay(GAME_ENGINE_STEP_DELAY)
@@ -310,8 +309,8 @@ class GameEngine(
         game.state = GameState.FIRE_LASERS_1
         database.games.update(game)
 
-        boardEngine.fireLasers(FieldElement.LASER, robots)
-        robots.forEach { database.robots.update(it) }
+        boardEngine.fireLasers(FieldElement.LASER)
+            .forEach { database.robots.update(it) }
         updates.emit(ViewUpdate(game.id))
         delay(GAME_ENGINE_STEP_DELAY)
 
@@ -319,7 +318,7 @@ class GameEngine(
         database.games.update(game)
 
         boardEngine.fireRobotLasers()
-        robots.forEach { database.robots.update(it) }
+            .forEach { database.robots.update(it) }
         updates.emit(ViewUpdate(game.id))
         delay(GAME_ENGINE_STEP_DELAY)
     }
@@ -329,7 +328,7 @@ class GameEngine(
         database.games.update(game)
 
         val robots = database.robots.filter { it.gameId eq game.id }.map { it }
-        boardEngine.touchCheckpoints(robots)
+        boardEngine.touchCheckpoints()
         robots.forEach { database.robots.update(it) }
 
         updates.emit(ViewUpdate(game.id))
@@ -341,9 +340,9 @@ class GameEngine(
         database.games.update(game)
 
         val robots = database.robots.filter { it.gameId eq game.id }.map { it }
-        boardEngine.touchRepair(robots)
+        boardEngine.touchRepair()
         robots.forEach { database.robots.update(it) }
-        boardEngine.touchModifications(robots)
+        boardEngine.touchModifications()
         robots.forEach { database.robots.update(it) }
 
         updates.emit(ViewUpdate(game.id))

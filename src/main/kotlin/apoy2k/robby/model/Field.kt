@@ -254,4 +254,21 @@ interface Field : Entity<Field> {
         .name
         .takeLast(1)
         .toInt()
+
+    /**
+     * True, if the field contains any laser overlay element
+     */
+    fun hasLaserOverlay() = elements.any { laserOverlays.contains(it) }
+
+    /**
+     * Clear any laser overlays on this field
+     */
+    fun clearLaserOverlays() = elements.removeIf { el -> laserOverlays.contains(el) }
+
+    /**
+     * True if this field has any laser-emitter on it
+     */
+    fun hasLaserEmitter() = elements.contains(FieldElement.LASER)
+            || elements.contains(FieldElement.LASER_2)
+            || robotId != null
 }

@@ -119,7 +119,7 @@ fun Route.base(
             return@get
         }
 
-        val boardEngine = BoardEngine(fields, assignIds = true)
+        val boardEngine = BoardEngine(fields, robots, assignIds = true)
         boardEngine.updateLaserOverlays()
 
         call.respondHtmlTemplate(LayoutTpl(user)) {
