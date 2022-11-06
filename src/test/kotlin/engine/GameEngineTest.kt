@@ -1,9 +1,6 @@
 package apoy2k.robby.kotlin.engine
 
-import apoy2k.robby.engine.BoardEngine
-import apoy2k.robby.engine.BoardType
-import apoy2k.robby.engine.GameEngine
-import apoy2k.robby.engine.RobotEngine
+import apoy2k.robby.engine.*
 import apoy2k.robby.exceptions.IncompleteAction
 import apoy2k.robby.exceptions.InvalidGameState
 import apoy2k.robby.kotlin.DatabaseBackedTest
@@ -12,9 +9,7 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import org.junit.jupiter.api.Test
 import org.ktorm.dsl.and
 import org.ktorm.dsl.eq
-import org.ktorm.entity.add
-import org.ktorm.entity.count
-import org.ktorm.entity.find
+import org.ktorm.entity.*
 import java.time.Clock
 import java.time.Instant
 import java.time.ZoneId
@@ -35,22 +30,23 @@ class GameEngineTest : DatabaseBackedTest() {
     @Test
     fun `select card for register`() {
         val game = gameEngine.createNewGame(BoardType.SANDBOX)
-        val boardEngine = BoardEngine.buildFromGame(game.id, database)
+        val board = database.fields.filter { it.gameId eq game.id }.map { it }.toBoard()
         database.users.add(User.new("1", "1"))
         val s1 = Session(1)
         gameEngine.perform(Action.joinGame(RobotModel.ZIPPY).also {
             it.session = s1
             it.game = game
-        }, boardEngine)
+        }, board, emptySet())
 
-        val robot = database.robots.find { it.gameId eq game.id and (it.userId eq (s1.userId ?: -1)) }
+        val robots = database.robots.filter { it.gameId eq game.id }.map { it }
+        val robot = robots.firstOrNull { it.userId == s1.userId }
         assertNotNull(robot)
 
         val card = robotEngine.getDrawnCards(robot.id)[0]
         gameEngine.perform(Action.selectCard(1, card.id).also {
             it.session = s1
             it.game = game
-        }, boardEngine)
+        }, board, robots)
 
         val registerCard = robotEngine.getRegister(robot.id, 1)
         assertNotNull(registerCard)
@@ -60,26 +56,27 @@ class GameEngineTest : DatabaseBackedTest() {
     @Test
     fun `card selection override from different register`() {
         val game = gameEngine.createNewGame(BoardType.SANDBOX)
-        val boardEngine = BoardEngine.buildFromGame(game.id, database)
+        val board = database.fields.filter { it.gameId eq game.id }.map { it }.toBoard()
         database.users.add(User.new("1", "1"))
         val s1 = Session(1)
         gameEngine.perform(Action.joinGame(RobotModel.ZIPPY).also {
             it.session = s1
             it.game = game
-        }, boardEngine)
+        }, board, emptySet())
 
-        val robot = database.robots.find { it.gameId eq game.id and (it.userId eq (s1.userId ?: -1)) }
+        val robots = database.robots.filter { it.gameId eq game.id }.map { it }
+        val robot = robots.firstOrNull { it.userId == s1.userId }
         assertNotNull(robot)
 
         val card = robotEngine.getDrawnCards(robot.id)[0]
         gameEngine.perform(Action.selectCard(1, card.id).also {
             it.session = s1
             it.game = game
-        }, boardEngine)
+        }, board, robots)
         gameEngine.perform(Action.selectCard(2, card.id).also {
             it.session = s1
             it.game = game
-        }, boardEngine)
+        }, board, robots)
 
         val register1 = robotEngine.getRegister(robot.id, 1)
         val register2 = robotEngine.getRegister(robot.id, 2)
@@ -104,10 +101,10 @@ class GameEngineTest : DatabaseBackedTest() {
             it.session = session
         }
 
-        val boardEngine1 = BoardEngine.buildFromGame(game1.id, database)
-        val boardEngine2 = BoardEngine.buildFromGame(game2.id, database)
-        gameEngine.perform(join1, boardEngine1)
-        gameEngine.perform(join2, boardEngine2)
+        val board1 = database.fields.filter { it.gameId eq game1.id }.map { it }.toBoard()
+        val board2 = database.fields.filter { it.gameId eq game2.id }.map { it }.toBoard()
+        gameEngine.perform(join1, board1, emptySet())
+        gameEngine.perform(join2, board2, emptySet())
         val robot1 = database.robots.find { it.gameId eq game1.id and (it.userId eq (session.userId ?: -1)) }
         val robot2 = database.robots.find { it.gameId eq game2.id and (it.userId eq (session.userId ?: -1)) }
 
@@ -115,43 +112,43 @@ class GameEngineTest : DatabaseBackedTest() {
         assertEquals(1, database.robots.count { it.gameId eq game2.id })
         assertNotNull(database.robots.find { it.gameId eq game1.id and (it.userId eq (session.userId ?: -1)) })
         assertNotNull(database.robots.find { it.gameId eq game2.id and (it.userId eq (session.userId ?: -1)) })
-        assertEquals(robot1?.id, boardEngine1.fieldAt(0, 0).robotId)
-        assertEquals(robot2?.id, boardEngine2.fieldAt(0, 0).robotId)
-        assertNull(boardEngine1.fieldAt(0, 1).robotId)
-        assertNull(boardEngine2.fieldAt(0, 1).robotId)
+        assertEquals(robot1?.id, board1.fieldAt(0, 0).robotId)
+        assertEquals(robot2?.id, board2.fieldAt(0, 0).robotId)
+        assertNull(board1.fieldAt(0, 1).robotId)
+        assertNull(board2.fieldAt(0, 1).robotId)
     }
 
     @Test
     fun `join game`() {
         val game = gameEngine.createNewGame(BoardType.SANDBOX)
-        val boardEngine = BoardEngine.buildFromGame(game.id, database)
+        val board = database.fields.filter { it.gameId eq game.id }.map { it }.toBoard()
         database.users.add(User.new("1", "1"))
         val s1 = Session(1)
 
         gameEngine.perform(Action.joinGame(RobotModel.ZIPPY).also {
             it.session = s1
             it.game = game
-        }, boardEngine)
+        }, board, emptySet())
         assertEquals(1, database.robots.count { it.gameId eq game.id })
     }
 
     @Test
     fun `join game without name`() {
         val game = gameEngine.createNewGame(BoardType.SANDBOX)
-        val boardEngine = BoardEngine.buildFromGame(game.id, database)
+        val board = database.fields.filter { it.gameId eq game.id }.map { it }.toBoard()
 
         assertFailsWith(IncompleteAction::class) {
             gameEngine.perform(Action.joinGame(RobotModel.ZIPPY).also {
                 it.session = Session(1)
                 it.game = game
-            }, boardEngine)
+            }, board, emptySet())
         }
     }
 
     @Test
     fun `multiple players join same game`() {
         val game = gameEngine.createNewGame(BoardType.SANDBOX)
-        val boardEngine = BoardEngine.buildFromGame(game.id, database)
+        val board = database.fields.filter { it.gameId eq game.id }.map { it }.toBoard()
         database.users.add(User.new("1", "1"))
         database.users.add(User.new("2", "2"))
         val s1 = Session(1)
@@ -160,18 +157,18 @@ class GameEngineTest : DatabaseBackedTest() {
         gameEngine.perform(Action.joinGame(RobotModel.ZIPPY).also {
             it.session = s1
             it.game = game
-        }, boardEngine)
+        }, board, emptySet())
         gameEngine.perform(Action.joinGame(RobotModel.ZIPPY).also {
             it.session = s2
             it.game = game
-        }, boardEngine)
+        }, board, emptySet())
         assertEquals(2, database.robots.count { it.gameId eq game.id })
     }
 
     @Test
     fun `join same game twice`() {
         val game = gameEngine.createNewGame(BoardType.SANDBOX)
-        val boardEngine = BoardEngine.buildFromGame(game.id, database)
+        val board = database.fields.filter { it.gameId eq game.id }.map { it }.toBoard()
         database.users.add(User.new("1", "1"))
         val s1 = Session(1)
 
@@ -179,36 +176,39 @@ class GameEngineTest : DatabaseBackedTest() {
             gameEngine.perform(Action.joinGame(RobotModel.ZIPPY).also {
                 it.session = s1
                 it.game = game
-            }, boardEngine)
+            }, board, emptySet())
+            val robots = database.robots.filter { it.gameId eq game.id }.map { it }
             gameEngine.perform(Action.joinGame(RobotModel.ZIPPY).also {
                 it.session = s1
                 it.game = game
-            }, boardEngine)
+            }, board, robots)
         }
     }
 
     @Test
     fun `leave game`() {
         val game = gameEngine.createNewGame(BoardType.SANDBOX)
-        val boardEngine = BoardEngine.buildFromGame(game.id, database)
+        val board = database.fields.filter { it.gameId eq game.id }.map { it }.toBoard()
         database.users.add(User.new("1", "1"))
         val s1 = Session(1)
 
         gameEngine.perform(Action.joinGame(RobotModel.ZIPPY).also {
             it.session = s1
             it.game = game
-        }, boardEngine)
+        }, board, emptySet())
+
+        val robots = database.robots.filter { it.gameId eq game.id }.map { it }
         gameEngine.perform(Action.leaveGame().also {
             it.session = s1
             it.game = game
-        }, boardEngine)
+        }, board, robots)
         assertEquals(0, database.robots.count { it.gameId eq game.id })
     }
 
     @Test
     fun `leave game with multiple players`() {
         val game = gameEngine.createNewGame(BoardType.SANDBOX)
-        val boardEngine = BoardEngine.buildFromGame(game.id, database)
+        val board = database.fields.filter { it.gameId eq game.id }.map { it }.toBoard()
         database.users.add(User.new("1", "1"))
         database.users.add(User.new("2", "2"))
         val s1 = Session(1)
@@ -217,15 +217,17 @@ class GameEngineTest : DatabaseBackedTest() {
         gameEngine.perform(Action.joinGame(RobotModel.ZIPPY).also {
             it.session = s1
             it.game = game
-        }, boardEngine)
+        }, board, emptySet())
+        var robots = database.robots.filter { it.gameId eq game.id }.map { it }
         gameEngine.perform(Action.joinGame(RobotModel.ZIPPY).also {
             it.session = s2
             it.game = game
-        }, boardEngine)
+        }, board, robots)
+        robots = database.robots.filter { it.gameId eq game.id }.map { it }
         gameEngine.perform(Action.leaveGame().also {
             it.session = s1
             it.game = game
-        }, boardEngine)
+        }, board, robots)
         assertEquals(1, database.robots.count { it.gameId eq game.id })
     }
 }

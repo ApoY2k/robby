@@ -47,7 +47,7 @@ class ViewUpdateRouter(
 
                 val game = database.games.find { it.id eq update.gameId } ?: return@onEach
                 val fields = database.fields.filter { it.gameId eq game.id }.map { it }
-                val board = BoardEngine.fieldListToMatrix(fields)
+                val board = fields.toBoard()
                 val robots = database.robots.filter { it.gameId eq game.id }.map { it }
 
                 gameSessions.forEach { (httpSession, wsSessions) ->

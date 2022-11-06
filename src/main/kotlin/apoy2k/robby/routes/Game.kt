@@ -1,9 +1,9 @@
 package apoy2k.robby.routes
 
-import apoy2k.robby.engine.BoardEngine
 import apoy2k.robby.engine.BoardType
 import apoy2k.robby.engine.GameEngine
 import apoy2k.robby.engine.ViewUpdateRouter
+import apoy2k.robby.engine.toBoard
 import apoy2k.robby.model.*
 import apoy2k.robby.templates.GameTpl
 import apoy2k.robby.templates.LayoutTpl
@@ -59,7 +59,7 @@ fun Route.game(
             }
 
             val fields = database.fields.filter { it.gameId eq gameId }.map { it }
-            val board = BoardEngine.fieldListToMatrix(fields)
+            val board = fields.toBoard()
             val robots = database.robots.filter { it.gameId eq gameId }.map { it }
             val session = call.sessions.get<Session>()
             val user = database.users.find { it.id eq (session?.userId ?: -1) }
