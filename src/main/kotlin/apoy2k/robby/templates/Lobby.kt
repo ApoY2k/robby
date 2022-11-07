@@ -2,8 +2,6 @@ package apoy2k.robby.templates
 
 import apoy2k.robby.model.Game
 import apoy2k.robby.model.User
-import apoy2k.robby.model.hasStarted
-import apoy2k.robby.model.isFinished
 import apoy2k.robby.routes.Location
 import io.ktor.server.html.*
 import kotlinx.html.*
@@ -36,6 +34,7 @@ class Lobby(
                             }
                         }
                         ul("list-group list-group-flush") {
+                            li("list-group-item") { +it.boardType.name }
                             li("list-group-item") {
                                 if (it.isFinished(now)) {
                                     +"Finished at ${it.finishedAt}"

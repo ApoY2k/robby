@@ -206,8 +206,8 @@ interface Field : Entity<Field> {
     fun blocksHorizontalLaser() = hasVerticalWall() || robotId != null
 
     /**
-     * Returns the FieldCondition to apply to any fields that might be in line of this lasser type
-     * on the board when applying laser conditions
+     * Returns the FieldElement to apply to any fields that might be in line of this lasser type
+     * on the board when applying laser elements
      */
     fun getInLineLaserFieldElements(): FieldElement? {
         if (elements.contains(FieldElement.LASER)) {

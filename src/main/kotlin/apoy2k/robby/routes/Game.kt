@@ -39,8 +39,9 @@ fun Route.game(
 
     post(Location.GAME_ROOT.path) {
         val params = call.receiveParameters()
-        val type = BoardType.valueOf(params["board"].orEmpty())
-        gameEngine.createNewGame(type)
+        val boardType = BoardType.valueOf(params["board"].orEmpty())
+        val maxRobots = params["maxRobots"]?.toInt() ?: 1
+        gameEngine.createNewGame(boardType, maxRobots)
         call.respondRedirect(Location.ROOT.path)
     }
 

@@ -1,7 +1,6 @@
-package apoy2k.robby.kotlin.engine
+package apo2k.robby.engine
 
 import apoy2k.robby.engine.*
-import apoy2k.robby.kotlin.apo2k.robby.assignIds
 import apoy2k.robby.model.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -64,7 +63,7 @@ class BoardEngineTest {
         val target = board.fieldAt(2, 1)
 
         source.robotId = robot1.id
-        board.execute(card, robot1, setOf(robot1))
+        board.execute(card, setOf(robot1))
         board.moveBelts(FieldElement.BELT, setOf(robot1))
 
         assertNull(source.robotId)
@@ -81,7 +80,7 @@ class BoardEngineTest {
         val target = board.fieldAt(2, 0)
 
         source.robotId = robot1.id
-        board.execute(card, robot1, setOf(robot1))
+        board.execute(card, setOf(robot1))
         board.moveBelts(FieldElement.BELT, setOf(robot1))
 
         assertNull(source.robotId)
@@ -116,7 +115,7 @@ class BoardEngineTest {
         val source = board.fieldAt(1, 2)
 
         source.robotId = robot1.id
-        board.execute(card, robot1, setOf(robot1))
+        board.execute(card, setOf(robot1))
         board.moveBelts(FieldElement.BELT, setOf(robot1))
 
         assertNotNull(source.robotId)
@@ -132,7 +131,7 @@ class BoardEngineTest {
         val target = board.fieldAt(3, 3)
 
         source.robotId = robot1.id
-        board.execute(card, robot1, setOf(robot1))
+        board.execute(card, setOf(robot1))
         board.moveBelts(FieldElement.BELT, setOf(robot1))
 
         assertNull(source.robotId)
@@ -195,7 +194,7 @@ class BoardEngineTest {
         val target = emptyBoard.fieldAt(2, 1)
 
         source.robotId = robot1.id
-        emptyBoard.execute(card, robot1, setOf(robot1))
+        emptyBoard.execute(card, setOf(robot1))
 
         assertNull(source.robotId)
         assertNotNull(target.robotId)
@@ -212,9 +211,9 @@ class BoardEngineTest {
         val target = emptyBoard.fieldAt(1, 3)
 
         source.robotId = robot1.id
-        emptyBoard.execute(card, robot1, setOf(robot1))
-        emptyBoard.execute(card, robot1, setOf(robot1))
-        emptyBoard.execute(card, robot1, setOf(robot1))
+        emptyBoard.execute(card, setOf(robot1))
+        emptyBoard.execute(card, setOf(robot1))
+        emptyBoard.execute(card, setOf(robot1))
 
         assertNull(source.robotId)
         assertNotNull(target.robotId)
@@ -230,7 +229,7 @@ class BoardEngineTest {
         val field = emptyBoard.fieldAt(1, 1)
 
         field.robotId = robot1.id
-        emptyBoard.execute(card, robot1, setOf(robot1))
+        emptyBoard.execute(card, setOf(robot1))
 
         assertNotNull(field.robotId)
         assertEquals(robot1.id, field.robotId)
@@ -246,7 +245,7 @@ class BoardEngineTest {
         val field = emptyBoard.fieldAt(1, 1)
 
         field.robotId = robot1.id
-        emptyBoard.execute(card, robot1, setOf(robot1))
+        emptyBoard.execute(card, setOf(robot1))
 
         assertNotNull(field.robotId)
         assertEquals(robot1.id, field.robotId)
@@ -264,7 +263,7 @@ class BoardEngineTest {
 
         top.robotId = robot1.id
         middle.robotId = robot2.id
-        emptyBoard.execute(card, robot1, setOf(robot1, robot2))
+        emptyBoard.execute(card, setOf(robot1, robot2))
 
         assertNull(top.robotId)
         assertNotNull(middle.robotId)
@@ -285,7 +284,7 @@ class BoardEngineTest {
         top.robotId = robot1.id
         middle.robotId = robot2.id
         down.robotId = robot3.id
-        emptyBoard.execute(card, robot1, setOf(robot1, robot2, robot3))
+        emptyBoard.execute(card, setOf(robot1, robot2, robot3))
 
         assertNotNull(top.robotId)
         assertNotNull(middle.robotId)
@@ -305,7 +304,7 @@ class BoardEngineTest {
 
         top.robotId = robot1.id
         down.robotId = robot2.id
-        emptyBoard.execute(card, robot1, setOf(robot1, robot2))
+        emptyBoard.execute(card, setOf(robot1, robot2))
 
         assertNotNull(top.robotId)
         assertNotNull(down.robotId)

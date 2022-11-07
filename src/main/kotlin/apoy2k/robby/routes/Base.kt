@@ -1,5 +1,6 @@
 package apoy2k.robby.routes
 
+import apoy2k.robby.engine.assignIds
 import apoy2k.robby.engine.fieldAt
 import apoy2k.robby.engine.updateLaserOverlays
 import apoy2k.robby.model.*
@@ -67,11 +68,13 @@ fun Route.base(
         val board = when (call.parameters["id"]) {
             "chop-shop" -> {
                 val board = generateChopShopBoard()
-                val robot1 = Robot.new(RobotModel.ZIPPY).also {
+                board.assignIds()
+                val robot = Robot.new(RobotModel.ZIPPY).also {
+                    it.id = 1
                     it.facing = Direction.UP
                 }
-                board.fieldAt(8, 4).robotId = robot1.id
-                board.updateLaserOverlays(setOf(robot1))
+                board.fieldAt(14, 5).robotId = robot.id
+                robots.add(robot)
                 board
             }
 
@@ -82,6 +85,8 @@ fun Route.base(
             call.respondRedirect(Location.BOARDS_ROOT.path)
             return@get
         }
+
+        board.updateLaserOverlays(robots)
 
         call.respondHtmlTemplate(LayoutTpl(user)) {
             content {

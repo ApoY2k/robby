@@ -1,4 +1,4 @@
-package apoy2k.robby.kotlin
+package apoy2k.robby.kotlin.apo2k.robby
 
 import apoy2k.robby.engine.BoardType
 import apoy2k.robby.engine.GameEngine
@@ -42,8 +42,8 @@ fun main() {
     val s1 = Session(1)
     val s2 = Session(2)
 
-    val game1 = gameEngine.createNewGame(BoardType.SANDBOX)
-    val game2 = gameEngine.createNewGame(BoardType.SANDBOX)
+    val game1 = gameEngine.createNewGame(BoardType.SANDBOX, 8)
+    val game2 = gameEngine.createNewGame(BoardType.SANDBOX, 8)
 
     val pool = Executors.newCachedThreadPool().asCoroutineDispatcher()
     runBlocking(pool) {

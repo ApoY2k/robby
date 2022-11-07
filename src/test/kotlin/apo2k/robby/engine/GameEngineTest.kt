@@ -1,9 +1,9 @@
-package apoy2k.robby.kotlin.engine
+package apo2k.robby.engine
 
 import apoy2k.robby.engine.*
 import apoy2k.robby.exceptions.IncompleteAction
 import apoy2k.robby.exceptions.InvalidGameState
-import apoy2k.robby.kotlin.DatabaseBackedTest
+import apoy2k.robby.kotlin.apo2k.robby.DatabaseBackedTest
 import apoy2k.robby.model.*
 import kotlinx.coroutines.flow.MutableSharedFlow
 import org.junit.jupiter.api.Test
@@ -29,7 +29,7 @@ class GameEngineTest : DatabaseBackedTest() {
 
     @Test
     fun `select card for register`() {
-        val game = gameEngine.createNewGame(BoardType.SANDBOX)
+        val game = gameEngine.createNewGame(BoardType.SANDBOX, 8)
         val board = database.fields.filter { it.gameId eq game.id }.map { it }.toBoard()
         database.users.add(User.new("1", "1"))
         val s1 = Session(1)
@@ -55,7 +55,7 @@ class GameEngineTest : DatabaseBackedTest() {
 
     @Test
     fun `card selection override from different register`() {
-        val game = gameEngine.createNewGame(BoardType.SANDBOX)
+        val game = gameEngine.createNewGame(BoardType.SANDBOX, 8)
         val board = database.fields.filter { it.gameId eq game.id }.map { it }.toBoard()
         database.users.add(User.new("1", "1"))
         val s1 = Session(1)
@@ -87,8 +87,8 @@ class GameEngineTest : DatabaseBackedTest() {
 
     @Test
     fun `join parallel games`() {
-        val game1 = gameEngine.createNewGame(BoardType.SANDBOX)
-        val game2 = gameEngine.createNewGame(BoardType.SANDBOX)
+        val game1 = gameEngine.createNewGame(BoardType.SANDBOX, 8)
+        val game2 = gameEngine.createNewGame(BoardType.SANDBOX, 8)
         database.users.add(User.new("1", "1"))
         val session = Session(1)
 
@@ -120,7 +120,7 @@ class GameEngineTest : DatabaseBackedTest() {
 
     @Test
     fun `join game`() {
-        val game = gameEngine.createNewGame(BoardType.SANDBOX)
+        val game = gameEngine.createNewGame(BoardType.SANDBOX, 8)
         val board = database.fields.filter { it.gameId eq game.id }.map { it }.toBoard()
         database.users.add(User.new("1", "1"))
         val s1 = Session(1)
@@ -134,7 +134,7 @@ class GameEngineTest : DatabaseBackedTest() {
 
     @Test
     fun `join game without name`() {
-        val game = gameEngine.createNewGame(BoardType.SANDBOX)
+        val game = gameEngine.createNewGame(BoardType.SANDBOX, 8)
         val board = database.fields.filter { it.gameId eq game.id }.map { it }.toBoard()
 
         assertFailsWith(IncompleteAction::class) {
@@ -147,7 +147,7 @@ class GameEngineTest : DatabaseBackedTest() {
 
     @Test
     fun `multiple players join same game`() {
-        val game = gameEngine.createNewGame(BoardType.SANDBOX)
+        val game = gameEngine.createNewGame(BoardType.SANDBOX, 8)
         val board = database.fields.filter { it.gameId eq game.id }.map { it }.toBoard()
         database.users.add(User.new("1", "1"))
         database.users.add(User.new("2", "2"))
@@ -167,7 +167,7 @@ class GameEngineTest : DatabaseBackedTest() {
 
     @Test
     fun `join same game twice`() {
-        val game = gameEngine.createNewGame(BoardType.SANDBOX)
+        val game = gameEngine.createNewGame(BoardType.SANDBOX, 8)
         val board = database.fields.filter { it.gameId eq game.id }.map { it }.toBoard()
         database.users.add(User.new("1", "1"))
         val s1 = Session(1)
@@ -187,7 +187,7 @@ class GameEngineTest : DatabaseBackedTest() {
 
     @Test
     fun `leave game`() {
-        val game = gameEngine.createNewGame(BoardType.SANDBOX)
+        val game = gameEngine.createNewGame(BoardType.SANDBOX, 8)
         val board = database.fields.filter { it.gameId eq game.id }.map { it }.toBoard()
         database.users.add(User.new("1", "1"))
         val s1 = Session(1)
@@ -207,7 +207,7 @@ class GameEngineTest : DatabaseBackedTest() {
 
     @Test
     fun `leave game with multiple players`() {
-        val game = gameEngine.createNewGame(BoardType.SANDBOX)
+        val game = gameEngine.createNewGame(BoardType.SANDBOX, 8)
         val board = database.fields.filter { it.gameId eq game.id }.map { it }.toBoard()
         database.users.add(User.new("1", "1"))
         database.users.add(User.new("2", "2"))

@@ -1,5 +1,6 @@
 package apoy2k.robby.model
 
+import apoy2k.robby.engine.BoardType
 import org.ktorm.entity.Entity
 import org.ktorm.schema.Table
 import org.ktorm.schema.enum
@@ -22,6 +23,8 @@ enum class GameState {
 @Suppress("unused")
 object Games : Table<Game>("games") {
     val id = int("id").primaryKey().bindTo { it.id }
+    val boardType = enum<BoardType>("boardType").bindTo { it.boardType }
+    val maxRobots = int("maxRobots").bindTo { it.maxRobots }
     val currentRegister = int("currentRegister").bindTo { it.currentRegister }
     val state = enum<GameState>("state").bindTo { it.state }
     val startedAt = timestamp("startedAt").bindTo { it.startedAt }
@@ -32,24 +35,26 @@ interface Game : Entity<Game> {
     companion object : Entity.Factory<Game>()
 
     var id: Int
+    var boardType: BoardType
+    var maxRobots: Int
     var currentRegister: Int
     var state: GameState
     var startedAt: Instant?
     var finishedAt: Instant?
-}
 
-/**
- * true, if the game has finished after the given instant or no finish date is set
- */
-fun Game.isFinished(now: Instant) = when (finishedAt) {
-    null -> false
-    else -> now.isAfter(finishedAt)
-}
+    /**
+     * true, if the game has finished after the given instant or no finish date is set
+     */
+    fun isFinished(now: Instant) = when (finishedAt) {
+        null -> false
+        else -> now.isAfter(finishedAt)
+    }
 
-/**
- * true, if the game has started after the given instant or no start is set
- */
-fun Game.hasStarted(now: Instant) = when (startedAt) {
-    null -> false
-    else -> now.isAfter(startedAt)
+    /**
+     * true, if the game has started after the given instant or no start is set
+     */
+    fun hasStarted(now: Instant) = when (startedAt) {
+        null -> false
+        else -> now.isAfter(startedAt)
+    }
 }

@@ -33,6 +33,13 @@ fun List<Field>.toBoard(): Board {
 }
 
 /**
+ * Generate IDs for all fields, only used for unit testing
+ */
+fun List<List<Field>>.assignIds() = this.flatten().forEachIndexed { idx, field ->
+    field.id = idx
+}
+
+/**
  * Execute a single movement card with the associated robot.
  * Note that even if the MovementCard specifies a movement of 2 or 3, this method will only
  * ever move the robot one (or zero, depending on the card) step.
@@ -40,7 +47,8 @@ fun List<Field>.toBoard(): Board {
  *
  * **Modifies fields and robots!**
  */
-fun Board.execute(card: MovementCard, robot: Robot, robots: Collection<Robot>) {
+fun Board.execute(card: MovementCard, robots: Collection<Robot>) {
+    val robot = robots.find { it.id == card.robotId } ?: return
     logger.debug("Executing $card on $robot")
     robot.rotate(card.movement)
 
@@ -183,14 +191,13 @@ fun Board.touchModifications(robots: Collection<Robot>) = flatten()
 /**
  * Place new robot on the board
  * **Modifies fields!**
- * @return Field where the robot was placed
  */
-fun Board.placeRobot(robotId: Int) = flatten()
-    .filter { it.hasStart() && it.robotId == null }
-    .minBy { it.getStartNumber() }
-    .also {
-        it.robotId = robotId
-    }
+fun Board.placeRobot(robotId: Int) {
+    flatten()
+        .filter { it.hasStart() && it.robotId == null }
+        .minBy { it.getStartNumber() }
+        .robotId = robotId
+}
 
 /**
  * Refresh the laser the laser(_2)(_h/_v) overlays on all fields that are in the direction of any laser
@@ -212,12 +219,15 @@ fun Board.updateLaserOverlays(robots: Collection<Robot>) = flatten()
     .forEach { sourceField ->
         val robotId = sourceField.robotId
         if (robotId != null) {
-            addLaserOverlay(sourceField, robots.first { it.id == robotId }.facing)
+            val robot = robots.first { it.id == robotId }
+            val element = robot.getInLineLaserFieldElements() ?: return@forEach
+            addLaserOverlay(sourceField, robot.facing, element)
         }
 
         val outgoingDirection = sourceField.outgoingDirection
+        val element = sourceField.getInLineLaserFieldElements() ?: return@forEach
         if (outgoingDirection != null) {
-            addLaserOverlay(sourceField, outgoingDirection)
+            addLaserOverlay(sourceField, outgoingDirection, element)
         }
     }
 
@@ -261,7 +271,7 @@ fun Board.findLastLaserHitField(startField: Field, direction: Direction): Field 
     val startPos = positionOf(startField)
 
     if (direction == Direction.RIGHT) {
-        for (col in startPos.col + 1 until this[startPos.row].size) {
+        for (col in startPos.col until this[startPos.row].size) {
             val field = fieldAt(Position(startPos.row, col))
             if (!field.blocksHorizontalLaser()) {
                 continue
@@ -284,7 +294,7 @@ fun Board.findLastLaserHitField(startField: Field, direction: Direction): Field 
     }
 
     if (direction == Direction.LEFT) {
-        for (col in startPos.col - 1 downTo 0) {
+        for (col in startPos.col downTo 0) {
             val field = fieldAt(Position(startPos.row, col))
             if (!field.blocksHorizontalLaser()) {
                 continue
@@ -307,7 +317,7 @@ fun Board.findLastLaserHitField(startField: Field, direction: Direction): Field 
     }
 
     if (direction == Direction.DOWN) {
-        for (row in startPos.row + 1 until size) {
+        for (row in startPos.row until size) {
             val field = fieldAt(Position(row, startPos.col))
             if (!field.blocksVerticalLaser()) {
                 continue
@@ -330,9 +340,11 @@ fun Board.findLastLaserHitField(startField: Field, direction: Direction): Field 
     }
 
     if (direction == Direction.UP) {
-        for (row in startPos.row - 1 downTo 0) {
+        for (row in startPos.row downTo 0) {
             val field = fieldAt(Position(row, startPos.col))
-            if (!field.blocksVerticalLaser()) {
+            if (!field.blocksVerticalLaser()) { // TODO This needs to take into account from which direction
+                // the laser is coming in, otherwise lasers will be blocked because they also contain walls themselves
+                // so a laser to the left will be block because of its right wall!
                 continue
             }
 
@@ -475,7 +487,7 @@ private fun Board.applyPositions(positions: Map<Position, Robot>, robots: Collec
  * Add laser overlays based on a given source field and direction.
  * **Modifies fields!**
  */
-private fun Board.addLaserOverlay(sourceField: Field, direction: Direction) {
+private fun Board.addLaserOverlay(sourceField: Field, direction: Direction, element: FieldElement) {
     val lastNonBlockedField = findLastLaserHitField(sourceField, direction)
     val lastNonBlockedFieldPos = positionOf(lastNonBlockedField)
 
@@ -528,7 +540,14 @@ private fun Board.addLaserOverlay(sourceField: Field, direction: Direction) {
     // Then apply the laser condition of the source laser field to all fields in the
     // direction of the source laser to build the "firing line" of the laser on the board
     fields.forEach apply@{ inLineField ->
-        val element = sourceField.getInLineLaserFieldElements() ?: return@apply
         inLineField.elements.add(element)
     }
 }
+
+/**
+ * Find the highset flag number on a board
+ */
+fun Board.highestFlagNumber() = flatten()
+    .filter { it.hasFlag() }
+    .maxBy { it.getFlagNumber() }
+    .getFlagNumber()

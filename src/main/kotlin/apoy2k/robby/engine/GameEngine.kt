@@ -83,9 +83,15 @@ class GameEngine(
 
         if (action.label == ActionLabel.JOIN_GAME) {
             val model = action.getString(ActionField.ROBOT_MODEL) ?: throw IncompleteAction("No robot model specified")
+
+            val robotCount = database.robots.count { it.gameId eq game.id }
+            if (game.maxRobots <= robotCount) {
+                return
+            }
+
             val robot = addRobot(game.id, user.name, user.id, RobotModel.valueOf(model))
-            val field = board.placeRobot(robot.id)
-            database.fields.update(field)
+            board.placeRobot(robot.id)
+            board.flatten().forEach { database.fields.update(it) }
             return
         }
 
@@ -115,14 +121,17 @@ class GameEngine(
     /**
      * Create a new game and return the created instance
      */
-    fun createNewGame(type: BoardType): Game {
+    fun createNewGame(boardType: BoardType, maxRobots: Int): Game {
         val game = Game {
             state = GameState.PROGRAMMING_REGISTERS
+            this.boardType = boardType
+            this.maxRobots = maxRobots
             currentRegister = 1
             startedAt = null
             finishedAt = null
         }
-        val fields = when (type) {
+
+        val fields = when (boardType) {
             BoardType.CHOPSHOP -> generateChopShopBoard()
             BoardType.DEMO -> generateDemoBoard()
             BoardType.SANDBOX -> generateSandboxBoard()
@@ -202,7 +211,7 @@ class GameEngine(
         runAutomaticSteps(game, board, robots)
 
         // Check for game end condition. If it is met, end the game
-        if (robots.any { it.passedCheckpoints >= 3 }) {
+        if (robots.any { it.passedCheckpoints >= board.highestFlagNumber() }) {
             game.finishedAt = clock.instant()
         } else {
             // After all automatic turns are done, deal new cards so players can plan their next move
@@ -250,9 +259,6 @@ class GameEngine(
         try {
             getRegister(game.id, register)
                 .forEach { card ->
-                    val robotId = card.robotId ?: return@forEach
-                    val robot = database.robots.find { it.id eq robotId } ?: return@forEach
-
                     val steps = when (card.movement) {
                         Movement.STRAIGHT_2 -> 2
                         Movement.STRAIGHT_3 -> 3
@@ -260,7 +266,7 @@ class GameEngine(
                     }
 
                     for (step in 1..steps) {
-                        board.execute(card, robot, robots)
+                        board.execute(card, robots)
                         board.flatten().forEach { database.fields.update(it) }
                         robots.forEach { database.robots.update(it) }
                         updates.emit(ViewUpdate(game.id))

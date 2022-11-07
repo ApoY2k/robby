@@ -57,6 +57,8 @@ create table "users" (
 drop table if exists "games";
 create table if not exists "games" (
     "id" integer,
+    "boardType" text not null,
+    "maxRobots" int not null,
     "currentRegister" integer not null,
     "state" text not null,
     "startedAt" integer,

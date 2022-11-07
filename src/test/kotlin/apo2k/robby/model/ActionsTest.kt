@@ -1,4 +1,4 @@
-package apoy2k.robby.kotlin.model
+package apo2k.robby.model
 
 import apoy2k.robby.model.*
 import org.junit.jupiter.api.Test
