@@ -67,19 +67,19 @@ div[class*="overlay"]::after {
     background-position: center;
 }
 
-.wall_d, .wall_ld, .wall_ldr, .wall_lud, .wall_urd, .wall_lurd, .wall_ud,.wall_rd, .wall_d, .laser_u, .laser_2_u, .pusher_u {
+.wall_d, .wall_ld, .wall_ldr, .wall_lud, .wall_urd, .wall_lurd, .wall_ud, .wall_rd, .wall_d, .laser_d, .laser_2_d, .pusher_d {
     border-bottom-style: solid;
 }
 
-.wall_lu, .wall_lur, .wall_lud, .wall_urd, .wall_lurd, .wall_u, .wall_ur,.wall_ud, .laser_d, .laser_2_d, .pusher_d {
+.wall_lu, .wall_lur, .wall_lud, .wall_urd, .wall_lurd, .wall_u, .wall_ur, .wall_ud, .laser_u, .laser_2_u, .pusher_u {
     border-top-style: solid;
 }
 
-.wall_l, .wall_lu, .wall_lr, .wall_lr, .wall_ld, .wall_lur, .wall_ldr,.wall_lud, .wall_lurd, .laser_r, .laser_2_r, .pusher_r {
+.wall_l, .wall_lu, .wall_lr, .wall_lr, .wall_ld, .wall_lur, .wall_ldr, .wall_lud, .wall_lurd, .laser_l, .laser_2_l, .pusher_l {
     border-left-style: solid;
 }
 
-.wall_lr, .wall_lur, .wall_ldr, .wall_urd, .wall_lurd, .wall_ur, .wall_r,.wall_rd, .laser_l, .laser_2_l, .pusher_l {
+.wall_lr, .wall_lur, .wall_ldr, .wall_urd, .wall_lurd, .wall_ur, .wall_r, .wall_rd, .laser_r, .laser_2_r, .pusher_r {
     border-right-style: solid;
 }
 
@@ -150,21 +150,21 @@ div[class*="overlay"]::after {
 .belt_l::after, .belt_lu::after, .belt_2_lu::after, .belt_ld::after, .belt_ul::after,
 .belt_dl::after, .belt_lur::after, .belt_lud::after, .belt_lrd::after, .belt_lurd::after,
 .belt_2_l::after, .belt_2_ul::after, .belt_2_dl::after, .belt_2_lur::after, .belt_2_lud::after,
-.belt_2_lrd::after, .belt_2_lurd::after, .laser_r::after, .laser_2_r::after, .pusher_r::after {
+.belt_2_lrd::after, .belt_2_lurd::after, .laser_l::after, .laser_2_l::after, .pusher_l::after {
     transform: rotate(-90deg);
 }
 
 .belt_r::after, .belt_dr::after, .belt_ur::after, .belt_rud::after, .belt_rlu::after,
 .belt_rld::after, .belt_rlud::after, .belt_2_r::after, .belt_2_dr::after, .belt_2_ur::after,
 .belt_2_rud::after, .belt_2_rlu::after, .belt_2_rld::after, .belt_2_rlud::after,
-.laser_l::after, .laser_2_l::after, .pusher_l::after {
+.laser_r::after, .laser_2_r::after, .pusher_r::after {
     transform: rotate(90deg);
 }
 
 .belt_d::after, .belt_rd::after, .belt_dlu::after, .belt_dur::after, .belt_dlur::after,
 .belt_dlr::after,.belt_2_d::after, .belt_2_ld::after, .belt_2_rd::after, .belt_2_dlu::after,
-.belt_2_dur::after, .belt_2_dlur::after, .belt_2_dlr::after, .laser_u::after,
-.laser_2_u::after, .pusher_u::after {
+.belt_2_dur::after, .belt_2_dlur::after, .belt_2_dlr::after, .laser_d::after,
+.laser_2_d::after, .pusher_d::after {
     transform: rotate(180deg);
 }
 
@@ -189,7 +189,7 @@ div.overlay-laser_2_h::after, div.overlay-laser_2_v::after {
     background-image: url("/assets/icons/overlay-laser_2.png");
 }
 
-div.overlay-laser_h::after, div.laser_2_h::after {
+div.overlay-laser_h::after, div.overlay-laser_2_h::after {
     transform: rotate(90deg);
 }
 

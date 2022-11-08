@@ -305,7 +305,6 @@ class GameEngine(
         database.games.update(game)
 
         board.fireLasers(FieldElement.LASER_2, robots)
-        board.flatten().forEach { database.fields.update(it) }
         robots.forEach { database.robots.update(it) }
 
         updates.emit(ViewUpdate(game.id))
@@ -315,7 +314,6 @@ class GameEngine(
         database.games.update(game)
 
         board.fireLasers(FieldElement.LASER, robots)
-        board.flatten().forEach { database.fields.update(it) }
         robots.forEach { database.robots.update(it) }
         updates.emit(ViewUpdate(game.id))
         delay(GAME_ENGINE_STEP_DELAY)
@@ -323,8 +321,7 @@ class GameEngine(
         game.state = GameState.FIRE_ROBOT_LASERS
         database.games.update(game)
 
-        board.fireRobotLasers()
-        board.flatten().forEach { database.fields.update(it) }
+        board.fireRobotLasers(robots)
         robots.forEach { database.robots.update(it) }
         updates.emit(ViewUpdate(game.id))
         delay(GAME_ENGINE_STEP_DELAY)

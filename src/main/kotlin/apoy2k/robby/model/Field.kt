@@ -36,6 +36,8 @@ enum class FieldElement {
     LASER_V,
     LASER_2_H,
     LASER_2_V,
+    ROBOT_LASER_V,
+    ROBOT_LASER_H,
 }
 
 // List of field elements that need to be combined with the directions of a field
@@ -74,6 +76,8 @@ val overlayElements = listOf(
     FieldElement.LASER_2_H,
     FieldElement.LASER_2_V,
     FieldElement.HOLE,
+    FieldElement.ROBOT_LASER_H,
+    FieldElement.ROBOT_LASER_V,
 )
 
 // List of laser overlay field elements
@@ -82,6 +86,8 @@ val laserOverlays = listOf(
     FieldElement.LASER_V,
     FieldElement.LASER_2_H,
     FieldElement.LASER_2_V,
+    FieldElement.ROBOT_LASER_H,
+    FieldElement.ROBOT_LASER_V,
 )
 
 // List of appliance elements that are attached to walls
@@ -201,9 +207,33 @@ interface Field : Entity<Field> {
     fun blocksVerticalLaser() = hasHorizontalWall() || robotId != null
 
     /**
+     * True, if this field blocks a vertical laser from *entering* the field
+     */
+    fun blocksVerticalLaserEntry(entryDirection: Direction) = blocksVerticalLaser()
+            && hasDirection(entryDirection)
+
+    /**
+     * True, if this field blocks a vertical laser from *exiting* the field
+     */
+    fun blocksVerticalLaserExit(entryDirection: Direction) = blocksVerticalLaser()
+            && hasDirection(entryDirection.toOpposite()) || robotId != null
+
+    /**
      * True, if this field blocks a vertical laser (either by walls or if a robot is on it)
      */
     fun blocksHorizontalLaser() = hasVerticalWall() || robotId != null
+
+    /**
+     * True, if this field blocks a vertical laser from *entering* the field
+     */
+    fun blocksHorizontalLaserEntry(entryDirection: Direction) = blocksHorizontalLaser()
+            && hasDirection(entryDirection)
+
+    /**
+     * True, if this field blocks a vertical laser from *exiting* the field
+     */
+    fun blocksHorizontalLaserExit(entryDirection: Direction) = blocksHorizontalLaser()
+            && hasDirection(entryDirection.toOpposite()) || robotId != null
 
     /**
      * Returns the FieldElement to apply to any fields that might be in line of this lasser type
