@@ -216,7 +216,7 @@ interface Field : Entity<Field> {
      * True, if this field blocks a vertical laser from *exiting* the field
      */
     fun blocksVerticalLaserExit(entryDirection: Direction) = blocksVerticalLaser()
-            && hasDirection(entryDirection.toOpposite()) || robotId != null
+            && hasDirection(entryDirection.toOpposite())
 
     /**
      * True, if this field blocks a vertical laser (either by walls or if a robot is on it)
@@ -233,7 +233,7 @@ interface Field : Entity<Field> {
      * True, if this field blocks a vertical laser from *exiting* the field
      */
     fun blocksHorizontalLaserExit(entryDirection: Direction) = blocksHorizontalLaser()
-            && hasDirection(entryDirection.toOpposite()) || robotId != null
+            && hasDirection(entryDirection.toOpposite())
 
     /**
      * Returns the FieldElement to apply to any fields that might be in line of this lasser type

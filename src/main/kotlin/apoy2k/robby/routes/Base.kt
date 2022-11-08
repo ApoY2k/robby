@@ -78,7 +78,7 @@ fun Route.base(
                     it.id = 2
                     it.facing = Direction.RIGHT
                 }
-                board.fieldAt(0, 2).robotId = robot1.id
+                board.fieldAt(5, 2).robotId = robot1.id
                 board.fieldAt(3, 0).robotId = robot2.id
                 robots.addAll(listOf(robot1, robot2))
                 board
@@ -89,14 +89,14 @@ fun Route.base(
                 board.assignIds()
                 val robot1 = Robot.new(RobotModel.ZIPPY).also {
                     it.id = 1
-                    it.facing = Direction.LEFT
+                    it.facing = Direction.UP
                 }
                 val robot2 = Robot.new(RobotModel.KLAUS).also {
                     it.id = 2
                     it.facing = Direction.RIGHT
                 }
                 board.fieldAt(14, 5).robotId = robot1.id
-                board.fieldAt(5, 5).robotId = robot2.id
+                board.fieldAt(2, 5).robotId = robot2.id
                 robots.addAll(listOf(robot1, robot2))
                 board
             }

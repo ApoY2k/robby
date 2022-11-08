@@ -185,11 +185,16 @@ div.overlay-laser_h::after, div.overlay-laser_v::after {
     background-image: url("/assets/icons/overlay-laser.png");
 }
 
+div.overlay-robot_laser_h::after, div.overlay-robot_laser_v::after {
+    background-image: url("/assets/icons/overlay-robot_laser.png");
+}
+
 div.overlay-laser_2_h::after, div.overlay-laser_2_v::after {
     background-image: url("/assets/icons/overlay-laser_2.png");
 }
 
-div.overlay-laser_h::after, div.overlay-laser_2_h::after {
+div.overlay-laser_h::after, div.overlay-laser_2_h::after,
+div.overlay-robot_laser_h::after, div.overlay-robot_laser_2_h::after {
     transform: rotate(90deg);
 }
 

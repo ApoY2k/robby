@@ -25,7 +25,7 @@ fun generateLaserTestBoard() = listOf(
     ),
     listOf(
         Field.new(),
-        Field.new(FieldElement.WALL, Direction.LEFT),
+        Field.new(FieldElement.WALL, Direction.RIGHT),
         Field.new(FieldElement.LASER, Direction.DOWN),
         Field.new(FieldElement.LASER_2, Direction.DOWN),
     ),

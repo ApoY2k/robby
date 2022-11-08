@@ -318,7 +318,7 @@ class BoardEngineTest {
         val klaus = Robot.new(RobotModel.KLAUS).also { it.id = 2 }
 
         val board = listOf(
-            listOf(Field.new(FieldElement.LASER, Direction.DOWN), Field.new()),
+            listOf(Field.new(FieldElement.LASER, Direction.UP), Field.new()),
             listOf(Field.new(), Field.new()),
             listOf(Field.new(), Field.new()),
             listOf(Field.new(), Field.new()),
@@ -340,13 +340,13 @@ class BoardEngineTest {
     fun `laser overlay applied`() {
         val board = listOf(
             listOf(
-                Field.new(FieldElement.LASER, Direction.DOWN),
-                Field.new(FieldElement.WALL, Direction.DOWN),
-                Field.new(FieldElement.LASER_2, Direction.DOWN)
+                Field.new(FieldElement.LASER, Direction.UP),
+                Field.new(FieldElement.WALL, Direction.UP),
+                Field.new(FieldElement.LASER_2, Direction.UP)
             ),
-            listOf(Field.new(), Field.new(FieldElement.LASER_2, Direction.UP), Field.new()),
+            listOf(Field.new(), Field.new(FieldElement.LASER_2, Direction.DOWN), Field.new()),
             listOf(Field.new(), Field.new(), Field.new()),
-            listOf(Field.new(), Field.new(FieldElement.LASER, Direction.UP), Field.new())
+            listOf(Field.new(), Field.new(FieldElement.LASER, Direction.DOWN), Field.new())
         )
         board.assignIds()
         board.updateLaserOverlays(emptySet())
@@ -363,8 +363,8 @@ class BoardEngineTest {
         board.updateLaserOverlays(setOf(robot1))
 
         assertContains(board.fieldAt(1, 0).elements, FieldElement.LASER_V)
-        assertTrue(board.fieldAt(2, 0).elements.none { it == FieldElement.LASER_V })
-        assertTrue(board.fieldAt(3, 0).elements.none { it == FieldElement.LASER_V })
+        assertContains(board.fieldAt(2, 0).elements, FieldElement.ROBOT_LASER_V)
+        assertContains(board.fieldAt(3, 0).elements, FieldElement.ROBOT_LASER_V)
     }
 
     @Test
@@ -419,6 +419,95 @@ class BoardEngineTest {
         board.fieldAt(0, 0).robotId = null
     }
 
+    @Test
+    fun `robots damage and block each other`() {
+        val board = listOf(
+            listOf(Field.new()),
+            listOf(Field.new()),
+            listOf(Field.new()),
+            listOf(Field.new()),
+        )
+        board.assignIds()
+
+        val robot1 = Robot.new(RobotModel.ZIPPY).also {
+            it.id = 1
+            it.facing = Direction.DOWN
+        }
+        val robot2 = Robot.new(RobotModel.KLAUS).also {
+            it.id = 2
+            it.facing = Direction.DOWN
+        }
+        val robot3 = Robot.new(RobotModel.GEROG).also {
+            it.id = 3
+            it.facing = Direction.UP
+        }
+        val robot4 = Robot.new(RobotModel.HUZZA).also {
+            it.id = 4
+            it.facing = Direction.UP
+        }
+        board.fieldAt(0, 0).robotId = robot1.id
+        board.fieldAt(1, 0).robotId = robot2.id
+        board.fieldAt(2, 0).robotId = robot3.id
+        board.fieldAt(3, 0).robotId = robot4.id
+
+        val robots = listOf(robot1, robot2, robot3, robot4)
+
+        board.updateLaserOverlays(robots)
+        board.fireRobotLasers(robots)
+
+        assertEquals(0, robot1.damage)
+        assertEquals(2, robot2.damage)
+        assertEquals(2, robot3.damage)
+        assertEquals(0, robot4.damage)
+    }
+
+    @Test
+    fun `multiple laser overlays compund damage`() {
+        val board = listOf(
+            listOf(Field.new(), Field.new(FieldElement.LASER, Direction.UP), Field.new()),
+            listOf(Field.new(), Field.new(), Field.new(FieldElement.LASER_2, Direction.RIGHT)),
+            listOf(Field.new(), Field.new(), Field.new()),
+        )
+        board.assignIds()
+
+        val robot1 = Robot.new(RobotModel.ZIPPY).also {
+            it.id = 1
+            it.facing = Direction.RIGHT
+        }
+        val robot2 = Robot.new(RobotModel.KLAUS).also {
+            it.id = 2
+            it.facing = Direction.RIGHT
+        }
+        val robot3 = Robot.new(RobotModel.KLAUS).also {
+            it.id = 3
+            it.facing = Direction.UP
+        }
+        board.fieldAt(1, 0).robotId = robot1.id
+        board.fieldAt(1, 1).robotId = robot2.id
+        board.fieldAt(2, 1).robotId = robot3.id
+
+        val robots = listOf(robot1, robot2, robot3)
+
+        board.updateLaserOverlays(robots)
+        board.fireLasers(FieldElement.LASER, robots)
+
+        assertEquals(0, robot1.damage)
+        assertEquals(1, robot2.damage)
+        assertEquals(0, robot3.damage)
+
+        board.fireLasers(FieldElement.LASER_2, robots)
+
+        assertEquals(0, robot1.damage)
+        assertEquals(3, robot2.damage)
+        assertEquals(0, robot3.damage)
+
+        board.fireRobotLasers(robots)
+
+        assertEquals(0, robot1.damage)
+        assertEquals(5, robot2.damage)
+        assertEquals(0, robot3.damage)
+    }
+
     @ParameterizedTest
     @MethodSource("provideLastLaserHitField")
     fun `find last laser hit field`(
@@ -468,31 +557,31 @@ class BoardEngineTest {
                 listOf(
                     Field.new(),
                     Field.new(FieldElement.WALL, Direction.DOWN),
-                    Field.new(FieldElement.LASER_2, Direction.DOWN)
+                    Field.new(FieldElement.LASER_2, Direction.UP)
                 ),
-                listOf(Field.new(), Field.new(FieldElement.LASER_2, Direction.UP), Field.new()),
+                listOf(Field.new(), Field.new(FieldElement.LASER_2, Direction.DOWN), Field.new()),
                 listOf(Field.new(), Field.new(), Field.new()),
-                listOf(Field.new(), Field.new(FieldElement.LASER, Direction.UP), Field.new())
+                listOf(Field.new(), Field.new(FieldElement.LASER, Direction.DOWN), Field.new())
             )
             laserBoard.assignIds()
             laserBoard.updateLaserOverlays(emptySet())
 
             return Stream.of(
-                Arguments.of(wallBoard, wallBoard.fieldAt(0, 0), Direction.RIGHT, wallBoard.fieldAt(0, 0)),
-                Arguments.of(wallBoard, wallBoard.fieldAt(1, 1), Direction.UP, wallBoard.fieldAt(0, 1)),
-                Arguments.of(wallBoard, wallBoard.fieldAt(1, 1), Direction.LEFT, wallBoard.fieldAt(1, 0)),
-                Arguments.of(wallBoard, wallBoard.fieldAt(0, 2), Direction.DOWN, wallBoard.fieldAt(3, 2)),
-                Arguments.of(wallBoard, wallBoard.fieldAt(3, 2), Direction.LEFT, wallBoard.fieldAt(3, 0)),
-                Arguments.of(wallBoard, wallBoard.fieldAt(3, 0), Direction.RIGHT, wallBoard.fieldAt(3, 2)),
-                Arguments.of(wallBoard, wallBoard.fieldAt(3, 1), Direction.UP, wallBoard.fieldAt(0, 1)),
                 Arguments.of(wallBoard, wallBoard.fieldAt(0, 0), Direction.LEFT, wallBoard.fieldAt(0, 0)),
-                Arguments.of(wallBoard, wallBoard.fieldAt(0, 0), Direction.UP, wallBoard.fieldAt(0, 0)),
-                Arguments.of(wallBoard, wallBoard.fieldAt(2, 2), Direction.RIGHT, wallBoard.fieldAt(2, 2)),
+                Arguments.of(wallBoard, wallBoard.fieldAt(1, 1), Direction.DOWN, wallBoard.fieldAt(0, 1)),
+                Arguments.of(wallBoard, wallBoard.fieldAt(1, 1), Direction.RIGHT, wallBoard.fieldAt(1, 0)),
+                Arguments.of(wallBoard, wallBoard.fieldAt(0, 2), Direction.UP, wallBoard.fieldAt(3, 2)),
+                Arguments.of(wallBoard, wallBoard.fieldAt(3, 2), Direction.RIGHT, wallBoard.fieldAt(3, 0)),
+                Arguments.of(wallBoard, wallBoard.fieldAt(3, 0), Direction.LEFT, wallBoard.fieldAt(3, 2)),
                 Arguments.of(wallBoard, wallBoard.fieldAt(3, 1), Direction.DOWN, wallBoard.fieldAt(3, 1)),
-                Arguments.of(robotBoard, robotBoard.fieldAt(0, 0), Direction.DOWN, robotBoard.fieldAt(2, 0)),
-                Arguments.of(robotBoard, robotBoard.fieldAt(3, 0), Direction.UP, robotBoard.fieldAt(2, 0)),
-                Arguments.of(laserBoard, laserBoard.fieldAt(3, 1), Direction.UP, laserBoard.fieldAt(2, 1)),
-                Arguments.of(laserBoard, laserBoard.fieldAt(0, 2), Direction.DOWN, laserBoard.fieldAt(3, 2)),
+                Arguments.of(wallBoard, wallBoard.fieldAt(0, 0), Direction.RIGHT, wallBoard.fieldAt(0, 0)),
+                Arguments.of(wallBoard, wallBoard.fieldAt(0, 0), Direction.DOWN, wallBoard.fieldAt(0, 0)),
+                Arguments.of(wallBoard, wallBoard.fieldAt(2, 2), Direction.LEFT, wallBoard.fieldAt(2, 2)),
+                Arguments.of(wallBoard, wallBoard.fieldAt(3, 1), Direction.UP, wallBoard.fieldAt(3, 1)),
+                Arguments.of(robotBoard, robotBoard.fieldAt(0, 0), Direction.UP, robotBoard.fieldAt(2, 0)),
+                Arguments.of(robotBoard, robotBoard.fieldAt(3, 0), Direction.DOWN, robotBoard.fieldAt(2, 0)),
+                Arguments.of(laserBoard, laserBoard.fieldAt(3, 1), Direction.DOWN, laserBoard.fieldAt(2, 1)),
+                Arguments.of(laserBoard, laserBoard.fieldAt(0, 2), Direction.UP, laserBoard.fieldAt(3, 2)),
             )
         }
 

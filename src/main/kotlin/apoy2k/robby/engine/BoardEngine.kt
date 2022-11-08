@@ -247,20 +247,20 @@ fun Board.fireLasers(type: FieldElement, robots: Collection<Robot>) = flatten()
     .forEach { field ->
         val robot = robots.firstOrNull { field.robotId == it.id } ?: return@forEach
 
-        if (type == FieldElement.LASER
-            && (field.elements.contains(FieldElement.LASER)
-                    || field.elements.contains(FieldElement.LASER_H)
-                    || field.elements.contains(FieldElement.LASER_V))
-        ) {
-            robot.damage = Integer.min(10, robot.damage + 1)
+        if (type == FieldElement.LASER) {
+            field.elements.forEach {
+                if (it == FieldElement.LASER || it == FieldElement.LASER_H || it == FieldElement.LASER_V) {
+                    robot.damage = Integer.min(10, robot.damage + 1)
+                }
+            }
         }
 
-        if (type == FieldElement.LASER_2
-            && (field.elements.contains(FieldElement.LASER_2)
-                    || field.elements.contains(FieldElement.LASER_2_H)
-                    || field.elements.contains(FieldElement.LASER_2_V))
-        ) {
-            robot.damage = Integer.min(10, robot.damage + 2)
+        if (type == FieldElement.LASER_2) {
+            field.elements.forEach {
+                if (it == FieldElement.LASER_2 || it == FieldElement.LASER_2_H || it == FieldElement.LASER_2_V) {
+                    robot.damage = Integer.min(10, robot.damage + 2)
+                }
+            }
         }
     }
 
@@ -270,30 +270,37 @@ fun Board.fireLasers(type: FieldElement, robots: Collection<Robot>) = flatten()
 fun Board.fireRobotLasers(robots: Collection<Robot>) = flatten()
     .forEach { field ->
         val robot = robots.firstOrNull { field.robotId == it.id } ?: return@forEach
-
-        if (field.elements.contains(FieldElement.ROBOT_LASER_H)
-            || field.elements.contains(FieldElement.ROBOT_LASER_V)
-        ) {
-            robot.damage = Integer.min(10, robot.damage + 1)
+        field.elements.forEach {
+            if (it == FieldElement.ROBOT_LASER_H || it == FieldElement.ROBOT_LASER_V) {
+                robot.damage = Integer.min(10, robot.damage + 1)
+            }
         }
     }
 
 /**
  * Finds the last field a laser can hit, starting from a field and going in a direciton until any blocking element
  * is encountered.
+ * **CAREFUL**: The **direction** provided to this method is interpreted as being the **position of the wall**
+ * a laser originated from, **not** the cardinal direction the laser **travels**!
+ * So, to determine the last field in a direction, the parameter for this functions must be passed as the **opposite**
+ * of that direction!
  * @return The last field that is considered "hit" by the laser.
  */
 fun Board.findLastLaserHitField(startField: Field, direction: Direction): Field {
     val startPos = positionOf(startField)
 
     if (direction == Direction.LEFT) {
+        if (startField.blocksHorizontalLaserExit(Direction.LEFT)) {
+            return startField
+        }
+
         for (col in startPos.col + 1 until this[startPos.row].size) {
             val field = fieldAt(Position(startPos.row, col))
             if (field.blocksHorizontalLaserEntry(Direction.LEFT)) {
                 return fieldAt(Position(startPos.row, col - 1))
             }
 
-            if (field.blocksHorizontalLaserExit(Direction.LEFT)) {
+            if (field.blocksHorizontalLaserExit(Direction.LEFT) || field.robotId != null) {
                 return fieldAt(Position(startPos.row, col))
             }
         }
@@ -302,14 +309,18 @@ fun Board.findLastLaserHitField(startField: Field, direction: Direction): Field 
     }
 
     if (direction == Direction.RIGHT) {
+        if (startField.blocksHorizontalLaserExit(Direction.RIGHT)) {
+            return startField
+        }
+
         for (col in startPos.col - 1 downTo 0) {
             val field = fieldAt(Position(startPos.row, col))
             if (field.blocksHorizontalLaserEntry(Direction.RIGHT)) {
-                return fieldAt(Position(startPos.row, col))
+                return fieldAt(Position(startPos.row, col + 1))
             }
 
-            if (field.blocksHorizontalLaserExit(Direction.RIGHT)) {
-                return fieldAt(Position(startPos.row, col + 1))
+            if (field.blocksHorizontalLaserExit(Direction.RIGHT) || field.robotId != null) {
+                return fieldAt(Position(startPos.row, col))
             }
         }
 
@@ -317,13 +328,17 @@ fun Board.findLastLaserHitField(startField: Field, direction: Direction): Field 
     }
 
     if (direction == Direction.UP) {
+        if (startField.blocksVerticalLaserExit(Direction.UP)) {
+            return startField
+        }
+
         for (row in startPos.row + 1 until size) {
             val field = fieldAt(Position(row, startPos.col))
             if (field.blocksVerticalLaserEntry(Direction.UP)) {
                 return fieldAt(Position(row - 1, startPos.col))
             }
 
-            if (field.blocksVerticalLaserExit(Direction.UP)) {
+            if (field.blocksVerticalLaserExit(Direction.UP) || field.robotId != null) {
                 return fieldAt(Position(row, startPos.col))
             }
         }
@@ -332,13 +347,17 @@ fun Board.findLastLaserHitField(startField: Field, direction: Direction): Field 
     }
 
     if (direction == Direction.DOWN) {
+        if (startField.blocksVerticalLaserExit(Direction.DOWN)) {
+            return startField
+        }
+
         for (row in startPos.row - 1 downTo 0) {
             val field = fieldAt(Position(row, startPos.col))
             if (field.blocksVerticalLaserEntry(Direction.DOWN)) {
                 return fieldAt(Position(row + 1, startPos.col))
             }
 
-            if (field.blocksVerticalLaserExit(Direction.DOWN)) {
+            if (field.blocksVerticalLaserExit(Direction.DOWN) || field.robotId != null) {
                 return fieldAt(Position(row, startPos.col))
             }
         }
@@ -481,10 +500,10 @@ private fun Board.addLaserOverlay(sourceField: Field, direction: Direction, elem
     // all fields on the way to the map edge
 
     val fields = when (direction) {
-        Direction.RIGHT -> (endPos.col..startPos.col).map { fieldAt(Position(startPos.row, it)) }
-        Direction.LEFT -> (startPos.col..endPos.col).map { fieldAt(Position(startPos.row, it)) }
-        Direction.DOWN -> (endPos.row..startPos.row).map { fieldAt(Position(it, startPos.col)) }
-        Direction.UP -> (startPos.row..endPos.row).map { fieldAt(Position(it, startPos.col)) }
+        Direction.RIGHT -> (endPos.col until startPos.col).map { fieldAt(Position(startPos.row, it)) }
+        Direction.LEFT -> (startPos.col + 1..endPos.col).map { fieldAt(Position(startPos.row, it)) }
+        Direction.DOWN -> (endPos.row until startPos.row).map { fieldAt(Position(it, startPos.col)) }
+        Direction.UP -> (startPos.row + 1..endPos.row).map { fieldAt(Position(it, startPos.col)) }
     }
 
     // Then apply the laser condition of the source laser field to all fields in the

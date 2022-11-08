@@ -125,7 +125,7 @@ interface Robot : Entity<Robot> {
      * on the board when applying laser element
      */
     fun getInLineLaserFieldElements(): FieldElement? = when (facing) {
-        Direction.UP, Direction.DOWN -> FieldElement.LASER_V
-        Direction.RIGHT, Direction.LEFT -> FieldElement.LASER_H
+        Direction.UP, Direction.DOWN -> FieldElement.ROBOT_LASER_V
+        Direction.RIGHT, Direction.LEFT -> FieldElement.ROBOT_LASER_H
     }
 }
