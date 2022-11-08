@@ -15,39 +15,36 @@ class FieldTest {
     @MethodSource("provideBlocksLaser")
     fun `blocks laser directions`(
         field: Field,
-        isVertical: Boolean,
+        direction: Direction,
+        entry: Boolean,
         expectBlock: Boolean
     ) {
-        val result = when (isVertical) {
-            V -> field.blocksVerticalLaser()
-            H -> field.blocksHorizontalLaser()
-            else -> throw Exception("Unknow laser direction")
+        val result = when (direction) {
+            Direction.LEFT, Direction.RIGHT -> when (entry) {
+                true -> field.blocksHorizontalLaserEntry(direction)
+                false -> field.blocksHorizontalLaserExit(direction)
+            }
+
+            Direction.UP, Direction.DOWN -> when (entry) {
+                true -> field.blocksVerticalLaserEntry(direction)
+                false -> field.blocksVerticalLaserExit(direction)
+            }
         }
+
         assertEquals(expectBlock, result)
     }
 
     companion object {
-        @JvmStatic
-        val V = true
-
-        @JvmStatic
-        val H = false
 
         @JvmStatic
         fun provideBlocksLaser(): Stream<Arguments> = Stream.of(
-            Arguments.of(Field.new(), H, false),
-            Arguments.of(Field.new(), V, false),
-            Arguments.of(Field.new(FieldElement.WALL, Direction.DOWN), V, true),
-            Arguments.of(Field.new(FieldElement.WALL, Direction.DOWN), H, false),
-            Arguments.of(Field.new(FieldElement.WALL, Direction.RIGHT, Direction.UP), V, true),
-            Arguments.of(Field.new(FieldElement.WALL, Direction.RIGHT, Direction.UP), H, true),
-            Arguments.of(Field.new(FieldElement.WALL, Direction.LEFT), V, false),
-            Arguments.of(Field.new(FieldElement.LASER, Direction.LEFT), V, false),
-            Arguments.of(Field.new(FieldElement.LASER, Direction.LEFT), H, true),
-            Arguments.of(Field.new(FieldElement.LASER_2, Direction.UP), V, true),
-            Arguments.of(Field.new(FieldElement.LASER_2, Direction.UP), H, false),
-            Arguments.of(Field.new(FieldElement.PUSHER, Direction.LEFT), V, false),
-            Arguments.of(Field.new(FieldElement.PUSHER, Direction.LEFT), H, true),
+            Arguments.of(Field.new(), Direction.LEFT, false, false),
+            Arguments.of(Field.new(), Direction.RIGHT, false, false),
+            Arguments.of(Field.new(FieldElement.WALL, Direction.DOWN), Direction.UP, true, false),
+            Arguments.of(Field.new(FieldElement.WALL, Direction.DOWN), Direction.DOWN, false, false),
+            Arguments.of(Field.new(FieldElement.WALL, Direction.RIGHT, Direction.UP), Direction.LEFT, true, false),
+            Arguments.of(Field.new(FieldElement.WALL, Direction.RIGHT, Direction.UP), Direction.UP, true, true),
+            Arguments.of(Field.new(FieldElement.LASER_2, Direction.LEFT), Direction.RIGHT, false, true),
         )
     }
 }

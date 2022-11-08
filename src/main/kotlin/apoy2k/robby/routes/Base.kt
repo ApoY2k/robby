@@ -73,10 +73,12 @@ fun Route.base(
                 val robot1 = Robot.new(RobotModel.ZIPPY).also {
                     it.id = 1
                     it.facing = Direction.LEFT
+                    it.damage = 8
                 }
                 val robot2 = Robot.new(RobotModel.KLAUS).also {
                     it.id = 2
                     it.facing = Direction.RIGHT
+                    it.damage = 3
                 }
                 board.fieldAt(5, 2).robotId = robot1.id
                 board.fieldAt(3, 0).robotId = robot2.id
@@ -90,10 +92,12 @@ fun Route.base(
                 val robot1 = Robot.new(RobotModel.ZIPPY).also {
                     it.id = 1
                     it.facing = Direction.UP
+                    it.damage = 8
                 }
                 val robot2 = Robot.new(RobotModel.KLAUS).also {
                     it.id = 2
                     it.facing = Direction.RIGHT
+                    it.damage = 3
                 }
                 board.fieldAt(14, 5).robotId = robot1.id
                 board.fieldAt(2, 5).robotId = robot2.id

@@ -202,38 +202,28 @@ interface Field : Entity<Field> {
             && (elements.contains(FieldElement.WALL) || applianceElements.any { elements.contains(it) })
 
     /**
-     * True, if this field blocks a vertical laser (either by walls or if a robot is on it)
-     */
-    fun blocksVerticalLaser() = hasHorizontalWall() || robotId != null
-
-    /**
      * True, if this field blocks a vertical laser from *entering* the field
      */
-    fun blocksVerticalLaserEntry(entryDirection: Direction) = blocksVerticalLaser()
-            && hasDirection(entryDirection)
+    fun blocksVerticalLaserEntry(entryDirection: Direction) = hasHorizontalWall()
+            && (robotId != null || hasDirection(entryDirection))
 
     /**
      * True, if this field blocks a vertical laser from *exiting* the field
      */
-    fun blocksVerticalLaserExit(entryDirection: Direction) = blocksVerticalLaser()
-            && hasDirection(entryDirection.toOpposite())
-
-    /**
-     * True, if this field blocks a vertical laser (either by walls or if a robot is on it)
-     */
-    fun blocksHorizontalLaser() = hasVerticalWall() || robotId != null
+    fun blocksVerticalLaserExit(entryDirection: Direction) = hasHorizontalWall()
+            && (robotId != null || hasDirection(entryDirection.toOpposite()))
 
     /**
      * True, if this field blocks a vertical laser from *entering* the field
      */
-    fun blocksHorizontalLaserEntry(entryDirection: Direction) = blocksHorizontalLaser()
-            && hasDirection(entryDirection)
+    fun blocksHorizontalLaserEntry(entryDirection: Direction) = hasVerticalWall()
+            && (robotId != null || hasDirection(entryDirection))
 
     /**
      * True, if this field blocks a vertical laser from *exiting* the field
      */
-    fun blocksHorizontalLaserExit(entryDirection: Direction) = blocksHorizontalLaser()
-            && hasDirection(entryDirection.toOpposite())
+    fun blocksHorizontalLaserExit(entryDirection: Direction) = hasVerticalWall()
+            && (robotId != null || hasDirection(entryDirection.toOpposite()))
 
     /**
      * Returns the FieldElement to apply to any fields that might be in line of this lasser type
