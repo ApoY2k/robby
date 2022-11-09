@@ -17,6 +17,7 @@ import org.ktorm.database.Database
 import org.ktorm.dsl.and
 import org.ktorm.dsl.batchUpdate
 import org.ktorm.dsl.eq
+import org.ktorm.dsl.update
 import org.ktorm.entity.*
 import org.slf4j.LoggerFactory
 import java.time.Clock
@@ -360,6 +361,10 @@ class GameEngine(
                 it.robotId = null
             }
             database.fields.update(it)
+        }
+        database.update(MovementCards) {
+            set(it.robotId, null)
+            where { it.robotId eq robotId }
         }
         database.robots.removeIf { it.id eq robotId }
     }
