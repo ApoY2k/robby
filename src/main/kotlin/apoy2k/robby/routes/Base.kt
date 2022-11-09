@@ -76,11 +76,13 @@ fun Route.base(
                 val board = generateLaserTestBoard().also { it.assignIds() }
                 val robot1 = Robot.new(RobotModel.ZIPPY).also {
                     it.id = 1
+                    it.passedCheckpoints = 1
                     it.facing = Direction.LEFT
                     it.damage = 8
                 }
                 val robot2 = Robot.new(RobotModel.KLAUS).also {
                     it.id = 2
+                    it.passedCheckpoints = 2
                     it.facing = Direction.RIGHT
                     it.damage = 3
                 }

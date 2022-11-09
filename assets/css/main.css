@@ -51,7 +51,8 @@ a.card:hover {
 .field[class*="laser"]::after,
 .field[class*="belt"]::after,
 .field[class*="pusher"]::after,
-div[class*="overlay"]::after {
+div[class*="overlay"]::after,
+div[class*="damage"]::after {
     content: "";
     display: block;
     position: absolute;
@@ -272,6 +273,55 @@ div.overlay-start_7::after {
 
 div.overlay-start_8::after {
     content: "🚦8";
+}
+
+div[class*="damage"]::after {
+    opacity: 1;
+    background-position: bottom;
+}
+
+div.damage-0::after {
+    background-image: url("/assets/icons/damage-0.png");
+}
+
+div.damage-1::after {
+    background-image: url("/assets/icons/damage-1.png");
+}
+
+div.damage-2::after {
+    background-image: url("/assets/icons/damage-2.png");
+}
+
+div.damage-3::after {
+    background-image: url("/assets/icons/damage-3.png");
+}
+
+div.damage-4::after {
+    background-image: url("/assets/icons/damage-4.png");
+}
+
+div.damage-5::after {
+    background-image: url("/assets/icons/damage-5.png");
+}
+
+div.damage-6::after {
+    background-image: url("/assets/icons/damage-6.png");
+}
+
+div.damage-7::after {
+    background-image: url("/assets/icons/damage-7.png");
+}
+
+div.damage-8::after {
+    background-image: url("/assets/icons/damage-8.png");
+}
+
+div.damage-9::after {
+    background-image: url("/assets/icons/damage-9.png");
+}
+
+div.damage-10::after {
+    background-image: url("/assets/icons/damage-10.png");
 }
 
 .robot {
