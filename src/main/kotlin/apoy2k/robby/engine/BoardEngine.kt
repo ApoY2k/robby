@@ -35,9 +35,10 @@ fun List<Field>.toBoard(): Board {
 /**
  * Generate IDs for all fields, only used for unit testing
  */
-fun List<List<Field>>.assignIds() = this.flatten().forEachIndexed { idx, field ->
-    field.id = idx
-}
+fun List<List<Field>>.assignIds() = flatten()
+    .forEachIndexed { idx, field ->
+        field.id = idx
+    }
 
 /**
  * Execute a single movement card with the associated robot.
@@ -193,8 +194,11 @@ fun Board.touchModifications(robots: Collection<Robot>) = flatten()
  * **Modifies fields!**
  */
 fun Board.placeRobot(robotId: Int) {
-    flatten()
-        .filter { it.hasStart() && it.robotId == null }
+    val startFields = flatten().filter { it.hasStart() && it.robotId == null }
+    if (startFields.isEmpty()) {
+        throw Exception("No empty start fields available")
+    }
+    startFields
         .minBy { it.getStartNumber() }
         .robotId = robotId
 }
@@ -385,8 +389,6 @@ private fun Board.positionOf(robotId: Int): Position {
  * @return the indices (row/col) of the provided field
  */
 private fun Board.positionOf(field: Field): Position {
-    // TODO For this to work reliably, the fields *must* have IDs - could there be a better way to handle this
-    // even for fields without IDs?
     val row = indexOfFirst { it.contains(field) }
     return Position(row, this[row].indexOf(field))
 }

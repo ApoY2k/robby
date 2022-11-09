@@ -14,9 +14,7 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import org.ktorm.database.Database
-import org.ktorm.dsl.and
-import org.ktorm.dsl.batchUpdate
-import org.ktorm.dsl.eq
+import org.ktorm.dsl.*
 import org.ktorm.entity.*
 import org.slf4j.LoggerFactory
 import java.time.Clock
@@ -51,21 +49,21 @@ class GameEngine(
                 return@onEach
             }
 
-            try {
-                logger.debug("Received $action")
+            logger.debug("Received $action")
 
-                val board = database.fields.filter { it.gameId eq game.id }.map { it }.toBoard()
-                val robots = database.robots.filter { it.gameId eq game.id }.map { it }
+            val board = database.fields.filter { it.gameId eq game.id }.map { it }.toBoard()
+            val robots = database.robots.filter { it.gameId eq game.id }.map { it }
 
-                // Perform the action and run automatic registers and actions
-                // with ViewUpdates in a separate coroutine so the channel isn't blocked
-                launch {
+            // Perform the action and run automatic registers and actions
+            // with ViewUpdates in a separate coroutine so the channel isn't blocked
+            launch {
+                try {
                     perform(action, board, robots)
                     updates.emit(ViewUpdate(game.id))
                     runEngine(game, board, robots)
+                } catch (err: Throwable) {
+                    logger.error("Error executing $action: $err", err)
                 }
-            } catch (err: Throwable) {
-                logger.error("Error executing $action: $err", err)
             }
         }.launchIn(this)
     }
@@ -82,14 +80,17 @@ class GameEngine(
         val game = action.game ?: throw IncompleteAction("No game attached to $action")
 
         if (action.label == ActionLabel.JOIN_GAME) {
-            val model = action.getString(ActionField.ROBOT_MODEL) ?: throw IncompleteAction("No robot model specified")
+            val model = action.getString(ActionField.ROBOT_MODEL)
+                ?: throw IncompleteAction("No robot model specified")
+            val facing = action.getString(ActionField.ROBOT_FACING)
+                ?: throw IncompleteAction("No orientation specified")
 
             val robotCount = database.robots.count { it.gameId eq game.id }
             if (game.maxRobots <= robotCount) {
                 return
             }
 
-            val robot = addRobot(game.id, user.name, user.id, RobotModel.valueOf(model))
+            val robot = addRobot(game.id, user.name, user.id, RobotModel.valueOf(model), Direction.valueOf(facing))
             board.placeRobot(robot.id)
             board.flatten().forEach { database.fields.update(it) }
             return
@@ -102,7 +103,7 @@ class GameEngine(
         }
 
         when (action.label) {
-            ActionLabel.LEAVE_GAME -> removeRobot(robot.id)
+            ActionLabel.LEAVE_GAME -> removeRobot(game.id, robot.id)
             ActionLabel.TOGGLE_READY -> robotEngine.toggleReady(robot)
             ActionLabel.TOGGLE_POWERDOWN -> robotEngine.togglePowerDown(robot)
 
@@ -179,9 +180,7 @@ class GameEngine(
             return
         }
 
-        val allReady = database.robots
-            .filter { it.gameId eq game.id }
-            .all { it.ready eq true }
+        val allReady = robots.isNotEmpty() && robots.all { it.ready }
 
         // Check conditions for running automatic registers are fulfilled
         if (!allReady) {
@@ -351,12 +350,18 @@ class GameEngine(
         delay(GAME_ENGINE_STEP_DELAY)
     }
 
-    private fun removeRobot(robotId: Int) {
+    private fun removeRobot(gameId: Int, robotId: Int) {
+        database.update(Fields) {
+            set(it.robotId, null)
+            where {
+                it.gameId eq gameId and it.robotId.isNotNull()
+            }
+        }
         database.robots.removeIf { it.id eq robotId }
     }
 
-    private fun addRobot(gameId: Int, name: String, userId: Int, model: RobotModel): Robot {
-        val robot = robotEngine.createNewRobot(gameId, name, userId, model)
+    private fun addRobot(gameId: Int, name: String, userId: Int, model: RobotModel, facing: Direction): Robot {
+        val robot = robotEngine.createNewRobot(gameId, name, userId, model, facing)
         robotEngine.drawCards(gameId, robot)
         return robot
     }

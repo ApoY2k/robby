@@ -32,7 +32,7 @@ class ViewUpdateRouter(
      * Keeps a map of existing gameId -> http session -> websocket sessions relations
      * which can be used to send the viewupdates, rendered in the context of the http session, per game
      */
-    private val sessions: MutableMap<Int, MutableMap<Session, MutableCollection<WebSocketSession>>> = mutableMapOf()
+    private val sessions: MutableMap<Int, MutableMap<WebSocketSession, Session?>> = mutableMapOf()
 
     /**
      * Start listening for view updates to send out tp the registered websocket sessions
@@ -50,8 +50,8 @@ class ViewUpdateRouter(
                 val board = fields.toBoard()
                 val robots = database.robots.filter { it.gameId eq game.id }.map { it }
 
-                gameSessions.forEach { (httpSession, wsSessions) ->
-                    val user = database.users.find { it.id eq (httpSession.userId ?: -1) }
+                gameSessions.forEach { (wsSession, httpSession) ->
+                    val user = database.users.find { it.id eq (httpSession?.userId ?: -1) }
                     val robot = robots.find { user != null && it.userId == user.id }
                     val cards = when (robot != null) {
                         true -> database.cards
@@ -67,12 +67,10 @@ class ViewUpdateRouter(
                         .appendHTML(false)
                         .html { body { insert(gameView) {} } }
                         .toString()
-                    val frame = Frame.Text(html)
 
-                    wsSessions.forEach { wsSession ->
-                        logger.debug("Sending ViewUpdate of Game(${update.gameId}) to $httpSession")
-                        wsSession.send(frame)
-                    }
+                    val frame = Frame.Text(html)
+                    logger.debug("Sending ViewUpdate of Game(${update.gameId}) to $httpSession over $wsSession")
+                    wsSession.send(frame)
                 }
             } catch (err: Throwable) {
                 logger.error("Error sending ViewUpdate: ${err.message}", err)
@@ -80,25 +78,16 @@ class ViewUpdateRouter(
         }.launchIn(this)
     }
 
-    fun addSession(gameId: Int, httpSession: Session, wsSession: WebSocketSession) {
-        logger.debug("Adding new WebSocketSession of $httpSession to Game($gameId) listeners")
+    fun addSession(gameId: Int, wsSession: WebSocketSession, httpSession: Session?) {
+        logger.debug("Adding $wsSession of $httpSession to Game($gameId) listeners")
         val gameSessions = sessions[gameId] ?: mutableMapOf()
-        val wsSessions = gameSessions[httpSession] ?: mutableSetOf()
-        wsSessions.add(wsSession)
-        gameSessions[httpSession] = wsSessions
+        gameSessions[wsSession] = httpSession
         sessions[gameId] = gameSessions
     }
 
-    fun removeSession(gameId: Int, httpSession: Session, wsSession: WebSocketSession) {
-        logger.debug("Removing WebSocketSession of $httpSession from Game($gameId) listeners")
+    fun removeSession(gameId: Int, wsSession: WebSocketSession) {
+        logger.debug("Removing $wsSession from Game($gameId) listeners")
         val gameSessions = sessions[gameId] ?: mutableMapOf()
-        val wsSessions = gameSessions[httpSession] ?: mutableSetOf()
-        wsSessions.remove(wsSession)
-        if (wsSessions.isEmpty()) {
-            gameSessions.remove(httpSession)
-        }
-        if (gameSessions.isEmpty()) {
-            sessions.remove(gameId)
-        }
+        gameSessions.remove(wsSession)
     }
 }

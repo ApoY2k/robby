@@ -157,13 +157,14 @@ class RobotEngine(
     /**
      * Createa new robot in a game for a session
      */
-    fun createNewRobot(gameId: Int, name: String, userId: Int, model: RobotModel): Robot {
+    fun createNewRobot(gameId: Int, name: String, userId: Int, model: RobotModel, facing: Direction): Robot {
         if (name.isBlank()) throw IncompleteAction("No name provided")
         if (database.robots.any { it.gameId eq gameId and (it.userId eq userId) })
             throw InvalidGameState("$name already has a Robot in this game")
 
         val robot = Robot.new(model, name, userId).also {
             it.gameId = gameId
+            it.facing = facing
         }
 
         database.robots.add(robot)

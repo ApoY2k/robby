@@ -18,6 +18,7 @@ enum class ActionField {
     ROBOT_MODEL,
     CARD_ID,
     REGISTER,
+    ROBOT_FACING,
 }
 
 /**
@@ -57,10 +58,11 @@ data class Action(
             )
         }
 
-        fun joinGame(model: RobotModel? = null) = Action(
+        fun joinGame(model: RobotModel? = null, facing: Direction? = null) = Action(
             ActionLabel.JOIN_GAME,
             listOf(
-                BasicNameValuePair(ActionField.ROBOT_MODEL.name, model?.name.orEmpty())
+                BasicNameValuePair(ActionField.ROBOT_MODEL.name, model?.name.orEmpty()),
+                BasicNameValuePair(ActionField.ROBOT_FACING.name, facing?.name.orEmpty()),
             )
         )
 

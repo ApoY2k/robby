@@ -86,13 +86,12 @@ fun Route.game(
 
     webSocket(Location.GAME_WEBSOCKET.path) {
         val session = call.sessions.get<Session>()
-            ?: throw Exception("No session for websocket found")
         val gameId = call.parameters["id"]?.toInt()
             ?: throw Exception("No game id found")
         val game = database.games.find { it.id eq gameId }
             ?: throw Exception("No game with id $gameId found, aborting websocket session")
 
-        viewUpdateRouter.addSession(gameId, session, this)
+        viewUpdateRouter.addSession(gameId, this, session)
 
         // This will block the thread while listening for incoming messages
         incoming.consumeEach { frame ->
@@ -119,12 +118,12 @@ fun Route.game(
         }
 
         // At this point, the websocket connection was aborted (by either client or server)
-        viewUpdateRouter.removeSession(gameId, session, this)
+        viewUpdateRouter.removeSession(gameId, this)
     }
 
     get(Location.GAME_IMAGE.path) {
         // TODO: generate image preview of game state
-        val dummy = javaClass.getResource("/assets/dummy-board-preview.png").toURI()
+        val dummy = javaClass.getResource("/assets/dummy-board-preview.png")?.toURI()!!
         call.respondFile(File(dummy))
     }
 }

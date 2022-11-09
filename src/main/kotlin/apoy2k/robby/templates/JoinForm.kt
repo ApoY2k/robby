@@ -36,13 +36,32 @@ fun HtmlBlockTag.renderJoinForm(
                         }
 
                         attributes["data-action"] = Action.joinGame().serializeForSocket()
-                        p { +"The game is open to join." }
-                        p { +"Select a robot" }
-                        select("form-control") {
+                        p { +"Join this game" }
+                        select("form-control mb-3") {
                             attributes["name"] = ActionField.ROBOT_MODEL.name
+
+                            option {
+                                attributes["selected"] = "selected"
+                                attributes["disabled"] = "disabled"
+                                +"Choose Robot Model"
+                            }
 
                             RobotModel.values()
                                 .filter { model -> !robots.map { it.model }.contains(model) }
+                                .forEach {
+                                    option { +it.name }
+                                }
+                        }
+                        select("form-control mb-3") {
+                            attributes["name"] = ActionField.ROBOT_FACING.name
+
+                            option {
+                                attributes["selected"] = "selected"
+                                attributes["disabled"] = "disabled"
+                                +"Choose Starting Orientation"
+                            }
+
+                            Direction.values()
                                 .forEach {
                                     option { +it.name }
                                 }

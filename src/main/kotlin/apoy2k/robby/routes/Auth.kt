@@ -42,6 +42,8 @@ fun Route.auth(
                                         span("input-group-text") { +"Username" }
                                         input(InputType.text, name = "username", classes = "form-control")
                                     }
+                                }
+                                div("col") {
                                     div("input-group") {
                                         span("input-group-text") { +"Password" }
                                         input(InputType.password, name = "password", classes = "form-control")

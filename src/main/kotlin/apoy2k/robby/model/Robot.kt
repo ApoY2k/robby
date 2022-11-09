@@ -8,6 +8,10 @@ enum class RobotModel {
     GEROG,
     KLAUS,
     HUZZA,
+    LIZZY,
+    CHLOE,
+    MINNA,
+    OLLI,
 }
 
 @Suppress("unused")
