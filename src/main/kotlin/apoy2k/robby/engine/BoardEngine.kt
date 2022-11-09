@@ -221,9 +221,8 @@ fun Board.updateLaserOverlays(robots: Collection<Robot>) = flatten()
         it.hasLaserEmitter()
     }
     .forEach { sourceField ->
-        val robotId = sourceField.robotId
-        if (robotId != null) {
-            val robot = robots.first { it.id == robotId }
+        val robot = robots.firstOrNull { it.id == sourceField.robotId }
+        if (robot != null) {
             val element = robot.getInLineLaserFieldElements() ?: return@forEach
 
             // For robots, the direction of firing lasers is reversed, as the algorithm for updating the laser

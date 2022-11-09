@@ -14,7 +14,8 @@ class ActionsTest {
             Action.joinGame(RobotModel.ZIPPY).also { it.game = game },
             Action.deserializeFromSocket(
                 "${ActionField.LABEL}=${ActionLabel.JOIN_GAME}&" +
-                        "${ActionField.ROBOT_MODEL}=${RobotModel.ZIPPY.name}"
+                        "${ActionField.ROBOT_MODEL}=${RobotModel.ZIPPY.name}&" +
+                        "${ActionField.ROBOT_FACING}=${Direction.DOWN.name}"
             )
         )
     }

@@ -14,7 +14,9 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import org.ktorm.database.Database
-import org.ktorm.dsl.*
+import org.ktorm.dsl.and
+import org.ktorm.dsl.batchUpdate
+import org.ktorm.dsl.eq
 import org.ktorm.entity.*
 import org.slf4j.LoggerFactory
 import java.time.Clock
@@ -92,6 +94,7 @@ class GameEngine(
 
             val robot = addRobot(game.id, user.name, user.id, RobotModel.valueOf(model), Direction.valueOf(facing))
             board.placeRobot(robot.id)
+            board.updateLaserOverlays(listOf(robot))
             board.flatten().forEach { database.fields.update(it) }
             return
         }
@@ -103,7 +106,7 @@ class GameEngine(
         }
 
         when (action.label) {
-            ActionLabel.LEAVE_GAME -> removeRobot(game.id, robot.id)
+            ActionLabel.LEAVE_GAME -> removeRobot(board, robots, robot.id)
             ActionLabel.TOGGLE_READY -> robotEngine.toggleReady(robot)
             ActionLabel.TOGGLE_POWERDOWN -> robotEngine.togglePowerDown(robot)
 
@@ -350,12 +353,13 @@ class GameEngine(
         delay(GAME_ENGINE_STEP_DELAY)
     }
 
-    private fun removeRobot(gameId: Int, robotId: Int) {
-        database.update(Fields) {
-            set(it.robotId, null)
-            where {
-                it.gameId eq gameId and it.robotId.isNotNull()
+    private fun removeRobot(board: Board, robots: Collection<Robot>, robotId: Int) {
+        board.updateLaserOverlays(robots.filter { it.id != robotId })
+        board.flatten().forEach {
+            if (it.robotId == robotId) {
+                it.robotId = null
             }
+            database.fields.update(it)
         }
         database.robots.removeIf { it.id eq robotId }
     }
