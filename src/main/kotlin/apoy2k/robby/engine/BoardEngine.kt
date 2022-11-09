@@ -57,6 +57,9 @@ fun Board.execute(card: MovementCard, robots: Collection<Robot>) {
         val direction = robot.getMovementDirection(card.movement)
         val positions = calculateRobotMove(robot, direction, robots)
         return applyPositions(positions, robots)
+    } else {
+        // Even if no steps were executed, rotating the robot could still cause laser overlay updates
+        updateLaserOverlays(robots)
     }
 }
 
@@ -185,7 +188,9 @@ fun Board.touchModifications(robots: Collection<Robot>) = flatten()
         field.elements.contains(FieldElement.REPAIR_MOD)
                 && robots.any { robot -> field.robotId == robot.id }
     }
-    .forEach {
+    .forEach { field ->
+        val robot = robots.first { it.id == field.robotId }
+        robot.damage = Integer.max(0, robot.damage - 1)
         // TODO: Implement modifications
     }
 
@@ -194,13 +199,7 @@ fun Board.touchModifications(robots: Collection<Robot>) = flatten()
  * **Modifies fields!**
  */
 fun Board.placeRobot(robotId: Int) {
-    val startFields = flatten().filter { it.hasStart() && it.robotId == null }
-    if (startFields.isEmpty()) {
-        throw Exception("No empty start fields available")
-    }
-    startFields
-        .minBy { it.getStartNumber() }
-        .robotId = robotId
+    findNextStartField().robotId = robotId
 }
 
 /**
@@ -377,6 +376,18 @@ fun Board.findLastLaserHitField(startField: Field, direction: Direction): Field 
 fun Board.fieldAt(row: Int, col: Int) = fieldAt(Position(row, col))
 
 /**
+ * Find the next empty start field
+ */
+private fun Board.findNextStartField(): Field {
+    val startFields = flatten().filter { it.hasStart() && it.robotId == null }
+    if (startFields.isEmpty()) {
+        throw Exception("No empty start fields available")
+    }
+    return startFields
+        .minBy { it.getStartNumber() }
+}
+
+/**
  * @return the position of a robot on the board
  */
 private fun Board.positionOf(robotId: Int): Position {
@@ -456,7 +467,12 @@ private fun Board.calculateRobotMove(
         result[positionOf(pushToField)] = pushedRobot
     }
 
-    result[positionOf(targetField)] = robot
+    if (targetField.elements.contains(FieldElement.HOLE)) {
+        val startField = findNextStartField()
+        result[positionOf(startField)] = robot
+    } else {
+        result[positionOf(targetField)] = robot
+    }
 
     return result
 }

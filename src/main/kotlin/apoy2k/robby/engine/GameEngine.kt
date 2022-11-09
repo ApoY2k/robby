@@ -193,7 +193,7 @@ class GameEngine(
 
         val now = clock.instant()
         if (!game.hasStarted(now)) {
-            logger.info("Starting first round of $game")
+            logger.debug("Starting first round of $game")
             game.startedAt = now
         }
 
@@ -252,7 +252,7 @@ class GameEngine(
      * Movements of more than 1 step are executed individually, with updates sent between every step
      */
     private suspend fun runRegister(game: Game, board: Board, robots: Collection<Robot>, register: Int) {
-        logger.info("Running register $register of $game")
+        logger.debug("Running register $register of $game")
         game.state = GameState.EXECUTING_REGISTERS
         game.currentRegister = register
         database.games.update(game)

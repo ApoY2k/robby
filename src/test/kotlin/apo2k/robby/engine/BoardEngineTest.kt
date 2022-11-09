@@ -508,6 +508,27 @@ class BoardEngineTest {
         assertEquals(0, robot3.damage)
     }
 
+    @Test
+    fun `robot is reset from hole`() {
+        val board = listOf(
+            listOf(Field.new(FieldElement.HOLE)),
+            listOf(Field.new()),
+            listOf(Field.new(FieldElement.START_1)),
+        ).also { it.assignIds() }
+
+        val robot1 = Robot.new(RobotModel.ZIPPY).also {
+            it.id = 1
+            it.facing = Direction.UP
+        }
+        board.placeRobot(robot1.id)
+
+        board.execute(MovementCard.new(Movement.STRAIGHT_2, 0), listOf(robot1))
+
+        assertNull(board.fieldAt(0, 0).robotId)
+        assertNull(board.fieldAt(1, 0).robotId)
+        assertEquals(robot1.id, board.fieldAt(2, 0).robotId)
+    }
+
     @ParameterizedTest
     @MethodSource("provideLastLaserHitField")
     fun `find last laser hit field`(

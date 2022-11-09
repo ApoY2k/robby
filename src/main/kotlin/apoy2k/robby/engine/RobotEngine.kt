@@ -34,7 +34,7 @@ class RobotEngine(
             return
         }
 
-        logger.info("Selecting card $cardId for $robot to register $register")
+        logger.debug("Selecting card $cardId for $robot to register $register")
 
         card.robotId = robot.id
         card.register = register
