@@ -11,4 +11,4 @@ services:
       JAVA_OPTS: "${ROBBY_JAVA_OPTS}"
       DATABASE_PATH: /app/robby.db
     volumes:
-      - robby.db:/app/robby.db
+      - ./robby.db:/app/robby.db
