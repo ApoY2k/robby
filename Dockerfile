@@ -13,7 +13,6 @@ WORKDIR /app
 
 COPY --from=build /app/target .
 
-ENV DATABASE_PATH="robby.db"
 ENV JAVA_OPTS=""
 
 CMD java $JAVA_OPTS -cp classes:dependency/* apoy2k.robby.ApplicationKt
