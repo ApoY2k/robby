@@ -1,13 +1,10 @@
-package apoy2k.robby.kotlin.apo2k.robby
+package apoy2k.robby
 
 import apoy2k.robby.engine.BoardType
 import apoy2k.robby.engine.GameEngine
 import apoy2k.robby.engine.RobotEngine
 import apoy2k.robby.engine.ViewUpdate
-import apoy2k.robby.model.Action
-import apoy2k.robby.model.RobotModel
-import apoy2k.robby.model.Session
-import apoy2k.robby.model.robots
+import apoy2k.robby.model.*
 import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -58,11 +55,11 @@ fun main() {
         }
 
         launch {
-            actionChannel.emit(Action.joinGame(RobotModel.ZIPPY).also {
+            actionChannel.emit(Action.joinGame(RobotModel.ZIPPY, Direction.DOWN).also {
                 it.game = game1
                 it.session = s1
             })
-            actionChannel.emit(Action.joinGame(RobotModel.HUZZA).also {
+            actionChannel.emit(Action.joinGame(RobotModel.HUZZA, Direction.DOWN).also {
                 it.game = game2
                 it.session = s1
             })

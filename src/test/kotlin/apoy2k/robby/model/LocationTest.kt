@@ -1,4 +1,4 @@
-package apo2k.robby.model
+package apoy2k.robby.model
 
 import apoy2k.robby.routes.Location
 import org.junit.jupiter.params.ParameterizedTest

@@ -1,6 +1,5 @@
-package apo2k.robby.model
+package apoy2k.robby.model
 
-import apoy2k.robby.model.*
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
@@ -11,7 +10,7 @@ class ActionsTest {
     fun `deserialize action`() {
         val game = Game()
         assertEquals(
-            Action.joinGame(RobotModel.ZIPPY).also { it.game = game },
+            Action.joinGame(RobotModel.ZIPPY, Direction.DOWN).also { it.game = game },
             Action.deserializeFromSocket(
                 "${ActionField.LABEL}=${ActionLabel.JOIN_GAME}&" +
                         "${ActionField.ROBOT_MODEL}=${RobotModel.ZIPPY.name}&" +

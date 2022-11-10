@@ -1,4 +1,4 @@
-package apoy2k.robby.kotlin.apo2k.robby
+package apoy2k.robby
 
 import apoy2k.robby.model.Fields
 import apoy2k.robby.model.Games

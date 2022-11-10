@@ -1,8 +1,5 @@
-package apo2k.robby.model
+package apoy2k.robby.model
 
-import apoy2k.robby.model.Direction
-import apoy2k.robby.model.Field
-import apoy2k.robby.model.FieldElement
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.MethodSource
