@@ -6,9 +6,9 @@ services:
     build: .
     restart: unless-stopped
     ports:
-      - "63378:8080"
+      - "${EXPOSE_PORT}:8080"
     environment:
-      JAVA_OPTS: "${ROBBY_JAVA_OPTS}"
+      JAVA_OPTS: "${JAVA_OPTS}"
       DATABASE_PATH: /app/robby.db
     volumes:
       - ./robby.db:/app/robby.db
