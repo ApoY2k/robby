@@ -11,8 +11,8 @@ FROM openjdk:slim as final
 
 WORKDIR /app
 
-COPY assets .
-COPY --from=build /app/target .
+COPY assets ./assets
+COPY --from=build /app/target ./target
 
 ENV JAVA_OPTS=""
 
