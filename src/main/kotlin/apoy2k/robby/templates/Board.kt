@@ -1,5 +1,6 @@
 package apoy2k.robby.templates
 
+import apoy2k.robby.engine.Board
 import apoy2k.robby.model.Field
 import apoy2k.robby.model.Robot
 import apoy2k.robby.model.directionElements
@@ -56,7 +57,7 @@ fun HtmlBlockTag.renderRobot(robot: Robot) {
     }
 }
 
-fun HtmlBlockTag.renderBoard(board: List<List<Field>>, robots: List<Robot>) {
+fun HtmlBlockTag.renderBoard(board: Board, robots: List<Robot>) {
     div("row") {
         div("col") {
             div("board") {

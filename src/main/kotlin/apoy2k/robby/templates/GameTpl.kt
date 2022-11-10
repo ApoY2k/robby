@@ -1,6 +1,10 @@
 package apoy2k.robby.templates
 
-import apoy2k.robby.model.*
+import apoy2k.robby.engine.Board
+import apoy2k.robby.model.Game
+import apoy2k.robby.model.MovementCard
+import apoy2k.robby.model.Robot
+import apoy2k.robby.model.User
 import io.ktor.server.html.*
 import kotlinx.html.*
 import java.time.Instant
@@ -10,7 +14,7 @@ class GameTpl(
     private val now: Instant,
     private val game: Game,
     private val robots: List<Robot>,
-    private val board: List<List<Field>>,
+    private val board: Board,
     private val user: User?,
     private val currentRobot: Robot?,
     private val robotCards: List<MovementCard>,

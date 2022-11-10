@@ -1,6 +1,5 @@
 package apoy2k.robby.engine
 
-import apoy2k.robby.exceptions.IncompleteAction
 import apoy2k.robby.model.*
 import apoy2k.robby.model.predef.board.generateChopShopBoard
 import apoy2k.robby.model.predef.board.generateDemoBoard
@@ -14,11 +13,11 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import org.ktorm.database.Database
-import org.ktorm.dsl.and
 import org.ktorm.dsl.batchUpdate
 import org.ktorm.dsl.eq
 import org.ktorm.dsl.update
-import org.ktorm.entity.*
+import org.ktorm.entity.map
+import org.ktorm.entity.sortedByDescending
 import org.slf4j.LoggerFactory
 import java.time.Clock
 
@@ -54,8 +53,8 @@ class GameEngine(
 
             logger.debug("Received $action")
 
-            val board = database.fields.filter { it.gameId eq game.id }.map { it }.toBoard()
-            val robots = database.robots.filter { it.gameId eq game.id }.map { it }
+            val board = database.fieldsFor(game.id).toBoard()
+            val robots = database.robotsFor(game.id)
 
             // Perform the action and run automatic registers and actions
             // with ViewUpdates in a separate coroutine so the channel isn't blocked
@@ -77,18 +76,17 @@ class GameEngine(
     fun perform(action: Action, board: Board, robots: Collection<Robot>) {
         // All actions require a session and game, so if an action without a session is noticed, just drop it with
         // an empty result view update set
-        val session = action.session ?: throw IncompleteAction("No session attached to $action")
-        val user = database.users.find { it.id eq (session.userId ?: -1) }
-            ?: throw IncompleteAction("No user found for $session")
-        val game = action.game ?: throw IncompleteAction("No game attached to $action")
+        val session = action.session
+        val user = database.user(session) ?: throw Exception("No user found for $session")
+        val game = action.game ?: throw Exception("No game attached to $action")
 
         if (action.label == ActionLabel.JOIN_GAME) {
             val model = action.getString(ActionField.ROBOT_MODEL)
-                ?: throw IncompleteAction("No robot model specified")
+                ?: throw Exception("No robot model specified")
             val facing = action.getString(ActionField.ROBOT_FACING)
-                ?: throw IncompleteAction("No orientation specified")
+                ?: throw Exception("No orientation specified")
 
-            val robotCount = database.robots.count { it.gameId eq game.id }
+            val robotCount = database.robotCount(game.id)
             if (game.maxRobots <= robotCount) {
                 return
             }
@@ -96,7 +94,7 @@ class GameEngine(
             val robot = addRobot(game.id, user.name, user.id, RobotModel.valueOf(model), Direction.valueOf(facing))
             board.placeRobot(robot.id)
             board.updateLaserOverlays(listOf(robot))
-            board.flatten().forEach { database.fields.update(it) }
+            board.flatten().forEach { database.update(it) }
             return
         }
 
@@ -112,8 +110,8 @@ class GameEngine(
             ActionLabel.TOGGLE_POWERDOWN -> robotEngine.togglePowerDown(robot)
 
             ActionLabel.SELECT_CARD -> {
-                val cardId = action.getInt(ActionField.CARD_ID) ?: throw IncompleteAction("No cardId defined")
-                val register = action.getInt(ActionField.REGISTER) ?: throw IncompleteAction("No register defined")
+                val cardId = action.getInt(ActionField.CARD_ID) ?: throw Exception("No cardId defined")
+                val register = action.getInt(ActionField.REGISTER) ?: throw Exception("No register defined")
                 robotEngine.selectCard(robot, register, cardId)
             }
 
@@ -143,7 +141,7 @@ class GameEngine(
         }
 
         database.useTransaction {
-            database.games.add(game)
+            database.add(game)
 
             fields.mapIndexed { row, rowFields ->
                 rowFields.mapIndexed { col, field ->
@@ -151,7 +149,7 @@ class GameEngine(
                     field.positionX = col
                     field.positionY = row
 
-                    database.fields.add(field)
+                    database.add(field)
                 }
             }
 
@@ -169,7 +167,7 @@ class GameEngine(
 
             generateStandardDeck().forEach {
                 it.gameId = game.id
-                database.cards.add(it)
+                database.add(it)
             }
         }
 
@@ -222,7 +220,7 @@ class GameEngine(
             robots.forEach { robotEngine.prepareNewRound(game.id, it) }
         }
 
-        database.games.update(game)
+        database.update(game)
         updates.emit(ViewUpdate(game.id))
     }
 
@@ -240,8 +238,7 @@ class GameEngine(
      * Get all movement cards of a specific register, sorted, for all players robots
      */
     private fun getRegister(gameId: Int, register: Int): List<MovementCard> {
-        return database.cards
-            .filter { (it.gameId eq gameId) and (it.register eq register) }
+        return database.cardsForRegister(gameId, register)
             .sortedByDescending { it.priority }
             .map { it }
     }
@@ -255,7 +252,7 @@ class GameEngine(
         logger.debug("Running register $register of $game")
         game.state = GameState.EXECUTING_REGISTERS
         game.currentRegister = register
-        database.games.update(game)
+        database.update(game)
         updates.emit(ViewUpdate(game.id))
         delay(GAME_ENGINE_STEP_DELAY)
 
@@ -270,8 +267,8 @@ class GameEngine(
 
                     for (step in 1..steps) {
                         board.execute(card, robots)
-                        board.flatten().forEach { database.fields.update(it) }
-                        robots.forEach { database.robots.update(it) }
+                        board.flatten().forEach { database.update(it) }
+                        robots.forEach { database.update(it) }
                         updates.emit(ViewUpdate(game.id))
                         delay(GAME_ENGINE_STEP_DELAY)
                     }
@@ -283,21 +280,21 @@ class GameEngine(
 
     private suspend fun runMoveBoardElements(game: Game, board: Board, robots: Collection<Robot>) {
         game.state = GameState.MOVE_BARD_ELEMENTS_2
-        database.games.update(game)
+        database.update(game)
 
         board.moveBelts(FieldElement.BELT_2, robots)
-        board.flatten().forEach { database.fields.update(it) }
-        robots.forEach { database.robots.update(it) }
+        board.flatten().forEach { database.update(it) }
+        robots.forEach { database.update(it) }
 
         updates.emit(ViewUpdate(game.id))
         delay(GAME_ENGINE_STEP_DELAY)
 
         game.state = GameState.MOVE_BARD_ELEMENTS_1
-        database.games.update(game)
+        database.update(game)
 
         board.moveBelts(FieldElement.BELT, robots)
-        board.flatten().forEach { database.fields.update(it) }
-        robots.forEach { database.robots.update(it) }
+        board.flatten().forEach { database.update(it) }
+        robots.forEach { database.update(it) }
 
         updates.emit(ViewUpdate(game.id))
         delay(GAME_ENGINE_STEP_DELAY)
@@ -305,37 +302,37 @@ class GameEngine(
 
     private suspend fun runFireLasers(game: Game, board: Board, robots: Collection<Robot>) {
         game.state = GameState.FIRE_LASERS_2
-        database.games.update(game)
+        database.update(game)
 
         board.fireLasers(FieldElement.LASER_2, robots)
-        robots.forEach { database.robots.update(it) }
+        robots.forEach { database.update(it) }
 
         updates.emit(ViewUpdate(game.id))
         delay(GAME_ENGINE_STEP_DELAY)
 
         game.state = GameState.FIRE_LASERS_1
-        database.games.update(game)
+        database.update(game)
 
         board.fireLasers(FieldElement.LASER, robots)
-        robots.forEach { database.robots.update(it) }
+        robots.forEach { database.update(it) }
         updates.emit(ViewUpdate(game.id))
         delay(GAME_ENGINE_STEP_DELAY)
 
         game.state = GameState.FIRE_ROBOT_LASERS
-        database.games.update(game)
+        database.update(game)
 
         board.fireRobotLasers(robots)
-        robots.forEach { database.robots.update(it) }
+        robots.forEach { database.update(it) }
         updates.emit(ViewUpdate(game.id))
         delay(GAME_ENGINE_STEP_DELAY)
     }
 
     private suspend fun runCheckpoints(game: Game, board: Board, robots: Collection<Robot>) {
         game.state = GameState.CHECKPOINTS
-        database.games.update(game)
+        database.update(game)
 
         board.touchCheckpoints(robots)
-        robots.forEach { database.robots.update(it) }
+        robots.forEach { database.update(it) }
 
         updates.emit(ViewUpdate(game.id))
         delay(GAME_ENGINE_STEP_DELAY)
@@ -343,12 +340,12 @@ class GameEngine(
 
     private suspend fun runRepairPowerups(game: Game, board: Board, robots: Collection<Robot>) {
         game.state = GameState.REPAIR_POWERUPS
-        database.games.update(game)
+        database.update(game)
 
         board.touchRepair(robots)
-        robots.forEach { database.robots.update(it) }
+        robots.forEach { database.update(it) }
         board.touchModifications(robots)
-        robots.forEach { database.robots.update(it) }
+        robots.forEach { database.update(it) }
 
         updates.emit(ViewUpdate(game.id))
         delay(GAME_ENGINE_STEP_DELAY)
@@ -360,13 +357,13 @@ class GameEngine(
             if (it.robotId == robotId) {
                 it.robotId = null
             }
-            database.fields.update(it)
+            database.update(it)
         }
         database.update(MovementCards) {
             set(it.robotId, null)
             where { it.robotId eq robotId }
         }
-        database.robots.removeIf { it.id eq robotId }
+        database.remove(robotId)
     }
 
     private fun addRobot(gameId: Int, name: String, userId: Int, model: RobotModel, facing: Direction): Robot {

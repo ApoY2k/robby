@@ -12,11 +12,6 @@ import kotlinx.html.body
 import kotlinx.html.html
 import kotlinx.html.stream.appendHTML
 import org.ktorm.database.Database
-import org.ktorm.dsl.eq
-import org.ktorm.entity.filter
-import org.ktorm.entity.find
-import org.ktorm.entity.map
-import org.ktorm.entity.sortedByDescending
 import org.slf4j.LoggerFactory
 import java.time.Clock
 
@@ -45,17 +40,16 @@ class ViewUpdateRouter(
                     return@onEach
                 }
 
-                val game = database.games.find { it.id eq update.gameId } ?: return@onEach
-                val fields = database.fields.filter { it.gameId eq game.id }.map { it }
-                val board = fields.toBoard()
-                val robots = database.robots.filter { it.gameId eq game.id }.map { it }
+                val game = database.game(update.gameId) ?: return@onEach
+                val board = database.fieldsFor(game.id).toBoard()
+                val robots = database.robotsFor(game.id)
 
                 gameSessions.forEach { (wsSession, httpSession) ->
-                    val user = database.users.find { it.id eq (httpSession?.userId ?: -1) }
+                    val user = database.user(httpSession)
                     val robot = robots.find { user != null && it.userId == user.id }
                     val cards = when (robot != null) {
-                        true -> database.cards
-                            .filter { it.robotId eq robot.id }
+                        true -> database
+                            .cardsForGame(robot.id)
                             .sortedByDescending { it.priority }
                             .map { it }
 

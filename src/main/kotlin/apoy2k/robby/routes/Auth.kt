@@ -3,7 +3,8 @@ package apoy2k.robby.routes
 import apoy2k.robby.isAuthenticated
 import apoy2k.robby.model.Session
 import apoy2k.robby.model.User
-import apoy2k.robby.model.users
+import apoy2k.robby.model.add
+import apoy2k.robby.model.user
 import apoy2k.robby.templates.LayoutTpl
 import io.ktor.server.application.*
 import io.ktor.server.html.*
@@ -13,19 +14,19 @@ import io.ktor.server.routing.*
 import io.ktor.server.sessions.*
 import kotlinx.html.*
 import org.ktorm.database.Database
-import org.ktorm.dsl.eq
-import org.ktorm.entity.add
-import org.ktorm.entity.find
 import java.util.*
 
 fun Route.auth(
     database: Database,
 ) {
     get(Location.AUTH.path) {
-        val session = call.sessions.get<Session>()
-        val user = database.users.find { it.id eq (session?.userId ?: -1) }
+        val user = getUser(database)
+        if (user != null) {
+            call.respondRedirect(Location.ROOT.path)
+            return@get
+        }
 
-        call.respondHtmlTemplate(LayoutTpl(user)) {
+        call.respondHtmlTemplate(LayoutTpl(null)) {
             content {
                 div("row") {
                     div("col") {
@@ -72,10 +73,10 @@ fun Route.auth(
             throw Exception("Password must not be blank")
         }
 
-        var user = database.users.find { it.name eq name }
+        var user = database.user(name)
         if (user == null) {
             user = User.new(name, passwordChallenge)
-            database.users.add(user)
+            database.add(user)
         } else {
             val password = Base64.getDecoder().decode(user.password)
             val salt = Base64.getDecoder().decode(user.salt)

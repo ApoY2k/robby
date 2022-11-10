@@ -7,7 +7,6 @@ import org.ktorm.dsl.eq
 import org.ktorm.dsl.insert
 import org.ktorm.dsl.update
 import org.ktorm.entity.Entity
-import org.ktorm.entity.find
 import org.ktorm.schema.Table
 import org.ktorm.schema.varchar
 
@@ -34,7 +33,7 @@ class DbSessionStorage(
     }
 
     override suspend fun read(id: String): String {
-        return database.sessions.find { it.id eq id }?.data
+        return database.session(id)
             ?: throw NoSuchElementException("Session $id not found")
     }
 

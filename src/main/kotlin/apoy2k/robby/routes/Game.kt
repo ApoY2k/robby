@@ -19,11 +19,6 @@ import io.ktor.websocket.*
 import kotlinx.coroutines.channels.consumeEach
 import kotlinx.coroutines.flow.MutableSharedFlow
 import org.ktorm.database.Database
-import org.ktorm.dsl.eq
-import org.ktorm.entity.filter
-import org.ktorm.entity.find
-import org.ktorm.entity.map
-import org.ktorm.entity.sortedByDescending
 import org.slf4j.LoggerFactory
 import java.io.File
 import java.time.Clock
@@ -53,24 +48,24 @@ fun Route.game(
                 return@get
             }
 
-            val game = database.games.find { it.id eq gameId }
+            val game = database.game(gameId)
             if (game == null) {
                 call.respond(HttpStatusCode.NotFound)
                 return@get
             }
 
-            val fields = database.fields.filter { it.gameId eq gameId }.map { it }
-            val board = fields.toBoard()
-            val robots = database.robots.filter { it.gameId eq gameId }.map { it }
-            val session = call.sessions.get<Session>()
-            val user = database.users.find { it.id eq (session?.userId ?: -1) }
-            val robot = when (session?.userId != null) {
-                true -> robots.find { it.userId == session?.userId }
+            val user = getUser(database)
+            val board = database.fieldsFor(gameId).toBoard()
+            val robots = database.robotsFor(gameId)
+
+            val robot = when (user?.id != null) {
+                true -> robots.find { it.userId == user?.id }
                 else -> null
             }
+
             val cards = when (robot != null) {
-                true -> database.cards
-                    .filter { it.robotId eq robot.id }
+                true -> database
+                    .cardsForGame(robot.id)
                     .sortedByDescending { it.priority }
                     .map { it }
 
@@ -88,7 +83,7 @@ fun Route.game(
         val session = call.sessions.get<Session>()
         val gameId = call.parameters["id"]?.toInt()
             ?: throw Exception("No game id found")
-        val game = database.games.find { it.id eq gameId }
+        val game = database.game(gameId)
             ?: throw Exception("No game with id $gameId found, aborting websocket session")
 
         viewUpdateRouter.addSession(gameId, this, session)

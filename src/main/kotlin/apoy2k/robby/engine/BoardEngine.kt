@@ -1,6 +1,5 @@
 package apoy2k.robby.engine
 
-import apoy2k.robby.exceptions.InvalidGameState
 import apoy2k.robby.model.*
 import org.slf4j.LoggerFactory
 
@@ -35,7 +34,7 @@ fun List<Field>.toBoard(): Board {
 /**
  * Generate IDs for all fields, only used for unit testing
  */
-fun List<List<Field>>.assignIds() = flatten()
+fun Board.assignIds() = flatten()
     .forEachIndexed { idx, field ->
         field.id = idx
     }
@@ -114,7 +113,7 @@ fun Board.moveBelts(beltType: FieldElement, robots: Collection<Robot>) {
     // from belts, all of these robots might require a rotation)
     newPositions.forEach { (position, robot) ->
         val previousPos = positionOf(robot.id)
-        val incomingDirectionError = InvalidGameState(
+        val incomingDirectionError = Exception(
             "Cannot determine incoming direction of [$robot] moving from" +
                     " [$previousPos] to [$position]"
         )
@@ -445,7 +444,7 @@ private fun Board.calculateRobotMove(
     robots: Collection<Robot>
 ): Map<Position, Robot> {
     val sourceField = flatten().firstOrNull { it.robotId == robot.id }
-        ?: throw InvalidGameState("Robot [$robot] could not be found on board cells")
+        ?: throw Exception("Robot [$robot] could not be found on board cells")
     val targetField = getNeighbour(sourceField, direction)
     val result = mutableMapOf<Position, Robot>()
 

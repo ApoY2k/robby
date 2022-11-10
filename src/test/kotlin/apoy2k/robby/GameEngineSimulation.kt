@@ -13,9 +13,6 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import org.ktorm.database.Database
-import org.ktorm.dsl.and
-import org.ktorm.dsl.eq
-import org.ktorm.entity.find
 import org.ktorm.logging.Slf4jLoggerAdapter
 import org.ktorm.support.sqlite.SQLiteDialect
 import org.slf4j.LoggerFactory
@@ -68,13 +65,13 @@ fun main() {
         // Leave some time for the engine to process
         delay(1000)
 
-        val robot1 = database.robots.find { it.gameId eq game1.id and (it.userId eq (s1.userId ?: -1)) }
+        val robot1 = database.robotFor(game1.id, (s1.userId ?: -1))
             ?: fail("Robot1 not found")
-        val robot2 = database.robots.find { it.gameId eq game1.id and (it.userId eq (s2.userId ?: -1)) }
+        val robot2 = database.robotFor(game1.id, (s2.userId ?: -1))
             ?: fail("Robot2 not found")
 
-        val game1cards = robotEngine.getDrawnCards(robot1.id)
-        val game2cards = robotEngine.getDrawnCards(robot2.id)
+        val game1cards = database.cardsForRobot(robot1.id)
+        val game2cards = database.cardsForRobot(robot2.id)
 
         launch {
             game1cards.take(5).forEachIndexed { idx, card ->

@@ -1,11 +1,9 @@
 package apoy2k.robby.engine
 
-import apoy2k.robby.exceptions.IncompleteAction
-import apoy2k.robby.exceptions.InvalidGameState
 import apoy2k.robby.model.*
 import org.ktorm.database.Database
 import org.ktorm.dsl.*
-import org.ktorm.entity.*
+import org.ktorm.entity.associateBy
 import org.slf4j.LoggerFactory
 
 class RobotEngine(
@@ -14,20 +12,14 @@ class RobotEngine(
     private val logger = LoggerFactory.getLogger(this.javaClass)
 
     /**
-     * Return the card for a robot and register
-     */
-    fun getRegister(robotId: Int, register: Int) = database.cards
-        .find { it.robotId eq robotId and (it.register eq register) }
-
-    /**
      * Write a card into a register of a players robot
      */
     fun selectCard(robot: Robot, register: Int, cardId: Int) {
-        val card = database.cards.find { it.id eq cardId }
-            ?: throw IncompleteAction("Card with ID '$cardId' does not exist")
+        val card = database.card(cardId)
+            ?: throw Exception("Card with ID '$cardId' does not exist")
 
         if (card.gameId != robot.gameId) {
-            throw IncompleteAction("$robot and $card do not belong to the same game")
+            throw Exception("$robot and $card do not belong to the same game")
         }
 
         if (robot.isLocked(register)) {
@@ -43,7 +35,7 @@ class RobotEngine(
                 set(it.register, null)
                 where { it.robotId eq robot.id and (it.register eq register) }
             }
-            database.cards.update(card)
+            database.update(card)
         }
     }
 
@@ -53,9 +45,7 @@ class RobotEngine(
      * on the current damage value of this robot
      */
     fun clearRegisters(robot: Robot, respectDamageLock: Boolean = true) {
-        val cards = database.cards
-            .filter { it.robotId eq robot.id and it.register.isNotNull() }
-            .associateBy { it.register }
+        val cards = database.cardsForRobotNoRegister(robot.id).associateBy { it.register }
 
         // Remove cards from registers that are not locked, as by the register locking rules
         // by setting the register for each card to null, "freeing" them from it
@@ -115,16 +105,14 @@ class RobotEngine(
             }
         }
 
-        database.robots.update(robot)
+        database.update(robot)
     }
 
     /**
      * Draw a new set of cards for a robot
      */
     fun drawCards(gameId: Int, robot: Robot) {
-        val cards = database.cards
-            .filter { it.gameId eq gameId and it.robotId.isNull() }
-            .map { it }
+        val cards = database.cardsWithoutRobot(gameId)
             .shuffled()
             .take(Integer.max(0, 9 - robot.damage))
 
@@ -148,26 +136,15 @@ class RobotEngine(
     }
 
     /**
-     * Get all cards drawn by a specific robot
-     */
-    fun getDrawnCards(robotId: Int): List<MovementCard> = database.cards
-        .filter { it.robotId eq robotId }
-        .map { it }
-
-    /**
      * Createa new robot in a game for a session
      */
     fun createNewRobot(gameId: Int, name: String, userId: Int, model: RobotModel, facing: Direction): Robot {
-        if (name.isBlank()) throw IncompleteAction("No name provided")
-        if (database.robots.any { it.gameId eq gameId and (it.userId eq userId) })
-            throw InvalidGameState("$name already has a Robot in this game")
-
         val robot = Robot.new(model, name, userId).also {
             it.gameId = gameId
             it.facing = facing
         }
 
-        database.robots.add(robot)
+        database.add(robot)
 
         return robot
     }
@@ -176,13 +153,13 @@ class RobotEngine(
      * Toggle the ready state on a robot
      */
     fun toggleReady(robot: Robot) {
-        if (database.cards.count { it.robotId eq robot.id and it.register.isNotNull() } != 5) {
+        if (database.cardCountForRobotRegister(robot.id) != 5) {
             // Robot does not have all registers programmed yet
             return
         }
 
         robot.ready = !robot.ready
-        database.robots.update(robot)
+        database.update(robot)
     }
 
     /**
@@ -190,6 +167,6 @@ class RobotEngine(
      */
     fun togglePowerDown(robot: Robot) {
         robot.powerDownScheduled = !robot.powerDownScheduled
-        database.robots.update(robot)
+        database.update(robot)
     }
 }
