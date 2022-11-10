@@ -14,6 +14,4 @@ WORKDIR /app
 COPY assets ./assets
 COPY --from=build /app/target ./target
 
-ENV JAVA_OPTS=""
-
-CMD java $JAVA_OPTS -cp target/classes:target/dependency/* apoy2k.robby.ApplicationKt
+CMD java -cp target/classes:target/dependency/* apoy2k.robby.ApplicationKt

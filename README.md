@@ -3,7 +3,9 @@
 # ▶ Run Setup
 
 * Create an empty file named `robby.db`
-* Run `docker compose up --build`
+* Copy `.env.template` to `.env` and adjust settings as fit for the environment
+* Run `sqlite3 robby.db` and then `.read database_schemay.sql` to create the db file
+* Run `docker compose up --build -d`
 * Navigate to `<server-ip>:63378`
 
 ## 🛠 Development Setup
