@@ -16,4 +16,4 @@ COPY --from=build /app/target ./target
 
 ENV JAVA_OPTS=""
 
-CMD java $JAVA_OPTS -cp classes:dependency/* apoy2k.robby.ApplicationKt
+CMD java $JAVA_OPTS -cp target/classes:target/dependency/* apoy2k.robby.ApplicationKt
