@@ -1,5 +1,11 @@
 # 🤖 robby
 
+# ▶ Run Setup
+
+* Create an empty file named `robby.db`
+* Run `docker compose up --build`
+* Navigate to `<server-ip>:63378`
+
 ## 🛠 Development Setup
 
 ### Requirements
