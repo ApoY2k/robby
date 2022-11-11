@@ -55,10 +55,6 @@ fun HtmlBlockTag.renderCreateGameForm() {
                     +"Chop Shop"
                 }
             }
-            input(InputType.number, classes = "form-control") {
-                attributes["name"] = "maxRobots"
-                placeholder = "Max. Robots"
-            }
         }
         button(classes = "btn btn-primary") { +"Create" }
     }

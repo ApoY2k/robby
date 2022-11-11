@@ -36,6 +36,7 @@ fun HtmlBlockTag.renderJoinForm(
                         }
 
                         attributes["data-action"] = Action.joinGame().serializeForSocket()
+
                         p { +"Join this game" }
                         select("form-control mb-3") {
                             attributes["name"] = ActionField.ROBOT_MODEL.name

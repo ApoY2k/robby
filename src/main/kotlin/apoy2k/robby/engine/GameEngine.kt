@@ -124,11 +124,11 @@ class GameEngine(
     /**
      * Create a new game and return the created instance
      */
-    fun createNewGame(boardType: BoardType, maxRobots: Int): Game {
+    fun createNewGame(boardType: BoardType): Game {
         val game = Game {
             state = GameState.PROGRAMMING_REGISTERS
             this.boardType = boardType
-            this.maxRobots = maxRobots
+            this.maxRobots = 0
             currentRegister = 1
             startedAt = null
             finishedAt = null
@@ -140,6 +140,8 @@ class GameEngine(
             BoardType.SANDBOX -> generateSandboxBoard()
         }
 
+        var maxRobots = 0
+
         database.useTransaction {
             database.add(game)
 
@@ -149,9 +151,16 @@ class GameEngine(
                     field.positionX = col
                     field.positionY = row
 
+                    if (field.hasStart()) {
+                        maxRobots++
+                    }
+
                     database.add(field)
                 }
             }
+
+            game.maxRobots = maxRobots
+            database.update(game)
 
             // Applying laser overlays only works correctly when all fields are uniquely adressable with an ID
             // so this has to be done *after* writing the DB entries for fields, as that will set the field IDs

@@ -30,7 +30,7 @@ fun Route.base(
 
         call.respondHtmlTemplate(LayoutTpl(user)) {
             content {
-                insert(HomeTpl(clock.instant(), games, robots, user)) {}
+                insert(HomeTpl(clock.instant(), user, games, robots)) {}
             }
         }
     }

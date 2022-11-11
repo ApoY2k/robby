@@ -10,9 +10,9 @@ import java.time.Instant
 
 class HomeTpl(
     private val now: Instant,
+    private val user: User?,
     private val games: List<Game>,
     private val robots: List<Robot>,
-    private val user: User?,
 ) : Template<FlowContent> {
     override fun FlowContent.apply() {
         div("row") {
@@ -32,6 +32,6 @@ class HomeTpl(
                 }
             }
         }
-        insert(Lobby(now, user, games)) {}
+        insert(Lobby(now, user, games, robots)) {}
     }
 }

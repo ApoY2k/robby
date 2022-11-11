@@ -1,6 +1,7 @@
 package apoy2k.robby.templates
 
 import apoy2k.robby.model.Game
+import apoy2k.robby.model.Robot
 import apoy2k.robby.model.User
 import apoy2k.robby.routes.Location
 import io.ktor.server.html.*
@@ -10,10 +11,11 @@ import java.time.Instant
 class Lobby(
     private val now: Instant,
     private val user: User?,
-    private val games: List<Game>
+    private val games: List<Game>,
+    private val robots: List<Robot>,
 ) : Template<FlowContent> {
     override fun FlowContent.apply() {
-        div("row") {
+        div("row mb-3") {
             div("col") {
                 h2 { +"Available games" }
             }
@@ -25,16 +27,17 @@ class Lobby(
         }
         div("row") {
             // TODO Filter / pagination for game cards
-            games.forEach {
-                renderGame(now, user, it)
+            games.forEach { game ->
+                renderGame(now, user, robots.filter { it.gameId == game.id }, game)
             }
         }
     }
 }
 
-fun FlowContent.renderGame(now: Instant, user: User?, game: Game) {
+fun FlowContent.renderGame(now: Instant, user: User?, robots: List<Robot>, game: Game) {
     val isFinished = game.isFinished(now)
     val hasStarted = game.hasStarted(now)
+    val hasJoined = robots.any { it.userId == user?.id }
 
     div("col-3") {
         if (isFinished) {
@@ -54,13 +57,23 @@ fun FlowContent.renderGame(now: Instant, user: User?, game: Game) {
             ul("list-group list-group-flush") {
                 li("list-group-item") { +game.boardType.name }
                 li("list-group-item") {
-                    if (isFinished) {
-                        +"Finished at ${game.finishedAt}"
-                    } else if (hasStarted) {
-                        +"Started at ${game.startedAt}"
-                    } else {
-                        +"Open to join"
+                    if (hasJoined) {
+                        attributes["class"] += " text-success"
                     }
+
+                    if (isFinished) {
+                        +"Finished"
+                    } else if (hasStarted) {
+                        +"In progress"
+                    } else {
+                        if (hasJoined) {
+                            +"Joined"
+                        } else {
+                            +"Open to join"
+                        }
+                    }
+
+                    +" (${robots.count()}/${game.maxRobots})"
                 }
             }
         }
