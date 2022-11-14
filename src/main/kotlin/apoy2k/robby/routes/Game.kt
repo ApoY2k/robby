@@ -64,7 +64,7 @@ fun Route.game(
 
             val cards = when (robot != null) {
                 true -> database
-                    .cardsForGame(robot.id)
+                    .cardsForRobot(robot.id)
                     .sortedByDescending { it.priority }
                     .map { it }
 
