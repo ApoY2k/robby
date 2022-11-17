@@ -23,7 +23,7 @@ class GameEngineTest : DatabaseBackedTest() {
 
     @Test
     fun `select card for register`() {
-        val game = gameEngine.createNewGame(BoardType.SANDBOX, 8)
+        val game = gameEngine.createNewGame(BoardType.SANDBOX)
         val board = database.fieldsFor(game.id).toBoard()
         database.add(User.new("1", "1"))
         val s1 = Session(1)
@@ -49,7 +49,7 @@ class GameEngineTest : DatabaseBackedTest() {
 
     @Test
     fun `card selection override from different register`() {
-        val game = gameEngine.createNewGame(BoardType.SANDBOX, 8)
+        val game = gameEngine.createNewGame(BoardType.SANDBOX)
         val board = database.fieldsFor(game.id).toBoard()
         database.add(User.new("1", "1"))
         val s1 = Session(1)
@@ -81,8 +81,8 @@ class GameEngineTest : DatabaseBackedTest() {
 
     @Test
     fun `join parallel games`() {
-        val game1 = gameEngine.createNewGame(BoardType.SANDBOX, 8)
-        val game2 = gameEngine.createNewGame(BoardType.SANDBOX, 8)
+        val game1 = gameEngine.createNewGame(BoardType.SANDBOX)
+        val game2 = gameEngine.createNewGame(BoardType.SANDBOX)
         database.add(User.new("1", "1"))
         val session = Session(1)
 
@@ -114,7 +114,7 @@ class GameEngineTest : DatabaseBackedTest() {
 
     @Test
     fun `join game`() {
-        val game = gameEngine.createNewGame(BoardType.SANDBOX, 8)
+        val game = gameEngine.createNewGame(BoardType.SANDBOX)
         val board = database.fieldsFor(game.id).toBoard()
         database.add(User.new("1", "1"))
         val s1 = Session(1)
@@ -128,7 +128,7 @@ class GameEngineTest : DatabaseBackedTest() {
 
     @Test
     fun `join game without name`() {
-        val game = gameEngine.createNewGame(BoardType.SANDBOX, 8)
+        val game = gameEngine.createNewGame(BoardType.SANDBOX)
         val board = database.fieldsFor(game.id).toBoard()
 
         assertFailsWith(Exception::class) {
@@ -141,7 +141,7 @@ class GameEngineTest : DatabaseBackedTest() {
 
     @Test
     fun `multiple players join same game`() {
-        val game = gameEngine.createNewGame(BoardType.SANDBOX, 8)
+        val game = gameEngine.createNewGame(BoardType.SANDBOX)
         val board = database.fieldsFor(game.id).toBoard()
         database.add(User.new("1", "1"))
         database.add(User.new("2", "2"))
@@ -161,7 +161,7 @@ class GameEngineTest : DatabaseBackedTest() {
 
     @Test
     fun `leave game`() {
-        val game = gameEngine.createNewGame(BoardType.SANDBOX, 8)
+        val game = gameEngine.createNewGame(BoardType.SANDBOX)
         val board = database.fieldsFor(game.id).toBoard()
         database.add(User.new("1", "1"))
         val s1 = Session(1)
@@ -181,7 +181,7 @@ class GameEngineTest : DatabaseBackedTest() {
 
     @Test
     fun `leave game with multiple players`() {
-        val game = gameEngine.createNewGame(BoardType.SANDBOX, 8)
+        val game = gameEngine.createNewGame(BoardType.SANDBOX)
         val board = database.fieldsFor(game.id).toBoard()
         database.add(User.new("1", "1"))
         database.add(User.new("2", "2"))

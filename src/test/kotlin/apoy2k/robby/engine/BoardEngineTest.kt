@@ -207,7 +207,7 @@ class BoardEngineTest {
         card.robotId = robot1.id
         robot1.facing = Direction.RIGHT
 
-        val source = emptyBoard.fieldAt(1, 1)
+        val source = emptyBoard.fieldAt(1, 0)
         val target = emptyBoard.fieldAt(1, 3)
 
         source.robotId = robot1.id
@@ -292,24 +292,6 @@ class BoardEngineTest {
         assertEquals(robot1.id, top.robotId)
         assertEquals(robot2.id, middle.robotId)
         assertEquals(robot3.id, down.robotId)
-    }
-
-    @Test
-    fun `push is blocked on board edge`() {
-        val card = MovementCard.new(Movement.STRAIGHT, 1)
-        card.robotId = robot1.id
-
-        val top = emptyBoard.fieldAt(2, 1)
-        val down = emptyBoard.fieldAt(3, 1)
-
-        top.robotId = robot1.id
-        down.robotId = robot2.id
-        emptyBoard.execute(card, setOf(robot1, robot2))
-
-        assertNotNull(top.robotId)
-        assertNotNull(down.robotId)
-        assertEquals(robot1.id, top.robotId)
-        assertEquals(robot2.id, down.robotId)
     }
 
     @Test
@@ -522,9 +504,63 @@ class BoardEngineTest {
         }
         board.placeRobot(robot1.id)
 
-        board.execute(MovementCard.new(Movement.STRAIGHT_2, 0), listOf(robot1))
+        val card = MovementCard.new(Movement.STRAIGHT, 0).also { it.robotId = robot1.id }
+        board.execute(card, listOf(robot1))
+        assertNull(board.fieldAt(0, 0).robotId)
+        assertEquals(robot1.id, board.fieldAt(1, 0).robotId)
+        assertNull(board.fieldAt(2, 0).robotId)
+
+        board.execute(card, listOf(robot1))
+        assertNull(board.fieldAt(0, 0).robotId)
+        assertNull(board.fieldAt(1, 0).robotId)
+        assertEquals(robot1.id, board.fieldAt(2, 0).robotId)
+    }
+
+    @Test
+    fun `robot is reset from edge of board`() {
+        val board = listOf(
+            listOf(Field.new()),
+            listOf(Field.new()),
+            listOf(Field.new(FieldElement.START_1)),
+        ).also { it.assignIds() }
+
+        val robot1 = Robot.new(RobotModel.ZIPPY).also {
+            it.id = 1
+            it.facing = Direction.UP
+        }
+        board.fieldAt(0, 0).robotId = 1
+
+        val card = MovementCard.new(Movement.STRAIGHT, 0).also { it.robotId = robot1.id }
+        board.execute(card, listOf(robot1))
 
         assertNull(board.fieldAt(0, 0).robotId)
+        assertNull(board.fieldAt(1, 0).robotId)
+        assertEquals(robot1.id, board.fieldAt(2, 0).robotId)
+    }
+
+    @Test
+    fun `robot is reset when pushed over edge of board`() {
+        val board = listOf(
+            listOf(Field.new()),
+            listOf(Field.new()),
+            listOf(Field.new(FieldElement.START_1)),
+        ).also { it.assignIds() }
+
+        val robot1 = Robot.new(RobotModel.ZIPPY).also {
+            it.id = 1
+            it.facing = Direction.UP
+        }
+        val robot2 = Robot.new(RobotModel.HUZZA).also {
+            it.id = 2
+            it.facing = Direction.UP
+        }
+        board.fieldAt(0, 0).robotId = robot1.id
+        board.fieldAt(1, 0).robotId = robot2.id
+
+        val card = MovementCard.new(Movement.STRAIGHT, 0).also { it.robotId = robot2.id }
+        board.execute(card, listOf(robot1, robot2))
+
+        assertEquals(robot2.id, board.fieldAt(0, 0).robotId)
         assertNull(board.fieldAt(1, 0).robotId)
         assertEquals(robot1.id, board.fieldAt(2, 0).robotId)
     }

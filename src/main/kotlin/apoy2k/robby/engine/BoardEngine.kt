@@ -65,7 +65,7 @@ fun Board.execute(card: MovementCard, robots: Collection<Robot>) {
 /**
  * Move all belts of the given type *one* tick.
  *
- * **Modifies fields!**
+ * **Modifies fields and robots!**
  */
 fun Board.moveBelts(beltType: FieldElement, robots: Collection<Robot>) {
     // Collect new positions that result of the belt moves as a list of "to execute" movements
@@ -414,9 +414,9 @@ private fun Board.fieldAt(position: Position): Field {
 
 /**
  * Find the neighbouring field in a specific diection. If the source field is on the bounds of the board,
- * and the direction would make the neighbour out of bounds, the original field is returned
+ * and the direction would make the neighbour out of bounds, null is returned.
  */
-private fun Board.getNeighbour(field: Field, direction: Direction): Field {
+private fun Board.getNeighbour(field: Field, direction: Direction): Field? {
     val idx = positionOf(field)
 
     val newRow = when (direction) {
@@ -429,6 +429,10 @@ private fun Board.getNeighbour(field: Field, direction: Direction): Field {
         Direction.LEFT -> idx.col - 1
         Direction.RIGHT -> idx.col + 1
         else -> idx.col
+    }
+
+    if (newRow < 0 || newRow > lastIndex || newCol < 0 || newCol > this[newRow].lastIndex) {
+        return null
     }
 
     return fieldAt(Position(newRow, newCol))
@@ -445,8 +449,19 @@ private fun Board.calculateRobotMove(
 ): Map<Position, Robot> {
     val sourceField = flatten().firstOrNull { it.robotId == robot.id }
         ?: throw Exception("Robot [$robot] could not be found on board cells")
-    val targetField = getNeighbour(sourceField, direction)
     val result = mutableMapOf<Position, Robot>()
+    val targetField = getNeighbour(sourceField, direction)
+
+    // If the target field is not on the board or is a hole, reset the robot to an empty start field
+    if (targetField == null || targetField.elements.contains(FieldElement.HOLE)) {
+        val startField = findNextStartField()
+        robot.damage = 10
+        result[positionOf(startField)] = robot
+        return result
+    }
+
+    // Set the robot on the target field
+    result[positionOf(targetField)] = robot
 
     // Check for robot in the way (on the target field) and push them away, if possible
     val pushedRobot = robots.find { it.id == targetField.robotId }
@@ -455,22 +470,24 @@ private fun Board.calculateRobotMove(
         // its movement, regardless of the orientation of the robot being pushed
         val pushToField = getNeighbour(targetField, direction)
 
+        // If the field the other robot is pushed to is not on the board, reset that robot
+        // to an empty start field
+        if (pushToField == null || pushToField.elements.contains(FieldElement.HOLE)) {
+            val startField = findNextStartField()
+            pushedRobot.damage = 10
+            result[positionOf(startField)] = pushedRobot
+            return result
+        }
+
         // If the field that the robot would be pushed to also has a robot, it cannot be pushed
         // away by the original robot. Instead, the whole movement is halted and the original
-        // robot should not move at all, as only one robot and be pushed away
+        // robot should not move at all, as only one robot can be pushed away
         if (pushToField.robotId != null) {
             return emptyMap()
         }
 
         // Add the position of the pushed robot to the result of calculated movements
         result[positionOf(pushToField)] = pushedRobot
-    }
-
-    if (targetField.elements.contains(FieldElement.HOLE)) {
-        val startField = findNextStartField()
-        result[positionOf(startField)] = robot
-    } else {
-        result[positionOf(targetField)] = robot
     }
 
     return result
