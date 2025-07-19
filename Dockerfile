@@ -1,17 +1,8 @@
-FROM maven as build
-
-WORKDIR /app
-
-COPY src src
-COPY pom.xml pom.xml
-
-RUN ["mvn", "-B", "-Dmaven.test.skip=true", "package"]
-
 FROM openjdk:slim as final
 
 WORKDIR /app
 
-COPY assets ./assets
-COPY --from=build /app/target ./target
+COPY assets assets
+COPY build/libs/robby-all.jar robby.jar
 
-CMD java -cp target/classes:target/dependency/* apoy2k.robby.ApplicationKt
+CMD java -jar robby.jar

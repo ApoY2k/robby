@@ -4,8 +4,15 @@ import apoy2k.robby.model.Game
 import apoy2k.robby.model.Robot
 import apoy2k.robby.model.User
 import apoy2k.robby.routes.Location
-import io.ktor.server.html.*
-import kotlinx.html.*
+import io.ktor.server.html.Template
+import kotlinx.html.FlowContent
+import kotlinx.html.a
+import kotlinx.html.div
+import kotlinx.html.h2
+import kotlinx.html.h5
+import kotlinx.html.img
+import kotlinx.html.li
+import kotlinx.html.ul
 import java.time.Instant
 
 class Lobby(
@@ -48,7 +55,7 @@ fun FlowContent.renderGame(now: Instant, user: User?, robots: List<Robot>, game:
         // TODO Show current / max number of robots in game
 
         a(Location.GAME_VIEW.build(mapOf("id" to game.id.toString())), classes = "card") {
-            img("Game Preview", "/game/${game.id}/image", "card-img-top")
+            img("Game Preview", "/game/${game.id}/image", classes = "card-img-top")
             div("card-body") {
                 h5("card-title") {
                     +"Game #${game.id}"

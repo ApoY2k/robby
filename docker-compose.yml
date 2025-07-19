@@ -4,10 +4,16 @@ services:
   app:
     container_name: robby
     build: .
-    restart: unless-stopped
     ports:
-      - "${EXPOSE_PORT}:8080"
+      - "8080:8080"
     environment:
       DATABASE_PATH: /app/robby.db
+    volumes:
+      - ./robby.db:/app/robby.db
+
+  adminer:
+    image: adminer
+    ports:
+      - "8335:8080"
     volumes:
       - ./robby.db:/app/robby.db

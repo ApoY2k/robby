@@ -1,6 +1,7 @@
 package apoy2k.robby.model
 
 import io.ktor.server.sessions.*
+import kotlinx.serialization.Serializable
 import org.ktorm.database.Database
 import org.ktorm.dsl.delete
 import org.ktorm.dsl.eq
@@ -10,6 +11,7 @@ import org.ktorm.entity.Entity
 import org.ktorm.schema.Table
 import org.ktorm.schema.varchar
 
+@Serializable
 data class Session(
     val userId: Int? = null,
 )

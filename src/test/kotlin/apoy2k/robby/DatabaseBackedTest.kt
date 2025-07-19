@@ -9,14 +9,13 @@ import org.ktorm.database.Database
 import org.ktorm.dsl.deleteAll
 import org.ktorm.logging.Slf4jLoggerAdapter
 import org.ktorm.support.sqlite.SQLiteDialect
-import org.slf4j.LoggerFactory
 import java.io.File
 
 abstract class DatabaseBackedTest {
     val database = Database.connect(
         url = "jdbc:sqlite:tests.db",
         dialect = SQLiteDialect(),
-        logger = Slf4jLoggerAdapter(LoggerFactory.getLogger("db")),
+        logger = Slf4jLoggerAdapter("db"),
     )
 
     private val schema = File("database_schema.sql")
