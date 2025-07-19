@@ -1,7 +1,8 @@
 # 🤖 robby
 
 ## ▶ Run Setup
-* 
+
+* Run `gradle shadowJar`
 * Run `docker compose up --build -d`
 * Navigate to `<server-ip>:63378`
 

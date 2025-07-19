@@ -1,13 +1,8 @@
-version: "3.9"
-
 services:
   app:
-    container_name: robby
     build: .
     ports:
       - "8080:8080"
-    environment:
-      DATABASE_PATH: /app/robby.db
     volumes:
       - ./robby.db:/app/robby.db
 
@@ -16,4 +11,5 @@ services:
     ports:
       - "8335:8080"
     volumes:
-      - ./robby.db:/app/robby.db
+      - ./robby.db:/robby.db
+      - ./adminer-plugin-loginless.php:/var/www/html/plugins-enabled/login-password-less.php
