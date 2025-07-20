@@ -1,4 +1,4 @@
-FROM openjdk:slim as final
+FROM openjdk:slim
 
 WORKDIR /app
 

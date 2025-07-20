@@ -36,7 +36,11 @@ import org.slf4j.event.Level
 import java.io.File
 import java.time.Clock
 
+private val logger = LoggerFactory.getLogger("main")
+
 fun main() {
+    logger.info("Starting up robby server")
+
     embeddedServer(Netty, port = 8080, host = "0.0.0.0") {
         val clock = Clock.systemDefaultZone()
         val database = Database.connect(
@@ -47,14 +51,14 @@ fun main() {
 
         setup(clock, database)
     }.start(wait = true)
+
+    logger.info("Shutting down up robby server")
 }
 
 fun Application.setup(
     clock: Clock,
     database: Database,
 ) {
-    val logger = LoggerFactory.getLogger(this.javaClass)
-
     install(WebSockets)
 
     install(Resources)
@@ -101,5 +105,21 @@ fun Application.setup(
         game(clock, database, gameEngine, actionChannel, viewUpdateRouter)
     }
 
-    // TODO initialize database schema if empty
+    logger.info("Running databse schema file")
+
+    val schemaFile = this.javaClass.getResource("/database_schema.sql")
+        ?: throw Exception("Missing database schema file")
+
+    val schema = schemaFile
+        .readText()
+        .split(";")
+        .filter { it.isNotBlank() }
+
+    database.useConnection { connection ->
+        schema.forEach { statement ->
+            connection.createStatement().use {
+                it.execute(statement)
+            }
+        }
+    }
 }

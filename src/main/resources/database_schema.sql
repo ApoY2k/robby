@@ -1,10 +1,8 @@
-drop table if exists "sessions";
-create table "sessions" (
+create table if not exists "sessions" (
     "id" text not null,
     "data" text,
     primary key("id")
 );
-drop table if exists "movementCards";
 create table if not exists "movementCards" (
     "id" integer,
     "game_id" integer not null,
@@ -15,7 +13,6 @@ create table if not exists "movementCards" (
     foreign key("game_id") references "games"("id"),
     primary key("id" AUTOINCREMENT)
 );
-drop table if exists "fields";
 create table if not exists "fields" (
     "id" integer,
     "game_id" integer not null,
@@ -29,7 +26,6 @@ create table if not exists "fields" (
     foreign key("robot_id") references "robots"("id"),
     primary key("id" AUTOINCREMENT)
 );
-drop table if exists "robots";
 create table if not exists "robots" (
     "id" integer,
     "game_id" integer not null,
@@ -46,15 +42,13 @@ create table if not exists "robots" (
     foreign key("user_id") references "users"("id"),
     primary key("id" AUTOINCREMENT)
 );
-drop table if exists "users";
-create table "users" (
+create table if not exists "users" (
     "id" integer not null,
     "name" text not null,
     "password" text not null,
     "salt" text not null,
     primary key("id")
 );
-drop table if exists "games";
 create table if not exists "games" (
     "id" integer,
     "boardType" text not null,

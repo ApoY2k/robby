@@ -1,11 +1,11 @@
 # 🤖 robby
 
-## ▶ Run Setup
-
-* Run `gradle shadowJar`
-* Run `docker compose up --build -d`
-* Navigate to `<server-ip>:63378`
+A game about programming battle bots.
 
 ## 🛠 Development Setup
 
-Standard gradle setup. If you can't figure that out, you shouldn't be developing anything anyway.
+Running `docker compose up -d` boots up both an app server Dockerfile and an adminer to view the database. [Adminer](http://127.0.0.1:8335/?sqlite=&username=admin&db=%2Frobby.db) credentials: `admin/admin`.
+
+Both the local run configuration and the docker compose setup point to the same database file (`/robby.db`).
+
+Note that for the local server you need to first build the shadow jar file with `gradle shadowJar`.
