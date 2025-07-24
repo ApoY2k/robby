@@ -226,6 +226,11 @@ interface Field : Entity<Field> {
             && (robotId != null || hasDirection(entryDirection.toOpposite()))
 
     /**
+     * True, if this field has a wall on the given side
+     */
+    fun hasWallOn(direction: Direction) = elements.contains(FieldElement.WALL) && hasDirection(direction)
+
+    /**
      * Returns the FieldElement to apply to any fields that might be in line of this lasser type
      * on the board when applying laser elements
      */

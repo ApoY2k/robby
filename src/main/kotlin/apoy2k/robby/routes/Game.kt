@@ -4,18 +4,31 @@ import apoy2k.robby.engine.BoardType
 import apoy2k.robby.engine.GameEngine
 import apoy2k.robby.engine.ViewUpdateRouter
 import apoy2k.robby.engine.toBoard
-import apoy2k.robby.model.*
+import apoy2k.robby.model.Action
+import apoy2k.robby.model.Session
+import apoy2k.robby.model.cardsForRobot
+import apoy2k.robby.model.fieldsFor
+import apoy2k.robby.model.game
+import apoy2k.robby.model.robotsFor
 import apoy2k.robby.templates.GameTpl
 import apoy2k.robby.templates.LayoutTpl
-import io.ktor.http.*
-import io.ktor.server.application.*
-import io.ktor.server.html.*
-import io.ktor.server.request.*
-import io.ktor.server.response.*
-import io.ktor.server.routing.*
-import io.ktor.server.sessions.*
-import io.ktor.server.websocket.*
-import io.ktor.websocket.*
+import io.ktor.http.HttpStatusCode
+import io.ktor.server.html.insert
+import io.ktor.server.html.respondHtmlTemplate
+import io.ktor.server.request.receiveParameters
+import io.ktor.server.response.respond
+import io.ktor.server.response.respondFile
+import io.ktor.server.response.respondRedirect
+import io.ktor.server.routing.Route
+import io.ktor.server.routing.get
+import io.ktor.server.routing.post
+import io.ktor.server.routing.route
+import io.ktor.server.sessions.get
+import io.ktor.server.sessions.sessions
+import io.ktor.server.websocket.webSocket
+import io.ktor.websocket.Frame
+import io.ktor.websocket.readBytes
+import io.ktor.websocket.readText
 import kotlinx.coroutines.channels.consumeEach
 import kotlinx.coroutines.flow.MutableSharedFlow
 import org.ktorm.database.Database
@@ -58,7 +71,7 @@ fun Route.game(
             val robots = database.robotsFor(gameId)
 
             val robot = when (user?.id != null) {
-                true -> robots.find { it.userId == user?.id }
+                true -> robots.find { it.userId == user.id }
                 else -> null
             }
 
@@ -93,7 +106,7 @@ fun Route.game(
                 is Frame.Text -> {
                     try {
                         val data = frame.readText()
-                        logger.debug("Received [$data] from $session on Game($gameId)")
+                        logger.debug("Received [{}] from {} on Game({})", data, session, gameId)
                         val action = Action.deserializeFromSocket(data).also {
                             it.game = game
                             it.session = session

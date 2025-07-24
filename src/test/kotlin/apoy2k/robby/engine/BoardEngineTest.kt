@@ -1,14 +1,24 @@
 package apoy2k.robby.engine
 
-import apoy2k.robby.engine.*
-import apoy2k.robby.model.*
+import apoy2k.robby.model.Direction
+import apoy2k.robby.model.Field
+import apoy2k.robby.model.FieldElement
+import apoy2k.robby.model.Movement
+import apoy2k.robby.model.MovementCard
+import apoy2k.robby.model.Robot
+import apoy2k.robby.model.RobotModel
+import apoy2k.robby.model.getTurnMovement
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.MethodSource
 import java.util.stream.Stream
-import kotlin.test.*
+import kotlin.test.assertContains
+import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
+import kotlin.test.assertNull
+import kotlin.test.assertTrue
 
 class BoardEngineTest {
 
@@ -563,6 +573,96 @@ class BoardEngineTest {
         assertEquals(robot2.id, board.fieldAt(0, 0).robotId)
         assertNull(board.fieldAt(1, 0).robotId)
         assertEquals(robot1.id, board.fieldAt(2, 0).robotId)
+    }
+
+    @Test
+    fun `robot cannot move through walls on source tile`() {
+        val board = listOf(
+            listOf(
+                Field.new(FieldElement.START_1),
+                Field.new(FieldElement.WALL, Direction.RIGHT),
+                Field.new(),
+            ),
+        ).also { it.assignIds() }
+
+        robot1.facing = Direction.RIGHT
+        board.fieldAt(0, 0).robotId = robot1.id
+
+        val card = MovementCard.new(Movement.STRAIGHT_2, 0).also { it.robotId = robot1.id }
+        board.execute(card, listOf(robot1))
+        board.execute(card, listOf(robot1))
+
+        assertNull(board.fieldAt(0, 0).robotId)
+        assertEquals(robot1.id, board.fieldAt(0, 1).robotId)
+        assertNull(board.fieldAt(0, 2).robotId)
+    }
+
+    @Test
+    fun `robot cannot move through walls on target tile`() {
+        val board = listOf(
+            listOf(
+                Field.new(FieldElement.START_1),
+                Field.new(),
+                Field.new(FieldElement.WALL, Direction.LEFT),
+            ),
+        ).also { it.assignIds() }
+
+        robot1.facing = Direction.RIGHT
+        board.fieldAt(0, 0).robotId = robot1.id
+
+        val card = MovementCard.new(Movement.STRAIGHT_2, 0).also { it.robotId = robot1.id }
+        board.execute(card, listOf(robot1))
+        board.execute(card, listOf(robot1))
+
+        assertNull(board.fieldAt(0, 0).robotId)
+        assertEquals(robot1.id, board.fieldAt(0, 1).robotId)
+        assertNull(board.fieldAt(0, 2).robotId)
+    }
+
+    @Test
+    fun `robot cannot push other robot trough walls on target tile`() {
+        val board = listOf(
+            listOf(
+                Field.new(FieldElement.START_1),
+                Field.new(),
+                Field.new(FieldElement.WALL, Direction.LEFT),
+            ),
+        ).also { it.assignIds() }
+
+        robot1.facing = Direction.RIGHT
+        board.fieldAt(0, 0).robotId = robot1.id
+        board.fieldAt(0, 1).robotId = robot2.id
+
+        val card = MovementCard.new(Movement.STRAIGHT_2, 0).also { it.robotId = robot1.id }
+        board.execute(card, listOf(robot1, robot2))
+        board.execute(card, listOf(robot1, robot2))
+
+        assertEquals(robot1.id, board.fieldAt(0, 0).robotId)
+        assertEquals(robot2.id, board.fieldAt(0, 1).robotId)
+        assertNull(board.fieldAt(0, 2).robotId)
+    }
+
+    @Test
+    fun `robot cannot push other robot trough walls on pushed to tile`() {
+        val board = listOf(
+            listOf(
+                Field.new(FieldElement.START_1),
+                Field.new(FieldElement.WALL, Direction.RIGHT),
+                Field.new(),
+            ),
+        ).also { it.assignIds() }
+
+        robot1.facing = Direction.RIGHT
+        board.fieldAt(0, 0).robotId = robot1.id
+        board.fieldAt(0, 1).robotId = robot2.id
+
+        val card = MovementCard.new(Movement.STRAIGHT_2, 0).also { it.robotId = robot1.id }
+        board.execute(card, listOf(robot1, robot2))
+        board.execute(card, listOf(robot1, robot2))
+
+        assertEquals(robot1.id, board.fieldAt(0, 0).robotId)
+        assertEquals(robot2.id, board.fieldAt(0, 1).robotId)
+        assertNull(board.fieldAt(0, 2).robotId)
     }
 
     @ParameterizedTest

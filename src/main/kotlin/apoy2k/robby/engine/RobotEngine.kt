@@ -1,8 +1,21 @@
 package apoy2k.robby.engine
 
-import apoy2k.robby.model.*
+import apoy2k.robby.model.Direction
+import apoy2k.robby.model.MovementCards
+import apoy2k.robby.model.Robot
+import apoy2k.robby.model.RobotModel
+import apoy2k.robby.model.add
+import apoy2k.robby.model.card
+import apoy2k.robby.model.cardCountForRobotRegister
+import apoy2k.robby.model.cardsForRobotNoRegister
+import apoy2k.robby.model.cardsWithoutRobot
+import apoy2k.robby.model.update
 import org.ktorm.database.Database
-import org.ktorm.dsl.*
+import org.ktorm.dsl.and
+import org.ktorm.dsl.batchUpdate
+import org.ktorm.dsl.eq
+import org.ktorm.dsl.isNull
+import org.ktorm.dsl.update
 import org.ktorm.entity.associateBy
 import org.slf4j.LoggerFactory
 
@@ -26,7 +39,7 @@ class RobotEngine(
             return
         }
 
-        logger.debug("Selecting card $cardId for $robot to register $register")
+        logger.debug("Selecting card {} for {} to register {}", cardId, robot, register)
 
         card.robotId = robot.id
         card.register = register
@@ -123,11 +136,13 @@ class RobotEngine(
                 // Only remove cards that are not in registers, as when they're assigned to registers they *must*
                 // stay assigned to a robot, too. Cards in a register without a robot don't make any sense
             }
-            database.batchUpdate(MovementCards) {
-                cards.forEach { card ->
-                    item {
-                        set(it.robotId, robot.id)
-                        where { it.id eq card.id }
+            if (!cards.isEmpty()) {
+                database.batchUpdate(MovementCards) {
+                    cards.forEach { card ->
+                        item {
+                            set(it.robotId, robot.id)
+                            where { it.id eq card.id }
+                        }
                     }
                 }
             }

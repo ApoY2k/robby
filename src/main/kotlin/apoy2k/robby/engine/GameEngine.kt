@@ -51,7 +51,7 @@ class GameEngine(
                 return@onEach
             }
 
-            logger.debug("Received $action")
+            logger.debug("Received {}", action)
 
             val board = database.fieldsFor(game.id).toBoard()
             val robots = database.robotsFor(game.id)
@@ -200,7 +200,7 @@ class GameEngine(
 
         val now = clock.instant()
         if (!game.hasStarted(now)) {
-            logger.debug("Starting first round of $game")
+            logger.debug("Starting first round of {}", game)
             game.startedAt = now
         }
 
@@ -258,7 +258,7 @@ class GameEngine(
      * Movements of more than 1 step are executed individually, with updates sent between every step
      */
     private suspend fun runRegister(game: Game, board: Board, robots: Collection<Robot>, register: Int) {
-        logger.debug("Running register $register of $game")
+        logger.debug("Running register {} of {}", register, game)
         game.state = GameState.EXECUTING_REGISTERS
         game.currentRegister = register
         database.update(game)
@@ -274,7 +274,7 @@ class GameEngine(
                         else -> 1
                     }
 
-                    for (step in 1..steps) {
+                    (1..steps).forEach { step ->
                         board.execute(card, robots)
                         board.flatten().forEach { database.update(it) }
                         robots.forEach { database.update(it) }

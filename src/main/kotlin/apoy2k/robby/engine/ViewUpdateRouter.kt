@@ -63,7 +63,7 @@ class ViewUpdateRouter(
                         .toString()
 
                     val frame = Frame.Text(html)
-                    logger.debug("Sending ViewUpdate of Game(${update.gameId}) to $httpSession over $wsSession")
+                    logger.debug("Sending ViewUpdate of Game({}) to {} over {}", update.gameId, httpSession, wsSession)
                     wsSession.send(frame)
                 }
             } catch (err: Throwable) {
@@ -73,14 +73,14 @@ class ViewUpdateRouter(
     }
 
     fun addSession(gameId: Int, wsSession: WebSocketSession, httpSession: Session?) {
-        logger.debug("Adding $wsSession of $httpSession to Game($gameId) listeners")
+        logger.debug("Adding {} of {} to Game({}) listeners", wsSession, httpSession, gameId)
         val gameSessions = sessions[gameId] ?: mutableMapOf()
         gameSessions[wsSession] = httpSession
         sessions[gameId] = gameSessions
     }
 
     fun removeSession(gameId: Int, wsSession: WebSocketSession) {
-        logger.debug("Removing $wsSession from Game($gameId) listeners")
+        logger.debug("Removing {} from Game({}) listeners", wsSession, gameId)
         val gameSessions = sessions[gameId] ?: mutableMapOf()
         gameSessions.remove(wsSession)
     }

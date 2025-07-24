@@ -1,6 +1,13 @@
 package apoy2k.robby.engine
 
-import apoy2k.robby.model.*
+import apoy2k.robby.model.Direction
+import apoy2k.robby.model.Field
+import apoy2k.robby.model.FieldElement
+import apoy2k.robby.model.Movement
+import apoy2k.robby.model.MovementCard
+import apoy2k.robby.model.Robot
+import apoy2k.robby.model.getTurnMovement
+import apoy2k.robby.model.hasSteps
 import org.slf4j.LoggerFactory
 
 typealias Board = List<List<Field>>
@@ -49,7 +56,7 @@ fun Board.assignIds() = flatten()
  */
 fun Board.execute(card: MovementCard, robots: Collection<Robot>) {
     val robot = robots.find { it.id == card.robotId } ?: return
-    logger.debug("Executing $card on $robot")
+    logger.debug("Executing {} on {}", card, robot)
     robot.rotate(card.movement)
 
     if (card.hasSteps()) {
@@ -460,8 +467,16 @@ private fun Board.calculateRobotMove(
         return result
     }
 
-    // Set the robot on the target field
-    result[positionOf(targetField)] = robot
+    // Check if a wall is in front of the robot's movement for the next step. This could either
+    // be a wall on the current field on the same direction of travel, or on the neighboring field
+    // on the opposite side of travel direction:
+    // If traveling to the right, a blocking wall is either on the right of the source field
+    // or the left of the target field
+    if (sourceField.hasWallOn(direction) || targetField.hasWallOn(direction.toOpposite())) {
+        return emptyMap()
+    }
+
+    // TODO Repeat wall check for wall-mounted devices (or include in "hasWallOn"?)
 
     // Check for robot in the way (on the target field) and push them away, if possible
     val pushedRobot = robots.find { it.id == targetField.robotId }
@@ -479,6 +494,14 @@ private fun Board.calculateRobotMove(
             return result
         }
 
+        // If there are walls the pushed robot would crash into, it cannot be pushed. This check is the same
+        // as for the original moving robot, but from the perspective of the pushed robot, so the
+        // source field (for the pushed robot) is the original target field, and the target field is the
+        // field it would be pushed to. If this is true, no movements can be done on any robot
+        if (targetField.hasWallOn(direction) || pushToField.hasWallOn(direction.toOpposite())) {
+            return emptyMap()
+        }
+
         // If the field that the robot would be pushed to also has a robot, it cannot be pushed
         // away by the original robot. Instead, the whole movement is halted and the original
         // robot should not move at all, as only one robot can be pushed away
@@ -489,6 +512,9 @@ private fun Board.calculateRobotMove(
         // Add the position of the pushed robot to the result of calculated movements
         result[positionOf(pushToField)] = pushedRobot
     }
+
+    // Set the robot on the target field
+    result[positionOf(targetField)] = robot
 
     return result
 }
